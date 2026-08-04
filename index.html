@@ -77,24 +77,21 @@
 
 <div id="list"></div>
 
-<!-- Loads the Supabase JavaScript library from a public CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // ---- YOUR SUPABASE DETAILS ----
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const form = document.getElementById("add-form");
   const list = document.getElementById("list");
   const status = document.getElementById("status");
 
-  // Fetches all applications from Supabase and draws them on the page
   async function loadApps() {
     status.textContent = "Loading...";
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("applications")
       .select("*")
       .order("deadline", { ascending: true });
@@ -109,7 +106,6 @@
     render(data);
   }
 
-  // Draws a list of application rows onto the page
   function render(apps) {
     list.innerHTML = "";
     apps.forEach((app) => {
@@ -129,14 +125,13 @@
     });
   }
 
-  // Runs when the form is submitted — inserts a new row into Supabase
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const company = document.getElementById("company").value;
     const role = document.getElementById("role").value;
     const deadline = document.getElementById("deadline").value;
 
-    const { error } = await supabase
+    const { error } = await sb
       .from("applications")
       .insert([{ company, role, deadline: deadline || null }]);
 
@@ -147,14 +142,13 @@
     }
 
     form.reset();
-    loadApps(); // refresh the list from the database
+    loadApps();
   });
 
-  // Handles clicks on any "Delete" button
   list.addEventListener("click", async function (e) {
     if (e.target.classList.contains("delete")) {
       const id = e.target.getAttribute("data-id");
-      const { error } = await supabase.from("applications").delete().eq("id", id);
+      const { error } = await sb.from("applications").delete().eq("id", id);
       if (error) {
         alert("Couldn't delete — check console (F12)");
         console.error(error);
@@ -164,7 +158,7 @@
     }
   });
 
-  loadApps(); // load data as soon as the page opens
+  loadApps();
 </script>
 
 </body>
