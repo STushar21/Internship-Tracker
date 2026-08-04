@@ -59,12 +59,14 @@
     font-size: 12px;
     padding: 4px 8px;
   }
+  .status { font-size: 12px; color: #5C6270; margin-bottom: 12px; }
 </style>
 </head>
 <body>
 
 <h1>Pipeline</h1>
-<div class="sub">IB internship tracker — data saved in this browser</div>
+<div class="sub">IB internship tracker — synced to your database</div>
+<div class="status" id="status">Loading...</div>
 
 <form id="add-form">
   <input type="text" id="company" placeholder="Company (e.g. Goldman Sachs)" required>
@@ -75,18 +77,42 @@
 
 <div id="list"></div>
 
-<script>
-  // Load existing applications from the browser's storage, or start empty
-  let apps = JSON.parse(localStorage.getItem("apps")) || [];
+<!-- Loads the Supabase JavaScript library from a public CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  // Grab references to the HTML elements we'll need
+<script>
+  // ---- YOUR SUPABASE DETAILS ----
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   const form = document.getElementById("add-form");
   const list = document.getElementById("list");
+  const status = document.getElementById("status");
 
-  // Draws the current list of applications onto the page
-  function render() {
+  // Fetches all applications from Supabase and draws them on the page
+  async function loadApps() {
+    status.textContent = "Loading...";
+    const { data, error } = await supabase
+      .from("applications")
+      .select("*")
+      .order("deadline", { ascending: true });
+
+    if (error) {
+      status.textContent = "Error loading data — check console (F12)";
+      console.error(error);
+      return;
+    }
+
+    status.textContent = data.length + " application(s) synced";
+    render(data);
+  }
+
+  // Draws a list of application rows onto the page
+  function render(apps) {
     list.innerHTML = "";
-    apps.forEach((app, index) => {
+    apps.forEach((app) => {
       const row = document.createElement("div");
       row.className = "row";
       row.innerHTML = `
@@ -96,42 +122,49 @@
         </div>
         <div>
           <div class="deadline">${app.deadline || "No deadline"}</div>
-          <button class="delete" data-index="${index}">Delete</button>
+          <button class="delete" data-id="${app.id}">Delete</button>
         </div>
       `;
       list.appendChild(row);
     });
   }
 
-  // Saves the current list to the browser so it survives a page reload
-  function save() {
-    localStorage.setItem("apps", JSON.stringify(apps));
-  }
-
-  // Runs when the form is submitted
-  form.addEventListener("submit", function (e) {
-    e.preventDefault(); // stops the page from reloading
+  // Runs when the form is submitted — inserts a new row into Supabase
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
     const company = document.getElementById("company").value;
     const role = document.getElementById("role").value;
     const deadline = document.getElementById("deadline").value;
 
-    apps.push({ company, role, deadline });
-    save();
-    render();
+    const { error } = await supabase
+      .from("applications")
+      .insert([{ company, role, deadline: deadline || null }]);
+
+    if (error) {
+      alert("Couldn't save — check console (F12)");
+      console.error(error);
+      return;
+    }
+
     form.reset();
+    loadApps(); // refresh the list from the database
   });
 
-  // Handles clicks on any "Delete" button (event delegation)
-  list.addEventListener("click", function (e) {
+  // Handles clicks on any "Delete" button
+  list.addEventListener("click", async function (e) {
     if (e.target.classList.contains("delete")) {
-      const index = e.target.getAttribute("data-index");
-      apps.splice(index, 1);
-      save();
-      render();
+      const id = e.target.getAttribute("data-id");
+      const { error } = await supabase.from("applications").delete().eq("id", id);
+      if (error) {
+        alert("Couldn't delete — check console (F12)");
+        console.error(error);
+        return;
+      }
+      loadApps();
     }
   });
 
-  render(); // draw the list on first load
+  loadApps(); // load data as soon as the page opens
 </script>
 
 </body>
