@@ -221,6 +221,7 @@
   </div>
 
   <button type="submit" id="submit-btn">Add to pipeline</button>
+  <button type="button" id="cancel-edit-btn" style="display:none; background:#2A2F38; color:#ECE9E2;">Cancel edit</button>
 </form>
 
 <div class="filters">
@@ -261,6 +262,7 @@
 
   let allApps = [];
   let currentTab = "active";
+  let editingId = null; // tracks whether the form is adding a new entry or editing an existing one
 
   async function loadApps() {
     statusText.textContent = "Loading...";
@@ -357,6 +359,7 @@
       ${app.notes ? `<div class="desc" style="color:#8B92A0">${app.notes}</div>` : ""}
       <div class="row-actions">
         ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
+        <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#4F9D69" data-offer="${app.id}">Mark offer</button>
              <button class="action-link" style="color:#B85C4A" data-reject="${app.id}">Mark rejected</button>`
@@ -420,6 +423,32 @@
     return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
   }
 
+  // Fills the form with an existing entry's data and switches it into "edit" mode
+  function startEdit(app) {
+    editingId = app.id;
+    document.getElementById("company").value = app.company || "";
+    document.getElementById("role").value = app.role || "";
+    document.getElementById("sector").value = app.sector || "";
+    document.getElementById("programme_type").value = app.programme_type || "";
+    document.getElementById("deadline").value = app.deadline || "";
+    document.getElementById("applied_date").value = app.applied_date || "";
+    document.getElementById("link").value = app.link || "";
+    document.getElementById("description").value = app.description || "";
+    document.getElementById("notes").value = app.notes || "";
+
+    document.getElementById("submit-btn").textContent = "Save changes";
+    document.getElementById("cancel-edit-btn").style.display = "inline-block";
+    form.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // Resets the form back to "add new entry" mode
+  function cancelEdit() {
+    editingId = null;
+    form.reset();
+    document.getElementById("submit-btn").textContent = "Add to pipeline";
+    document.getElementById("cancel-edit-btn").style.display = "none";
+  }
+
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const payload = {
@@ -432,17 +461,25 @@
       link: normalizeLink(document.getElementById("link").value),
       description: document.getElementById("description").value || null,
       notes: document.getElementById("notes").value || null,
-      stage: "Researching",
     };
 
-    const { error } = await sb.from("applications").insert([payload]);
+    let error;
+    if (editingId) {
+      // Editing an existing entry — update it, keep its current stage untouched
+      ({ error } = await sb.from("applications").update(payload).eq("id", editingId));
+    } else {
+      // Adding a brand new entry — starts at the first stage
+      payload.stage = "Researching";
+      ({ error } = await sb.from("applications").insert([payload]));
+    }
+
     if (error) {
       alert("Couldn't save — check console (F12)");
       console.error(error);
       return;
     }
 
-    form.reset();
+    cancelEdit();
     loadApps();
   });
 
@@ -453,10 +490,16 @@
       if (error) { console.error(error); return; }
       loadApps();
     }
+    if (t.dataset.edit) {
+      const app = allApps.find(a => String(a.id) === t.dataset.edit);
+      if (app) startEdit(app);
+    }
     if (t.dataset.offer) updateField(t.dataset.offer, { closed: "offer" });
     if (t.dataset.reject) updateField(t.dataset.reject, { closed: "rejected" });
     if (t.dataset.reopen) updateField(t.dataset.reopen, { closed: null });
   });
+
+  document.getElementById("cancel-edit-btn").addEventListener("click", cancelEdit);
 
   statusTabs.addEventListener("click", (e) => {
     if (!e.target.dataset.filter) return;
