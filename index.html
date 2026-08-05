@@ -411,6 +411,15 @@
     loadApps();
   }
 
+  // Makes sure a link always has "https://" in front, so the browser treats
+  // it as a full web address instead of a path on our own site.
+  function normalizeLink(value) {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
+  }
+
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const payload = {
@@ -420,7 +429,7 @@
       programme_type: document.getElementById("programme_type").value || null,
       deadline: document.getElementById("deadline").value || null,
       applied_date: document.getElementById("applied_date").value || null,
-      link: document.getElementById("link").value || null,
+      link: normalizeLink(document.getElementById("link").value),
       description: document.getElementById("description").value || null,
       notes: document.getElementById("notes").value || null,
       stage: "Researching",
