@@ -23,6 +23,8 @@
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
+  /* Buttons don't inherit page text color by default in most browsers —
+     explicitly setting color here is what fixes the black-on-dark bug. */
   .cat-card {
     background: #1B1F26;
     border: 1px solid #2A2F38;
@@ -30,21 +32,35 @@
     padding: 16px;
     cursor: pointer;
     text-align: left;
+    color: #ECE9E2;
+    font-family: inherit;
   }
   .cat-card:hover { border-color: #B08D57; }
-  .cat-title { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; }
+  .cat-title { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; color: #ECE9E2; }
   .cat-desc { font-size: 11.5px; color: #8B92A0; line-height: 1.4; }
   .cat-count { font-size: 10.5px; color: #B08D57; margin-top: 8px; }
+  .cat-due { font-size: 10.5px; color: #4F9D69; margin-top: 2px; }
 
   /* --- quiz --- */
   #quiz-view { display: none; }
-  .progress { font-size: 11.5px; color: #8B92A0; margin-bottom: 10px; }
+  .progress { font-size: 11.5px; color: #8B92A0; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .difficulty {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .difficulty.easy { background: #1E3324; color: #4F9D69; }
+  .difficulty.medium { background: #332B18; color: #D9A441; }
+  .difficulty.hard { background: #33201C; color: #C97A64; }
   .card {
     background: #1B1F26;
     border: 1px solid #2A2F38;
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 16px;
+    color: #ECE9E2;
   }
   .passage {
     font-size: 13px;
@@ -57,7 +73,7 @@
     margin-bottom: 14px;
     white-space: pre-wrap;
   }
-  .question { font-size: 15px; font-weight: 600; margin-bottom: 14px; line-height: 1.4; }
+  .question { font-size: 15px; font-weight: 600; margin-bottom: 14px; line-height: 1.4; color: #ECE9E2; }
   .option {
     display: block;
     width: 100%;
@@ -70,6 +86,7 @@
     color: #ECE9E2;
     font-size: 13.5px;
     cursor: pointer;
+    font-family: inherit;
   }
   .option:hover { border-color: #B08D57; }
   .option.correct { border-color: #4F9D69; background: #1E3324; }
@@ -86,8 +103,9 @@
   }
   .quiz-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
+    margin-top: 14px;
   }
   button.primary {
     background: #B08D57;
@@ -98,6 +116,7 @@
     font-weight: 600;
     cursor: pointer;
     font-size: 13.5px;
+    font-family: inherit;
   }
   button.ghost {
     background: none;
@@ -105,6 +124,7 @@
     color: #8B92A0;
     font-size: 12.5px;
     cursor: pointer;
+    font-family: inherit;
   }
 
   /* --- results --- */
@@ -129,20 +149,20 @@
 </div>
 
 <div id="results-view">
-  <div class="sub">Category complete</div>
+  <div class="sub">Session complete</div>
   <div class="score" id="score-display"></div>
   <div id="score-note" style="color:#8B92A0; font-size:13px; margin-bottom:20px;"></div>
-  <button class="primary" id="retry-btn">Try again</button>
+  <button class="primary" id="retry-btn">Another pass</button>
   <button class="ghost" id="back-to-cats-btn" style="margin-left:12px;">Choose another category</button>
 </div>
 
 <script>
   // ---------------------------------------------------------------
   // QUESTION BANKS
-  // Each category is an array of questions. A question can optionally
-  // include a "passage" shown above the question (used for verbal
-  // reasoning and critical thinking, where several questions share
-  // one piece of text).
+  // Each question can optionally include a "passage" shown above it.
+  // "difficulty" is just a label shown to you — it doesn't affect scoring.
+  // IDs get assigned automatically below (category key + index) so the
+  // spaced-repetition system has something stable to track per question.
   // ---------------------------------------------------------------
   const CATEGORIES = {
     numerical: {
@@ -150,6 +170,7 @@
       desc: "Interpreting data, percentages, ratios, and growth under time pressure.",
       questions: [
         {
+          difficulty: "medium",
           passage: "A boutique advisory firm's annual revenue: 2023: £8.4m | 2024: £9.6m | 2025: £11.04m",
           question: "What was the percentage growth in revenue from 2024 to 2025?",
           options: ["10%", "12%", "15%", "18%"],
@@ -157,12 +178,14 @@
           explanation: "(£11.04m − £9.6m) ÷ £9.6m = £1.44m ÷ £9.6m = 15%."
         },
         {
+          difficulty: "easy",
           question: "A deal is valued at £240m, financed with 60% debt and the remainder equity. How much equity is required?",
           options: ["£72m", "£96m", "£120m", "£144m"],
           correct: 1,
           explanation: "40% of £240m = £96m."
         },
         {
+          difficulty: "hard",
           passage: "Fund performance (net returns): Fund A: +8.2% | Fund B: +6.5% | Fund C: +9.1%",
           question: "An investor split £500,000 equally across all three funds at the start of the year. Approximately what is the total value at year end?",
           options: ["£539,700", "£547,000", "£530,300", "£560,000"],
@@ -170,16 +193,58 @@
           explanation: "Average return ≈ (8.2+6.5+9.1)/3 = 7.93%. £500,000 × 1.0793 ≈ £539,700."
         },
         {
+          difficulty: "easy",
           question: "A company's share price rose from £14.20 to £16.35. What is the percentage increase, to the nearest whole number?",
           options: ["13%", "15%", "17%", "19%"],
           correct: 1,
           explanation: "(£16.35 − £14.20) ÷ £14.20 = £2.15 ÷ £14.20 ≈ 15.1%."
         },
         {
+          difficulty: "easy",
           question: "An analyst estimates EBITDA of £42m and applies a 7.5x multiple to derive enterprise value. What is the resulting EV?",
           options: ["£294m", "£315m", "£336m", "£301.5m"],
-          correct: 0,
+          correct: 1,
           explanation: "£42m × 7.5 = £315m."
+        },
+        {
+          difficulty: "easy",
+          question: "A private equity fund charges a 2% annual management fee on £300m of committed capital. What is the annual fee?",
+          options: ["£3m", "£6m", "£9m", "£12m"],
+          correct: 1,
+          explanation: "2% of £300m = £6m."
+        },
+        {
+          difficulty: "medium",
+          question: "An LBO uses 70% debt at a blended interest rate of 8%. If total deal debt is £210m, what is the annual interest expense?",
+          options: ["£14.7m", "£16.8m", "£18.9m", "£21m"],
+          correct: 1,
+          explanation: "£210m × 8% = £16.8m."
+        },
+        {
+          difficulty: "easy",
+          question: "A company's net income is £45m with 30m shares outstanding. What is EPS?",
+          options: ["£1.20", "£1.50", "£1.80", "£2.00"],
+          correct: 1,
+          explanation: "£45m ÷ 30m shares = £1.50 per share."
+        },
+        {
+          difficulty: "hard",
+          question: "Facility A charges a fixed 6% rate. Facility B charges SONIA + 2.5%, with SONIA currently at 4.1% and expected to fall by 0.75 percentage points. What is Facility B's expected effective rate, and is it cheaper than Facility A?",
+          options: [
+            "5.85% — cheaper than Facility A",
+            "6.6% — more expensive than Facility A",
+            "6.85% — more expensive than Facility A",
+            "5.35% — cheaper than Facility A"
+          ],
+          correct: 0,
+          explanation: "SONIA falls to 4.1% − 0.75% = 3.35%. Adding the 2.5% margin gives 5.85%, which is below Facility A's fixed 6%."
+        },
+        {
+          difficulty: "medium",
+          question: "Working capital increased from £12m to £15.6m over the year. By what percentage did it increase?",
+          options: ["25%", "28%", "30%", "32%"],
+          correct: 2,
+          explanation: "(£15.6m − £12m) ÷ £12m = £3.6m ÷ £12m = 30%."
         }
       ]
     },
@@ -189,13 +254,15 @@
       desc: "True / False / Cannot Say judgements based strictly on a written passage.",
       questions: [
         {
+          difficulty: "medium",
           passage: "Boutique advisory firms have grown their market share in mid-market M&A over the past five years, largely by offering more senior banker attention on smaller deals than bulge bracket firms are typically able to provide. However, boutiques generally lack the balance sheet to underwrite large financing packages, meaning they are frequently retained for advisory-only mandates rather than financed transactions.",
           question: "Boutique firms are unable to work on any financed transactions.",
           options: ["True", "False", "Cannot Say"],
           correct: 2,
-          explanation: "The passage says boutiques are 'frequently' retained for advisory-only work, not that financed deals are impossible for them. That's weaker than the absolute claim in the statement, so it cannot be confirmed either way from the text alone."
+          explanation: "The passage says boutiques are 'frequently' retained for advisory-only work, not that financed deals are impossible for them. That's weaker than the absolute claim in the statement."
         },
         {
+          difficulty: "easy",
           passage: "Boutique advisory firms have grown their market share in mid-market M&A over the past five years, largely by offering more senior banker attention on smaller deals than bulge bracket firms are typically able to provide. However, boutiques generally lack the balance sheet to underwrite large financing packages, meaning they are frequently retained for advisory-only mandates rather than financed transactions.",
           question: "One reason boutiques have gained market share is the level of seniority they offer clients on smaller deals.",
           options: ["True", "False", "Cannot Say"],
@@ -203,6 +270,7 @@
           explanation: "This is stated directly: growth came 'largely by offering more senior banker attention on smaller deals.'"
         },
         {
+          difficulty: "hard",
           passage: "Private equity fundraising slowed in 2024 as institutional investors, facing liquidity constraints from an already illiquid portfolio of unrealised fund commitments, reduced new allocations. Secondary market activity increased correspondingly, as limited partners sought to sell existing fund stakes to free up capital.",
           question: "Institutional investors reduced new allocations because they had no remaining capital of any kind.",
           options: ["True", "False", "Cannot Say"],
@@ -210,6 +278,7 @@
           explanation: "The passage attributes the slowdown to liquidity constraints from illiquid existing commitments — not a complete absence of capital. The statement overstates what's said, so it's False, not Cannot Say."
         },
         {
+          difficulty: "easy",
           passage: "Private equity fundraising slowed in 2024 as institutional investors, facing liquidity constraints from an already illiquid portfolio of unrealised fund commitments, reduced new allocations. Secondary market activity increased correspondingly, as limited partners sought to sell existing fund stakes to free up capital.",
           question: "Secondary market activity increased in 2024.",
           options: ["True", "False", "Cannot Say"],
@@ -217,11 +286,52 @@
           explanation: "Stated directly: 'Secondary market activity increased correspondingly.'"
         },
         {
+          difficulty: "medium",
           passage: "Central banks raising interest rates tend to increase the discount rate applied in valuation models, which mechanically reduces the present value of future cash flows. This effect is generally more pronounced for growth companies, whose valuations rely more heavily on cash flows expected further in the future.",
           question: "Rate rises affect the valuations of growth companies and mature companies equally.",
           options: ["True", "False", "Cannot Say"],
           correct: 1,
-          explanation: "The passage explicitly says the effect is 'more pronounced' for growth companies — meaning the impact is not equal, so the statement is False."
+          explanation: "The passage explicitly says the effect is 'more pronounced' for growth companies — meaning the impact is not equal."
+        },
+        {
+          difficulty: "easy",
+          passage: "Environmental, social and governance (ESG) mandates increasingly require asset managers to screen out certain sectors, such as fossil fuels, from portfolios. Some managers argue this constrains their ability to maximise risk-adjusted returns, while others contend that ESG-integrated portfolios have historically performed in line with, or better than, unconstrained benchmarks over the long term.",
+          question: "All asset managers agree that ESG constraints reduce returns.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage explicitly presents disagreement — some argue constraints hurt returns, others argue performance has been in line or better."
+        },
+        {
+          difficulty: "medium",
+          passage: "Trading volumes on the exchange rose 18% year-on-year, driven primarily by increased retail participation following the introduction of commission-free trading apps. Institutional volumes remained broadly flat over the same period.",
+          question: "Institutional investors traded less overall than retail investors during the period.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 2,
+          explanation: "We know retail volume grew and institutional volume stayed flat, but we're never told the absolute starting sizes of each group, so we can't say who traded more overall."
+        },
+        {
+          difficulty: "easy",
+          passage: "A recent industry survey found that 62% of graduate applicants to investment banking roles cited 'exit opportunities into private equity' as a primary motivation for applying, while only 24% cited a long-term interest in banking itself as their primary driver.",
+          question: "The majority of surveyed applicants were primarily motivated by a long-term interest in banking.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "Only 24% cited long-term interest as their primary driver — nowhere near a majority."
+        },
+        {
+          difficulty: "easy",
+          passage: "Following a wave of consolidation, the top five accountancy firms now audit a larger proportion of listed companies than at any point in the past two decades. Regulators have expressed concern that this concentration increases systemic risk should any one of these firms face a major failure.",
+          question: "Regulators believe the current level of concentration among audit firms poses no risk.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says regulators have expressed concern about increased systemic risk — the opposite of believing there's no risk."
+        },
+        {
+          difficulty: "medium",
+          passage: "Following a wave of consolidation, the top five accountancy firms now audit a larger proportion of listed companies than at any point in the past two decades. Regulators have expressed concern that this concentration increases systemic risk should any one of these firms face a major failure.",
+          question: "The concentration of audit work among the top five firms is at its highest level in at least twenty years.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Directly supported: 'a larger proportion... than at any point in the past two decades.'"
         }
       ]
     },
@@ -231,30 +341,35 @@
       desc: "Spotting the pattern in a sequence and applying it to find what comes next.",
       questions: [
         {
+          difficulty: "easy",
           question: "What comes next in the sequence? 3, 6, 12, 24, __",
           options: ["30", "36", "48", "42"],
           correct: 2,
           explanation: "Each number doubles the previous one: 24 × 2 = 48."
         },
         {
+          difficulty: "medium",
           question: "What comes next in the sequence? 2, 5, 11, 23, __",
           options: ["35", "41", "47", "45"],
           correct: 2,
           explanation: "Each term is roughly double the previous plus 1: 23 × 2 + 1 = 47."
         },
         {
+          difficulty: "medium",
           question: "What comes next in the letter sequence? A, C, F, J, __",
           options: ["M", "N", "O", "P"],
           correct: 2,
           explanation: "The gap between letters increases by one each time: +2, +3, +4, so next is +5 from J, which is O."
         },
         {
+          difficulty: "medium",
           question: "What comes next in the sequence? 100, 95, 85, 70, __",
           options: ["50", "55", "60", "45"],
-          correct: 1,
+          correct: 0,
           explanation: "The amount subtracted increases by 5 each time (−5, −10, −15), so the next difference is −20: 70 − 20 = 50."
         },
         {
+          difficulty: "hard",
           question: "If all Analysts are Assessors, and some Assessors are Managers, which conclusion must be true?",
           options: [
             "All Analysts are Managers",
@@ -263,7 +378,47 @@
             "No Analysts are Managers"
           ],
           correct: 2,
-          explanation: "We only know Assessors overlap with Managers, not specifically which Assessors — so we can't conclude anything definite about Analysts and Managers from this alone."
+          explanation: "We only know Assessors overlap with Managers, not specifically which Assessors — so nothing definite follows about Analysts and Managers."
+        },
+        {
+          difficulty: "easy",
+          question: "What comes next in the sequence? 7, 14, 28, 56, __",
+          options: ["84", "100", "112", "120"],
+          correct: 2,
+          explanation: "Each number doubles: 56 × 2 = 112."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 1, 4, 9, 16, __",
+          options: ["20", "23", "25", "28"],
+          correct: 2,
+          explanation: "These are square numbers (1², 2², 3², 4²), so the next is 5² = 25."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the letter sequence? Z, X, V, T, __",
+          options: ["S", "R", "Q", "P"],
+          correct: 1,
+          explanation: "Each letter moves back 2 places in the alphabet: T → R."
+        },
+        {
+          difficulty: "hard",
+          question: "What comes next in the sequence? 2, 6, 12, 20, 30, __",
+          options: ["36", "40", "42", "44"],
+          correct: 2,
+          explanation: "The differences between terms increase by 2 each time (4, 6, 8, 10), so the next difference is 12: 30 + 12 = 42."
+        },
+        {
+          difficulty: "hard",
+          question: "All Partners are Directors. No Directors are Interns. What follows?",
+          options: [
+            "No Partners are Interns",
+            "All Interns are Partners",
+            "Some Partners are Interns",
+            "Cannot be determined"
+          ],
+          correct: 0,
+          explanation: "If every Partner is a Director, and no Director is an Intern, then no Partner can be an Intern either — a valid chain of deduction."
         }
       ]
     },
@@ -273,6 +428,7 @@
       desc: "Workplace scenarios testing judgement, professionalism, and prioritisation.",
       questions: [
         {
+          difficulty: "medium",
           passage: "You are a first-year analyst working late on a pitch book due tomorrow morning. Partway through, you realise a senior associate gave you an outdated set of comparable company data to work from, and using it will make several of your valuation multiples incorrect.",
           question: "What is the most effective first action?",
           options: [
@@ -282,9 +438,10 @@
             "Wait until the next morning to mention it, since it's already late"
           ],
           correct: 1,
-          explanation: "Flagging it promptly and clearly is the standard 'most effective' response in IB SJTs: it surfaces the risk in time to fix it, respects the associate's ownership of the decision, and doesn't quietly take on the responsibility (or blame) for a change they didn't approve."
+          explanation: "Flagging it promptly and clearly is the standard 'most effective' response: it surfaces the risk in time to fix it and respects the associate's ownership of the decision."
         },
         {
+          difficulty: "easy",
           passage: "During a group case study at an assessment centre, one team member is dominating the discussion and dismissing other people's ideas without much consideration.",
           question: "What is the most effective way to handle this?",
           options: [
@@ -294,9 +451,10 @@
             "Report the behaviour to the assessor afterwards"
           ],
           correct: 2,
-          explanation: "Assessment centres are testing collaborative leadership. Redirecting the conversation constructively shows initiative and inclusiveness without creating unnecessary conflict."
+          explanation: "Assessment centres test collaborative leadership. Redirecting the conversation constructively shows initiative and inclusiveness without unnecessary conflict."
         },
         {
+          difficulty: "medium",
           passage: "You're given a task by a director with a tight deadline, but you realise you don't fully understand one part of the instructions, and the director has already left for a client meeting.",
           question: "What is the most effective approach?",
           options: [
@@ -306,9 +464,10 @@
             "Skip the unclear part of the task entirely"
           ],
           correct: 2,
-          explanation: "Seeking clarification through an available channel — or clearly stating an assumption while continuing — balances meeting the deadline with reducing the risk of doing the wrong thing."
+          explanation: "Seeking clarification through an available channel — or clearly stating an assumption while continuing — balances the deadline against the risk of doing the wrong thing."
         },
         {
+          difficulty: "medium",
           passage: "You notice a small error in a client-facing document that a colleague prepared and already sent for internal sign-off, but it hasn't gone to the client yet.",
           question: "What is the most effective action?",
           options: [
@@ -318,9 +477,10 @@
             "Wait to see if anyone else notices it first"
           ],
           correct: 2,
-          explanation: "Raising it directly and constructively protects the work's quality and respects your colleague's ownership of their own document, rather than silently altering it or staying quiet."
+          explanation: "Raising it directly and constructively protects the work's quality and respects your colleague's ownership of their own document."
         },
         {
+          difficulty: "hard",
           passage: "You've been assigned two urgent tasks by two different senior team members, both due by end of day, and you don't have time to complete both to a high standard.",
           question: "What is the most effective approach?",
           options: [
@@ -330,7 +490,72 @@
             "Pick whichever senior person you get on better with personally"
           ],
           correct: 2,
-          explanation: "Surfacing a genuine prioritisation conflict early gives seniors the chance to resolve it, rather than you silently guessing and potentially under-delivering on something time-critical."
+          explanation: "Surfacing a genuine prioritisation conflict early gives seniors the chance to resolve it, rather than you silently guessing and potentially under-delivering."
+        },
+        {
+          difficulty: "easy",
+          passage: "You've just joined a new team and notice a process that seems inefficient. More senior colleagues have used the same process for years without complaint.",
+          question: "What is the most effective approach?",
+          options: [
+            "Point out the inefficiency in a team meeting immediately",
+            "Say nothing since you're new and it's not your place",
+            "Ask a senior colleague privately why the process works the way it does, and share your idea if there's an appropriate opening",
+            "Change the process yourself quietly"
+          ],
+          correct: 2,
+          explanation: "Curiosity before criticism — understanding why a process exists first, then raising ideas diplomatically, is more effective than either staying silent or acting unilaterally."
+        },
+        {
+          difficulty: "easy",
+          passage: "A client asks you a technical question in a meeting that you don't know the answer to, and your manager isn't in the room.",
+          question: "What is the most effective response?",
+          options: [
+            "Guess an answer confidently so the client doesn't lose confidence in the team",
+            "Admit you're not sure, and commit to finding out and following up promptly",
+            "Deflect the question entirely",
+            "Ask another junior colleague in the room, who also may not know"
+          ],
+          correct: 1,
+          explanation: "Honesty plus a concrete follow-up commitment protects credibility far better than guessing, which risks giving the client wrong information."
+        },
+        {
+          difficulty: "medium",
+          passage: "You've been given conflicting feedback by two different mentors on how to approach a task.",
+          question: "What is the most effective approach?",
+          options: [
+            "Ignore both and do it your own way",
+            "Follow whichever mentor is more senior without further thought",
+            "Acknowledge both viewpoints, ask clarifying questions if needed, and use your judgement on the specific context, explaining your reasoning if asked",
+            "Avoid doing the task until the mentors resolve it between themselves"
+          ],
+          correct: 2,
+          explanation: "Weighing both perspectives and reasoning through the specific context shows independent judgement, rather than simply deferring to seniority or avoiding the decision."
+        },
+        {
+          difficulty: "easy",
+          passage: "You realise you will miss an internal deadline due to an unexpectedly large workload, despite your best effort.",
+          question: "What is the most effective approach?",
+          options: [
+            "Stay silent and hope no one notices the delay",
+            "Proactively inform your manager as soon as you realise, with a realistic new estimate",
+            "Ask a colleague to cover for you without telling your manager",
+            "Deliver something rushed and incomplete just to hit the deadline"
+          ],
+          correct: 1,
+          explanation: "Proactive, early communication with a realistic revised estimate is consistently the most effective response in SJTs — it gives others time to plan around the change."
+        },
+        {
+          difficulty: "hard",
+          passage: "During a team social event, a colleague makes a comment that makes you uncomfortable, but they likely didn't intend any harm.",
+          question: "What is the most effective response?",
+          options: [
+            "Say nothing and avoid the person going forward",
+            "Address it directly but privately and calmly with the person afterwards, explaining how it landed",
+            "Escalate immediately to HR without speaking to the person first",
+            "Make a joke back to diffuse the moment and never mention it again"
+          ],
+          correct: 1,
+          explanation: "A calm, private, direct conversation gives the person a chance to understand the impact and adjust — proportionate to an unintentional comment, while still addressing it rather than avoiding it."
         }
       ]
     },
@@ -340,6 +565,7 @@
       desc: "Recognising assumptions and evaluating whether conclusions logically follow.",
       questions: [
         {
+          difficulty: "medium",
           passage: "Statement: \"We should switch to Supplier B because they are cheaper than Supplier A.\"",
           question: "Which underlying assumption does this statement rely on?",
           options: [
@@ -349,9 +575,10 @@
             "Price is the only factor customers care about"
           ],
           correct: 0,
-          explanation: "The argument only holds if being cheaper is actually a net benefit — which assumes quality/reliability aren't compromised. The other options aren't required for the conclusion to make sense."
+          explanation: "The argument only holds if being cheaper is actually a net benefit — which assumes quality/reliability aren't compromised."
         },
         {
+          difficulty: "medium",
           passage: "Argument: \"Interest rates have risen for three consecutive quarters. Therefore, interest rates will rise again next quarter.\"",
           question: "Is this conclusion strong or weak, based on logic alone?",
           options: [
@@ -361,9 +588,10 @@
             "Weak — because interest rates never rise four times in a row"
           ],
           correct: 1,
-          explanation: "A trend continuing isn't logically necessary just because it happened before — the argument needs a causal reason, which isn't given. This is a classic 'assumes the trend continues' weakness tested in critical thinking assessments."
+          explanation: "A trend continuing isn't logically necessary just because it happened before — the argument needs a causal reason, which isn't given."
         },
         {
+          difficulty: "easy",
           passage: "All the analysts on the team hit their deadline this month. Priya is an analyst on the team.",
           question: "Which conclusion follows with certainty?",
           options: [
@@ -373,9 +601,10 @@
             "Priya works harder than other teams"
           ],
           correct: 1,
-          explanation: "This is a direct, valid deduction: if all analysts on the team hit their deadline, and Priya is one of them, then Priya hit her deadline. The other options add claims not supported by the given statements."
+          explanation: "This is a direct, valid deduction: if all analysts hit their deadline, and Priya is one of them, then Priya hit her deadline."
         },
         {
+          difficulty: "medium",
           passage: "Argument: \"Our top-performing fund manager wakes up at 5am every day. Therefore, waking up early causes strong investment performance.\"",
           question: "What is the main flaw in this argument?",
           options: [
@@ -385,9 +614,10 @@
             "There is no flaw — the logic is sound"
           ],
           correct: 1,
-          explanation: "One person's habits and success happening together doesn't establish that one causes the other — this is a classic correlation-vs-causation flaw, especially weak with a sample of one."
+          explanation: "One person's habits and success happening together doesn't establish that one causes the other — a classic correlation-vs-causation flaw, especially weak with a sample of one."
         },
         {
+          difficulty: "medium",
           passage: "Statement: \"The firm should expand into the Asian market because several competitors have already done so successfully.\"",
           question: "Which assumption is this argument most reliant on?",
           options: [
@@ -397,11 +627,176 @@
             "No firm has ever failed expanding into Asia"
           ],
           correct: 1,
-          explanation: "The argument only makes sense if the firm is similarly positioned to succeed as its competitors were — without that assumption, their success doesn't predict this firm's outcome."
+          explanation: "The argument only makes sense if the firm is similarly positioned to succeed as its competitors were."
+        },
+        {
+          difficulty: "medium",
+          passage: "Since the merger was announced, the share price has risen 10%. Therefore, the market believes the merger will be successful.",
+          question: "What is the main assumption underlying this conclusion?",
+          options: [
+            "The share price increase was caused by the merger announcement, rather than other factors",
+            "The company has never had a share price increase before",
+            "All mergers cause price increases",
+            "The market is always correct"
+          ],
+          correct: 0,
+          explanation: "The conclusion only follows if the merger announcement is actually what drove the price move, rather than some unrelated event happening at the same time."
+        },
+        {
+          difficulty: "hard",
+          passage: "All senior bankers work more than 70 hours per week. Raj works more than 70 hours per week.",
+          question: "Which conclusion follows with certainty?",
+          options: [
+            "Raj is a senior banker",
+            "Raj may or may not be a senior banker",
+            "Raj is not a senior banker",
+            "Raj wants to become a senior banker"
+          ],
+          correct: 1,
+          explanation: "This is a classic 'affirming the consequent' trap: knowing all senior bankers work long hours doesn't mean everyone who works long hours is a senior banker."
+        },
+        {
+          difficulty: "medium",
+          passage: "Since introducing flexible working, employee satisfaction scores have improved. Therefore the firm should expand flexible working to all departments.",
+          question: "What would most weaken this argument, if true?",
+          options: [
+            "Departments that introduced flexible working also received unrelated pay rises at the same time",
+            "Flexible working is popular in other industries too",
+            "Some employees enjoy working from home",
+            "The firm has grown in headcount"
+          ],
+          correct: 0,
+          explanation: "If a second, unrelated change (a pay rise) happened alongside flexible working, it becomes unclear which change actually drove the satisfaction improvement — undermining the causal claim."
+        },
+        {
+          difficulty: "hard",
+          passage: "No junior analysts have signing authority. Some employees with signing authority are Managing Directors.",
+          question: "Which conclusion is logically valid?",
+          options: [
+            "Some junior analysts are Managing Directors",
+            "All Managing Directors have signing authority",
+            "No employees with signing authority are junior analysts",
+            "No Managing Directors have signing authority"
+          ],
+          correct: 2,
+          explanation: "This is the logical contrapositive of the first statement: if no junior analysts have signing authority, then equally, no one with signing authority is a junior analyst."
+        },
+        {
+          difficulty: "medium",
+          passage: "Two out of three interns who joined without a targeted internship went on to receive full-time offers, while only one of five interns who completed a targeted internship received an offer. Therefore, targeted internships reduce your chances of getting a full-time offer.",
+          question: "What is the primary weakness in this argument?",
+          options: [
+            "The sample sizes are very small, so the comparison may not be reliable",
+            "Interns always receive offers regardless of internship type",
+            "The argument correctly proves causation",
+            "There is no weakness in this argument"
+          ],
+          correct: 0,
+          explanation: "Comparing 3 people to 5 people is far too small a sample to draw a reliable conclusion about cause and effect — the difference could easily be chance."
         }
       ]
     }
   };
+
+  // Assign a stable ID to every question: category key + its position, e.g. "numerical-3"
+  Object.entries(CATEGORIES).forEach(([key, cat]) => {
+    cat.questions.forEach((q, i) => { q.id = `${key}-${i}`; });
+  });
+
+  // ---------------------------------------------------------------
+  // SPACED REPETITION (Anki-style "leitner box" system)
+  // Every question has a "box" (0 = just missed / brand new, higher =
+  // known better) and a "due" date. Get it right → box goes up and it's
+  // due further in the future. Get it wrong → box resets to 0 and it's
+  // due again today, so it comes back soon. Data lives in this browser
+  // only (localStorage), same as your first Phase 1 tracker version.
+  // ---------------------------------------------------------------
+  const SRS_KEY = "assessment_srs_v1";
+  const INTERVAL_DAYS = [0, 1, 3, 7, 14]; // days until next review, indexed by box
+  const SESSION_SIZE = 8;
+
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function addDays(dateStr, days) {
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function loadSrs() {
+    try {
+      return JSON.parse(localStorage.getItem(SRS_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveSrs(data) {
+    localStorage.setItem(SRS_KEY, JSON.stringify(data));
+  }
+
+  // A question is "due" if we've never seen it, or its stored due date has arrived
+  function isDue(srs, id) {
+    const entry = srs[id];
+    if (!entry) return true;
+    return entry.due <= todayStr();
+  }
+
+  function recordAnswer(id, wasCorrect) {
+    const srs = loadSrs();
+    const entry = srs[id] || { box: 0, due: todayStr() };
+
+    if (wasCorrect) {
+      entry.box = Math.min(entry.box + 1, INTERVAL_DAYS.length - 1);
+    } else {
+      entry.box = 0;
+    }
+    entry.due = addDays(todayStr(), INTERVAL_DAYS[entry.box]);
+
+    srs[id] = entry;
+    saveSrs(srs);
+  }
+
+  function shuffle(array) {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  // Returns a shuffled copy of a question with its options reordered
+  // and the "correct" index recalculated to match the new order.
+  function shuffleQuestionOptions(q) {
+    const correctText = q.options[q.correct];
+    const shuffledOptions = shuffle(q.options);
+    return {
+      ...q,
+      options: shuffledOptions,
+      correct: shuffledOptions.indexOf(correctText),
+    };
+  }
+
+  // Builds today's session for a category: due questions first (shuffled),
+  // topped up with not-yet-due questions if there aren't enough due ones.
+  function buildSession(categoryKey) {
+    const srs = loadSrs();
+    const all = CATEGORIES[categoryKey].questions;
+
+    const due = shuffle(all.filter(q => isDue(srs, q.id)));
+    const notDue = shuffle(all.filter(q => !isDue(srs, q.id)));
+
+    const session = due.concat(notDue).slice(0, SESSION_SIZE);
+    return session.map(shuffleQuestionOptions);
+  }
+
+  function dueCount(categoryKey) {
+    const srs = loadSrs();
+    return CATEGORIES[categoryKey].questions.filter(q => isDue(srs, q.id)).length;
+  }
 
   // ---------------------------------------------------------------
   // APP LOGIC
@@ -414,19 +809,21 @@
   const progressEl = document.getElementById("progress");
 
   let activeCategoryKey = null;
+  let sessionQuestions = [];
   let currentIndex = 0;
   let score = 0;
 
-  // Build the category picker cards from the CATEGORIES object above
   function renderCategoryGrid() {
     catGrid.innerHTML = "";
     Object.entries(CATEGORIES).forEach(([key, cat]) => {
+      const due = dueCount(key);
       const card = document.createElement("button");
       card.className = "cat-card";
       card.innerHTML = `
         <div class="cat-title">${cat.title}</div>
         <div class="cat-desc">${cat.desc}</div>
-        <div class="cat-count">${cat.questions.length} questions</div>
+        <div class="cat-count">${cat.questions.length} questions in bank</div>
+        <div class="cat-due">${due} due for review</div>
       `;
       card.addEventListener("click", () => startQuiz(key));
       catGrid.appendChild(card);
@@ -435,6 +832,7 @@
 
   function startQuiz(key) {
     activeCategoryKey = key;
+    sessionQuestions = buildSession(key);
     currentIndex = 0;
     score = 0;
     catView.style.display = "none";
@@ -445,19 +843,21 @@
 
   function renderQuestion() {
     const cat = CATEGORIES[activeCategoryKey];
-    const q = cat.questions[currentIndex];
+    const q = sessionQuestions[currentIndex];
 
-    progressEl.textContent = `${cat.title} — Question ${currentIndex + 1} of ${cat.questions.length}`;
+    progressEl.innerHTML = `
+      <span>${cat.title} — Question ${currentIndex + 1} of ${sessionQuestions.length}</span>
+      <span class="difficulty ${q.difficulty}">${q.difficulty}</span>
+    `;
 
     questionCard.innerHTML = `
       ${q.passage ? `<div class="passage">${q.passage}</div>` : ""}
       <div class="question">${q.question}</div>
       <div id="options-wrap"></div>
       <div class="explanation" id="explanation">${q.explanation}</div>
-      <div class="quiz-actions" style="margin-top:14px;">
-        <span></span>
+      <div class="quiz-actions">
         <button class="primary" id="next-btn" style="display:none;">
-          ${currentIndex + 1 === cat.questions.length ? "See results" : "Next question"}
+          ${currentIndex + 1 === sessionQuestions.length ? "See results" : "Next question"}
         </button>
       </div>
     `;
@@ -473,9 +873,9 @@
   }
 
   function selectAnswer(selectedIndex) {
-    const cat = CATEGORIES[activeCategoryKey];
-    const q = cat.questions[currentIndex];
+    const q = sessionQuestions[currentIndex];
     const options = document.querySelectorAll("#options-wrap .option");
+    const wasCorrect = selectedIndex === q.correct;
 
     options.forEach((btn, i) => {
       btn.disabled = true;
@@ -483,7 +883,8 @@
       else if (i === selectedIndex) btn.classList.add("incorrect");
     });
 
-    if (selectedIndex === q.correct) score++;
+    if (wasCorrect) score++;
+    recordAnswer(q.id, wasCorrect);
 
     document.getElementById("explanation").style.display = "block";
     document.getElementById("next-btn").style.display = "inline-block";
@@ -491,9 +892,8 @@
 
   document.addEventListener("click", (e) => {
     if (e.target.id === "next-btn") {
-      const cat = CATEGORIES[activeCategoryKey];
       currentIndex++;
-      if (currentIndex < cat.questions.length) {
+      if (currentIndex < sessionQuestions.length) {
         renderQuestion();
       } else {
         showResults();
@@ -502,22 +902,22 @@
   });
 
   function showResults() {
-    const cat = CATEGORIES[activeCategoryKey];
     quizView.style.display = "none";
     resultsView.style.display = "block";
-    document.getElementById("score-display").textContent = `${score} / ${cat.questions.length}`;
+    document.getElementById("score-display").textContent = `${score} / ${sessionQuestions.length}`;
 
-    const pct = Math.round((score / cat.questions.length) * 100);
+    const pct = Math.round((score / sessionQuestions.length) * 100);
     let note;
-    if (pct >= 80) note = "Strong result — this category looks solid.";
-    else if (pct >= 50) note = "Decent foundation — worth another pass to tighten it up.";
-    else note = "Good to know now rather than in the real test — try the explanations again slowly.";
+    if (pct >= 80) note = "Strong result. The ones you missed will resurface soon — everything else is now scheduled further out.";
+    else if (pct >= 50) note = "Decent foundation. Another pass will focus mostly on what you got wrong just now.";
+    else note = "Good to find out now rather than in the real test. The questions you missed will come straight back up next time.";
     document.getElementById("score-note").textContent = note;
   }
 
   document.getElementById("exit-quiz").addEventListener("click", () => {
     quizView.style.display = "none";
     catView.style.display = "block";
+    renderCategoryGrid();
   });
 
   document.getElementById("retry-btn").addEventListener("click", () => startQuiz(activeCategoryKey));
@@ -525,6 +925,7 @@
   document.getElementById("back-to-cats-btn").addEventListener("click", () => {
     resultsView.style.display = "none";
     catView.style.display = "block";
+    renderCategoryGrid();
   });
 
   renderCategoryGrid();
