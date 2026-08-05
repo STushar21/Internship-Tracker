@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assessment Practice — Pipeline</title>
+<style>
+  body {
+    background: #14171C;
+    color: #ECE9E2;
+    font-family: system-ui, sans-serif;
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 16px 80px;
+  }
+  a { color: #B08D57; }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #8B92A0; font-size: 13px; margin-bottom: 24px; }
+  .back-link { font-size: 12.5px; margin-bottom: 18px; display: inline-block; }
+
+  /* --- category picker --- */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .cat-card {
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .cat-card:hover { border-color: #B08D57; }
+  .cat-title { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; }
+  .cat-desc { font-size: 11.5px; color: #8B92A0; line-height: 1.4; }
+  .cat-count { font-size: 10.5px; color: #B08D57; margin-top: 8px; }
+
+  /* --- quiz --- */
+  #quiz-view { display: none; }
+  .progress { font-size: 11.5px; color: #8B92A0; margin-bottom: 10px; }
+  .card {
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .passage {
+    font-size: 13px;
+    color: #C7CAD1;
+    line-height: 1.6;
+    background: #14171C;
+    border: 1px solid #23272F;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    white-space: pre-wrap;
+  }
+  .question { font-size: 15px; font-weight: 600; margin-bottom: 14px; line-height: 1.4; }
+  .option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #14171C;
+    border: 1px solid #2A2F38;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    color: #ECE9E2;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .option:hover { border-color: #B08D57; }
+  .option.correct { border-color: #4F9D69; background: #1E3324; }
+  .option.incorrect { border-color: #B85C4A; background: #33201C; }
+  .option:disabled { cursor: default; }
+  .explanation {
+    font-size: 12.5px;
+    color: #8B92A0;
+    line-height: 1.5;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #23272F;
+    display: none;
+  }
+  .quiz-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  button.primary {
+    background: #B08D57;
+    color: #14171C;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13.5px;
+  }
+  button.ghost {
+    background: none;
+    border: none;
+    color: #8B92A0;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+
+  /* --- results --- */
+  #results-view { display: none; text-align: center; }
+  .score { font-size: 40px; font-weight: 700; color: #B08D57; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Back to Pipeline</a>
+<h1>Assessment Practice</h1>
+<div class="sub">Practice the test types firms actually use in early-stage screening</div>
+
+<div id="category-view">
+  <div class="cat-grid" id="cat-grid"></div>
+</div>
+
+<div id="quiz-view">
+  <button class="ghost" id="exit-quiz" style="margin-bottom:10px;">← Choose a different category</button>
+  <div class="progress" id="progress"></div>
+  <div class="card" id="question-card"></div>
+</div>
+
+<div id="results-view">
+  <div class="sub">Category complete</div>
+  <div class="score" id="score-display"></div>
+  <div id="score-note" style="color:#8B92A0; font-size:13px; margin-bottom:20px;"></div>
+  <button class="primary" id="retry-btn">Try again</button>
+  <button class="ghost" id="back-to-cats-btn" style="margin-left:12px;">Choose another category</button>
+</div>
+
+<script>
+  // ---------------------------------------------------------------
+  // QUESTION BANKS
+  // Each category is an array of questions. A question can optionally
+  // include a "passage" shown above the question (used for verbal
+  // reasoning and critical thinking, where several questions share
+  // one piece of text).
+  // ---------------------------------------------------------------
+  const CATEGORIES = {
+    numerical: {
+      title: "Numerical Reasoning",
+      desc: "Interpreting data, percentages, ratios, and growth under time pressure.",
+      questions: [
+        {
+          passage: "A boutique advisory firm's annual revenue: 2023: £8.4m | 2024: £9.6m | 2025: £11.04m",
+          question: "What was the percentage growth in revenue from 2024 to 2025?",
+          options: ["10%", "12%", "15%", "18%"],
+          correct: 2,
+          explanation: "(£11.04m − £9.6m) ÷ £9.6m = £1.44m ÷ £9.6m = 15%."
+        },
+        {
+          question: "A deal is valued at £240m, financed with 60% debt and the remainder equity. How much equity is required?",
+          options: ["£72m", "£96m", "£120m", "£144m"],
+          correct: 1,
+          explanation: "40% of £240m = £96m."
+        },
+        {
+          passage: "Fund performance (net returns): Fund A: +8.2% | Fund B: +6.5% | Fund C: +9.1%",
+          question: "An investor split £500,000 equally across all three funds at the start of the year. Approximately what is the total value at year end?",
+          options: ["£539,700", "£547,000", "£530,300", "£560,000"],
+          correct: 0,
+          explanation: "Average return ≈ (8.2+6.5+9.1)/3 = 7.93%. £500,000 × 1.0793 ≈ £539,700."
+        },
+        {
+          question: "A company's share price rose from £14.20 to £16.35. What is the percentage increase, to the nearest whole number?",
+          options: ["13%", "15%", "17%", "19%"],
+          correct: 1,
+          explanation: "(£16.35 − £14.20) ÷ £14.20 = £2.15 ÷ £14.20 ≈ 15.1%."
+        },
+        {
+          question: "An analyst estimates EBITDA of £42m and applies a 7.5x multiple to derive enterprise value. What is the resulting EV?",
+          options: ["£294m", "£315m", "£336m", "£301.5m"],
+          correct: 0,
+          explanation: "£42m × 7.5 = £315m."
+        }
+      ]
+    },
+
+    verbal: {
+      title: "Verbal Reasoning",
+      desc: "True / False / Cannot Say judgements based strictly on a written passage.",
+      questions: [
+        {
+          passage: "Boutique advisory firms have grown their market share in mid-market M&A over the past five years, largely by offering more senior banker attention on smaller deals than bulge bracket firms are typically able to provide. However, boutiques generally lack the balance sheet to underwrite large financing packages, meaning they are frequently retained for advisory-only mandates rather than financed transactions.",
+          question: "Boutique firms are unable to work on any financed transactions.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 2,
+          explanation: "The passage says boutiques are 'frequently' retained for advisory-only work, not that financed deals are impossible for them. That's weaker than the absolute claim in the statement, so it cannot be confirmed either way from the text alone."
+        },
+        {
+          passage: "Boutique advisory firms have grown their market share in mid-market M&A over the past five years, largely by offering more senior banker attention on smaller deals than bulge bracket firms are typically able to provide. However, boutiques generally lack the balance sheet to underwrite large financing packages, meaning they are frequently retained for advisory-only mandates rather than financed transactions.",
+          question: "One reason boutiques have gained market share is the level of seniority they offer clients on smaller deals.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "This is stated directly: growth came 'largely by offering more senior banker attention on smaller deals.'"
+        },
+        {
+          passage: "Private equity fundraising slowed in 2024 as institutional investors, facing liquidity constraints from an already illiquid portfolio of unrealised fund commitments, reduced new allocations. Secondary market activity increased correspondingly, as limited partners sought to sell existing fund stakes to free up capital.",
+          question: "Institutional investors reduced new allocations because they had no remaining capital of any kind.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage attributes the slowdown to liquidity constraints from illiquid existing commitments — not a complete absence of capital. The statement overstates what's said, so it's False, not Cannot Say."
+        },
+        {
+          passage: "Private equity fundraising slowed in 2024 as institutional investors, facing liquidity constraints from an already illiquid portfolio of unrealised fund commitments, reduced new allocations. Secondary market activity increased correspondingly, as limited partners sought to sell existing fund stakes to free up capital.",
+          question: "Secondary market activity increased in 2024.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly: 'Secondary market activity increased correspondingly.'"
+        },
+        {
+          passage: "Central banks raising interest rates tend to increase the discount rate applied in valuation models, which mechanically reduces the present value of future cash flows. This effect is generally more pronounced for growth companies, whose valuations rely more heavily on cash flows expected further in the future.",
+          question: "Rate rises affect the valuations of growth companies and mature companies equally.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage explicitly says the effect is 'more pronounced' for growth companies — meaning the impact is not equal, so the statement is False."
+        }
+      ]
+    },
+
+    logical: {
+      title: "Logical Reasoning",
+      desc: "Spotting the pattern in a sequence and applying it to find what comes next.",
+      questions: [
+        {
+          question: "What comes next in the sequence? 3, 6, 12, 24, __",
+          options: ["30", "36", "48", "42"],
+          correct: 2,
+          explanation: "Each number doubles the previous one: 24 × 2 = 48."
+        },
+        {
+          question: "What comes next in the sequence? 2, 5, 11, 23, __",
+          options: ["35", "41", "47", "45"],
+          correct: 2,
+          explanation: "Each term is roughly double the previous plus 1: 23 × 2 + 1 = 47."
+        },
+        {
+          question: "What comes next in the letter sequence? A, C, F, J, __",
+          options: ["M", "N", "O", "P"],
+          correct: 2,
+          explanation: "The gap between letters increases by one each time: +2, +3, +4, so next is +5 from J, which is O."
+        },
+        {
+          question: "What comes next in the sequence? 100, 95, 85, 70, __",
+          options: ["50", "55", "60", "45"],
+          correct: 1,
+          explanation: "The amount subtracted increases by 5 each time (−5, −10, −15), so the next difference is −20: 70 − 20 = 50."
+        },
+        {
+          question: "If all Analysts are Assessors, and some Assessors are Managers, which conclusion must be true?",
+          options: [
+            "All Analysts are Managers",
+            "Some Analysts are definitely Managers",
+            "It cannot be concluded that any Analyst is a Manager",
+            "No Analysts are Managers"
+          ],
+          correct: 2,
+          explanation: "We only know Assessors overlap with Managers, not specifically which Assessors — so we can't conclude anything definite about Analysts and Managers from this alone."
+        }
+      ]
+    },
+
+    sjt: {
+      title: "Situational Judgement",
+      desc: "Workplace scenarios testing judgement, professionalism, and prioritisation.",
+      questions: [
+        {
+          passage: "You are a first-year analyst working late on a pitch book due tomorrow morning. Partway through, you realise a senior associate gave you an outdated set of comparable company data to work from, and using it will make several of your valuation multiples incorrect.",
+          question: "What is the most effective first action?",
+          options: [
+            "Fix the data yourself without telling anyone, to avoid seeming like you're causing a problem",
+            "Flag the issue to the associate as soon as possible, explaining specifically what's wrong and asking how they'd like to proceed",
+            "Use the outdated data as given, since you were told to use it",
+            "Wait until the next morning to mention it, since it's already late"
+          ],
+          correct: 1,
+          explanation: "Flagging it promptly and clearly is the standard 'most effective' response in IB SJTs: it surfaces the risk in time to fix it, respects the associate's ownership of the decision, and doesn't quietly take on the responsibility (or blame) for a change they didn't approve."
+        },
+        {
+          passage: "During a group case study at an assessment centre, one team member is dominating the discussion and dismissing other people's ideas without much consideration.",
+          question: "What is the most effective way to handle this?",
+          options: [
+            "Interrupt them directly and tell them they're being unfair to others",
+            "Say nothing and let the group dynamic play out naturally",
+            "Politely redirect the conversation to draw out quieter members' views, without confronting the dominant member personally",
+            "Report the behaviour to the assessor afterwards"
+          ],
+          correct: 2,
+          explanation: "Assessment centres are testing collaborative leadership. Redirecting the conversation constructively shows initiative and inclusiveness without creating unnecessary conflict."
+        },
+        {
+          passage: "You're given a task by a director with a tight deadline, but you realise you don't fully understand one part of the instructions, and the director has already left for a client meeting.",
+          question: "What is the most effective approach?",
+          options: [
+            "Guess your best interpretation and proceed without telling anyone",
+            "Wait until the director is back, even if it means missing the deadline",
+            "Ask a colleague or more senior team member for clarification, or email the director briefly noting your assumption while you proceed",
+            "Skip the unclear part of the task entirely"
+          ],
+          correct: 2,
+          explanation: "Seeking clarification through an available channel — or clearly stating an assumption while continuing — balances meeting the deadline with reducing the risk of doing the wrong thing."
+        },
+        {
+          passage: "You notice a small error in a client-facing document that a colleague prepared and already sent for internal sign-off, but it hasn't gone to the client yet.",
+          question: "What is the most effective action?",
+          options: [
+            "Say nothing, since it's not your document",
+            "Quietly fix it yourself in the shared file without mentioning it to anyone",
+            "Let your colleague know directly and constructively, so they can correct it before it goes further",
+            "Wait to see if anyone else notices it first"
+          ],
+          correct: 2,
+          explanation: "Raising it directly and constructively protects the work's quality and respects your colleague's ownership of their own document, rather than silently altering it or staying quiet."
+        },
+        {
+          passage: "You've been assigned two urgent tasks by two different senior team members, both due by end of day, and you don't have time to complete both to a high standard.",
+          question: "What is the most effective approach?",
+          options: [
+            "Prioritise whichever task was assigned first, without discussing it further",
+            "Do a rushed job on both to make sure something is delivered for each",
+            "Proactively flag the conflict to both people (or their common manager) and ask for guidance on prioritisation",
+            "Pick whichever senior person you get on better with personally"
+          ],
+          correct: 2,
+          explanation: "Surfacing a genuine prioritisation conflict early gives seniors the chance to resolve it, rather than you silently guessing and potentially under-delivering on something time-critical."
+        }
+      ]
+    },
+
+    "critical-thinking": {
+      title: "Critical Thinking (Watson-Glaser style)",
+      desc: "Recognising assumptions and evaluating whether conclusions logically follow.",
+      questions: [
+        {
+          passage: "Statement: \"We should switch to Supplier B because they are cheaper than Supplier A.\"",
+          question: "Which underlying assumption does this statement rely on?",
+          options: [
+            "Supplier B's lower price does not come with a corresponding drop in quality or reliability",
+            "Supplier A is a foreign company",
+            "The company has used Supplier A for over five years",
+            "Price is the only factor customers care about"
+          ],
+          correct: 0,
+          explanation: "The argument only holds if being cheaper is actually a net benefit — which assumes quality/reliability aren't compromised. The other options aren't required for the conclusion to make sense."
+        },
+        {
+          passage: "Argument: \"Interest rates have risen for three consecutive quarters. Therefore, interest rates will rise again next quarter.\"",
+          question: "Is this conclusion strong or weak, based on logic alone?",
+          options: [
+            "Strong — past trends always continue",
+            "Weak — a past trend continuing is not logically guaranteed, and no reasoning is given for why it would continue",
+            "Strong — three data points is statistically sufficient",
+            "Weak — because interest rates never rise four times in a row"
+          ],
+          correct: 1,
+          explanation: "A trend continuing isn't logically necessary just because it happened before — the argument needs a causal reason, which isn't given. This is a classic 'assumes the trend continues' weakness tested in critical thinking assessments."
+        },
+        {
+          passage: "All the analysts on the team hit their deadline this month. Priya is an analyst on the team.",
+          question: "Which conclusion follows with certainty?",
+          options: [
+            "Priya is the best performer on the team",
+            "Priya hit her deadline this month",
+            "Priya will hit her deadline next month too",
+            "Priya works harder than other teams"
+          ],
+          correct: 1,
+          explanation: "This is a direct, valid deduction: if all analysts on the team hit their deadline, and Priya is one of them, then Priya hit her deadline. The other options add claims not supported by the given statements."
+        },
+        {
+          passage: "Argument: \"Our top-performing fund manager wakes up at 5am every day. Therefore, waking up early causes strong investment performance.\"",
+          question: "What is the main flaw in this argument?",
+          options: [
+            "It correctly identifies a proven cause-and-effect relationship",
+            "It mistakes a single correlation for a proven cause, based on only one example",
+            "It uses too much data to reach its conclusion",
+            "There is no flaw — the logic is sound"
+          ],
+          correct: 1,
+          explanation: "One person's habits and success happening together doesn't establish that one causes the other — this is a classic correlation-vs-causation flaw, especially weak with a sample of one."
+        },
+        {
+          passage: "Statement: \"The firm should expand into the Asian market because several competitors have already done so successfully.\"",
+          question: "Which assumption is this argument most reliant on?",
+          options: [
+            "Asian markets are larger than European markets",
+            "The firm has the same capabilities and resources as those competitors",
+            "The competitors are publicly listed",
+            "No firm has ever failed expanding into Asia"
+          ],
+          correct: 1,
+          explanation: "The argument only makes sense if the firm is similarly positioned to succeed as its competitors were — without that assumption, their success doesn't predict this firm's outcome."
+        }
+      ]
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // APP LOGIC
+  // ---------------------------------------------------------------
+  const catView = document.getElementById("category-view");
+  const catGrid = document.getElementById("cat-grid");
+  const quizView = document.getElementById("quiz-view");
+  const resultsView = document.getElementById("results-view");
+  const questionCard = document.getElementById("question-card");
+  const progressEl = document.getElementById("progress");
+
+  let activeCategoryKey = null;
+  let currentIndex = 0;
+  let score = 0;
+
+  // Build the category picker cards from the CATEGORIES object above
+  function renderCategoryGrid() {
+    catGrid.innerHTML = "";
+    Object.entries(CATEGORIES).forEach(([key, cat]) => {
+      const card = document.createElement("button");
+      card.className = "cat-card";
+      card.innerHTML = `
+        <div class="cat-title">${cat.title}</div>
+        <div class="cat-desc">${cat.desc}</div>
+        <div class="cat-count">${cat.questions.length} questions</div>
+      `;
+      card.addEventListener("click", () => startQuiz(key));
+      catGrid.appendChild(card);
+    });
+  }
+
+  function startQuiz(key) {
+    activeCategoryKey = key;
+    currentIndex = 0;
+    score = 0;
+    catView.style.display = "none";
+    resultsView.style.display = "none";
+    quizView.style.display = "block";
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const cat = CATEGORIES[activeCategoryKey];
+    const q = cat.questions[currentIndex];
+
+    progressEl.textContent = `${cat.title} — Question ${currentIndex + 1} of ${cat.questions.length}`;
+
+    questionCard.innerHTML = `
+      ${q.passage ? `<div class="passage">${q.passage}</div>` : ""}
+      <div class="question">${q.question}</div>
+      <div id="options-wrap"></div>
+      <div class="explanation" id="explanation">${q.explanation}</div>
+      <div class="quiz-actions" style="margin-top:14px;">
+        <span></span>
+        <button class="primary" id="next-btn" style="display:none;">
+          ${currentIndex + 1 === cat.questions.length ? "See results" : "Next question"}
+        </button>
+      </div>
+    `;
+
+    const optionsWrap = document.getElementById("options-wrap");
+    q.options.forEach((optionText, i) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = optionText;
+      btn.addEventListener("click", () => selectAnswer(i));
+      optionsWrap.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(selectedIndex) {
+    const cat = CATEGORIES[activeCategoryKey];
+    const q = cat.questions[currentIndex];
+    const options = document.querySelectorAll("#options-wrap .option");
+
+    options.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === q.correct) btn.classList.add("correct");
+      else if (i === selectedIndex) btn.classList.add("incorrect");
+    });
+
+    if (selectedIndex === q.correct) score++;
+
+    document.getElementById("explanation").style.display = "block";
+    document.getElementById("next-btn").style.display = "inline-block";
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.id === "next-btn") {
+      const cat = CATEGORIES[activeCategoryKey];
+      currentIndex++;
+      if (currentIndex < cat.questions.length) {
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+  });
+
+  function showResults() {
+    const cat = CATEGORIES[activeCategoryKey];
+    quizView.style.display = "none";
+    resultsView.style.display = "block";
+    document.getElementById("score-display").textContent = `${score} / ${cat.questions.length}`;
+
+    const pct = Math.round((score / cat.questions.length) * 100);
+    let note;
+    if (pct >= 80) note = "Strong result — this category looks solid.";
+    else if (pct >= 50) note = "Decent foundation — worth another pass to tighten it up.";
+    else note = "Good to know now rather than in the real test — try the explanations again slowly.";
+    document.getElementById("score-note").textContent = note;
+  }
+
+  document.getElementById("exit-quiz").addEventListener("click", () => {
+    quizView.style.display = "none";
+    catView.style.display = "block";
+  });
+
+  document.getElementById("retry-btn").addEventListener("click", () => startQuiz(activeCategoryKey));
+
+  document.getElementById("back-to-cats-btn").addEventListener("click", () => {
+    resultsView.style.display = "none";
+    catView.style.display = "block";
+  });
+
+  renderCategoryGrid();
+</script>
+
+</body>
+</html>
