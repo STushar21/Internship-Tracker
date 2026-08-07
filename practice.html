@@ -16,6 +16,32 @@
   h1 { font-size: 28px; margin-bottom: 4px; }
   .sub { color: #8B92A0; font-size: 13px; margin-bottom: 24px; }
   .back-link { font-size: 12.5px; margin-bottom: 18px; display: inline-block; }
+  .top-nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 0 auto 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  }
+  .top-nav a {
+    padding: 8px 20px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8B92A0;
+    text-decoration: none;
+  }
+  .top-nav a.active {
+    background: #B08D57;
+    color: #14171C;
+  }
 
   /* --- category picker --- */
   .cat-grid {
@@ -134,7 +160,11 @@
 </head>
 <body>
 
-<a class="back-link" href="index.html">← Back to Pipeline</a>
+<nav class="top-nav">
+  <a href="index.html">Tracker</a>
+  <a href="practice.html" class="active">OA Prep</a>
+</nav>
+
 <h1>Assessment Practice</h1>
 <div class="sub">Practice the test types firms actually use in early-stage screening</div>
 
@@ -245,6 +275,151 @@
           options: ["25%", "28%", "30%", "32%"],
           correct: 2,
           explanation: "(£15.6m − £12m) ÷ £12m = £3.6m ÷ £12m = 30%."
+        },
+        {
+          difficulty: "easy",
+          question: "A firm's costs rose from £18m to £21.6m. What is the percentage increase?",
+          options: ["15%", "18%", "20%", "22%"],
+          correct: 2,
+          explanation: "(£21.6m − £18m) ÷ £18m = £3.6m ÷ £18m = 20%."
+        },
+        {
+          difficulty: "medium",
+          question: "An analyst forecasts revenue growing at 12% annually. If current revenue is £50m, what will it be in 2 years, to the nearest £m?",
+          options: ["£60m", "£61m", "£63m", "£65m"],
+          correct: 2,
+          explanation: "£50m × 1.12 × 1.12 ≈ £62.7m, which rounds to £63m."
+        },
+        {
+          difficulty: "easy",
+          question: "A bond yields 4% annually on a £2,000 investment. How much interest is earned over 3 years, assuming simple interest?",
+          options: ["£200", "£220", "£240", "£260"],
+          correct: 2,
+          explanation: "£2,000 × 4% × 3 years = £240."
+        },
+        {
+          difficulty: "easy",
+          question: "A company's gross margin is 40% on revenue of £75m. What is the gross profit?",
+          options: ["£25m", "£28m", "£30m", "£32m"],
+          correct: 2,
+          explanation: "£75m × 40% = £30m."
+        },
+        {
+          difficulty: "medium",
+          question: "An IPO raises £120m by issuing 15% of the company's total shares. What is the implied total company valuation?",
+          options: ["£600m", "£700m", "£800m", "£900m"],
+          correct: 2,
+          explanation: "£120m ÷ 15% = £800m."
+        },
+        {
+          difficulty: "medium",
+          question: "A portfolio returns +12% in year 1 and −8% in year 2. What is the compounded two-year return, to the nearest whole percent?",
+          options: ["+2%", "+3%", "+4%", "+5%"],
+          correct: 1,
+          explanation: "1.12 × 0.92 = 1.0304, i.e. approximately +3% overall."
+        },
+        {
+          difficulty: "easy",
+          question: "A company's debt-to-equity ratio is 1.5x. If total equity is £80m, what is total debt?",
+          options: ["£100m", "£110m", "£120m", "£130m"],
+          correct: 2,
+          explanation: "£80m × 1.5 = £120m."
+        },
+        {
+          difficulty: "easy",
+          question: "A fund's assets under management grew from £2.4bn to £3.0bn. What percentage growth is this?",
+          options: ["20%", "22%", "25%", "28%"],
+          correct: 2,
+          explanation: "(£3.0bn − £2.4bn) ÷ £2.4bn = £0.6bn ÷ £2.4bn = 25%."
+        },
+        {
+          difficulty: "medium",
+          question: "An analyst values a company using a P/E multiple of 18x on forecast EPS of £2.20. What is the implied share price?",
+          options: ["£35.60", "£37.80", "£39.60", "£41.40"],
+          correct: 2,
+          explanation: "18 × £2.20 = £39.60."
+        },
+        {
+          difficulty: "hard",
+          question: "Free cash flow is £64m and capital expenditure is £24m. Estimating EBITDA as FCF plus capex (a simplification ignoring tax and working capital effects), what is the estimated EBITDA?",
+          options: ["£80m", "£84m", "£88m", "£92m"],
+          correct: 2,
+          explanation: "£64m + £24m = £88m under this simplified approach."
+        },
+        {
+          difficulty: "medium",
+          question: "GBP/USD moves from 1.30 to 1.17. By what percentage has GBP depreciated against USD?",
+          options: ["8%", "10%", "12%", "14%"],
+          correct: 1,
+          explanation: "(1.30 − 1.17) ÷ 1.30 = 0.13 ÷ 1.30 = 10%."
+        },
+        {
+          difficulty: "easy",
+          question: "A company buys back 5% of its 200m shares outstanding. How many shares remain after the buyback?",
+          options: ["180m", "185m", "190m", "195m"],
+          correct: 2,
+          explanation: "200m × 95% = 190m shares remain."
+        },
+        {
+          difficulty: "hard",
+          question: "An analyst estimates terminal value using a 2% perpetuity growth rate and a 9% discount rate, on final-year free cash flow of £30m. What is the terminal value, to the nearest £m? (TV = FCF × (1+g) ÷ (r − g))",
+          options: ["£380m", "£410m", "£437m", "£460m"],
+          correct: 2,
+          explanation: "£30m × 1.02 ÷ (0.09 − 0.02) = £30.6m ÷ 0.07 ≈ £437m."
+        },
+        {
+          difficulty: "easy",
+          question: "A company's current ratio is 1.8x with current liabilities of £50m. What are its current assets?",
+          options: ["£80m", "£85m", "£90m", "£95m"],
+          correct: 2,
+          explanation: "£50m × 1.8 = £90m."
+        },
+        {
+          difficulty: "easy",
+          question: "An acquirer pays a 35% premium over a target's current share price of £8.00. What is the offer price per share?",
+          options: ["£10.00", "£10.40", "£10.80", "£11.20"],
+          correct: 2,
+          explanation: "£8.00 × 1.35 = £10.80."
+        },
+        {
+          difficulty: "hard",
+          question: "A leveraged buyout targets a 3x MOIC (multiple on invested capital) over 5 years. Which of these is closest to the annualized IRR this implies?",
+          options: ["18%", "21%", "25%", "28%"],
+          correct: 2,
+          explanation: "3^(1/5) − 1 ≈ 24.6%, closest to 25%."
+        },
+        {
+          difficulty: "easy",
+          question: "A company's inventory turnover ratio is 6x with average inventory of £12m. What is its cost of goods sold (COGS)?",
+          options: ["£60m", "£66m", "£72m", "£78m"],
+          correct: 2,
+          explanation: "£12m × 6 = £72m."
+        },
+        {
+          difficulty: "easy",
+          question: "Net debt is total debt minus cash. A company has £340m total debt and £95m cash. What is its net debt?",
+          options: ["£225m", "£235m", "£245m", "£255m"],
+          correct: 2,
+          explanation: "£340m − £95m = £245m."
+        },
+        {
+          difficulty: "medium",
+          question: "A firm issues £150m of new equity at a 12% discount to its current £25.00 share price. At what price per share is the issue made?",
+          options: ["£21.50", "£22.00", "£22.50", "£23.00"],
+          correct: 1,
+          explanation: "£25.00 × (1 − 12%) = £25.00 × 0.88 = £22.00."
+        },
+        {
+          difficulty: "medium",
+          question: "An analyst calculates WACC by weighting 60% equity at a 10% cost of equity and 40% debt at a 5% after-tax cost of debt, arriving at 8%. Is this calculation correct?",
+          options: [
+            "Yes — 8% is correct",
+            "No — it should be 7%",
+            "No — it should be 9%",
+            "No — it should be 8.5%"
+          ],
+          correct: 0,
+          explanation: "(60% × 10%) + (40% × 5%) = 6% + 2% = 8%. The calculation is correct."
         }
       ]
     },
@@ -332,6 +507,166 @@
           options: ["True", "False", "Cannot Say"],
           correct: 0,
           explanation: "Directly supported: 'a larger proportion... than at any point in the past two decades.'"
+        },
+        {
+          difficulty: "easy",
+          passage: "Leveraged loan issuance rebounded in the first half of 2025 after two years of decline, driven by strong investor demand for floating-rate assets amid expectations that interest rates would remain elevated for longer than initially forecast. High-yield bond issuance, by contrast, remained subdued over the same period.",
+          question: "Leveraged loan issuance and high-yield bond issuance both rebounded in the first half of 2025.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "High-yield bond issuance is explicitly described as remaining subdued, while only leveraged loan issuance rebounded."
+        },
+        {
+          difficulty: "easy",
+          passage: "Leveraged loan issuance rebounded in the first half of 2025 after two years of decline, driven by strong investor demand for floating-rate assets amid expectations that interest rates would remain elevated for longer than initially forecast. High-yield bond issuance, by contrast, remained subdued over the same period.",
+          question: "Investor demand for floating-rate assets was a factor behind the rebound in leveraged loans.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly as a driver of the rebound."
+        },
+        {
+          difficulty: "medium",
+          passage: "Leveraged loan issuance rebounded in the first half of 2025 after two years of decline, driven by strong investor demand for floating-rate assets amid expectations that interest rates would remain elevated for longer than initially forecast. High-yield bond issuance, by contrast, remained subdued over the same period.",
+          question: "Interest rates fell during the first half of 2025.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 2,
+          explanation: "The passage discusses expectations that rates would stay elevated — it never confirms what rates actually did."
+        },
+        {
+          difficulty: "easy",
+          passage: "A growing number of asset managers have begun disclosing the carbon intensity of their portfolios in response to investor demand for transparency. Critics argue that carbon intensity metrics can be misleading, since a company's emissions relative to its revenue may fall even as its absolute emissions rise, for example if revenue grows faster than emissions.",
+          question: "Carbon intensity metrics can show improvement even if a company's total emissions increase.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly: intensity can fall even as absolute emissions rise, if revenue grows faster."
+        },
+        {
+          difficulty: "easy",
+          passage: "A growing number of asset managers have begun disclosing the carbon intensity of their portfolios in response to investor demand for transparency. Critics argue that carbon intensity metrics can be misleading, since a company's emissions relative to its revenue may fall even as its absolute emissions rise, for example if revenue grows faster than emissions.",
+          question: "All asset managers currently disclose the carbon intensity of their portfolios.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 2,
+          explanation: "The passage says 'a growing number,' not all — we can't confirm universal disclosure from this."
+        },
+        {
+          difficulty: "medium",
+          passage: "Special purpose acquisition companies (SPACs) saw a surge in popularity in 2020 and 2021, before falling sharply out of favour as many post-merger companies underperformed and regulatory scrutiny increased. Some bankers argue the structure still has a role for specific situations, such as companies seeking a faster route to public markets than a traditional IPO process allows.",
+          question: "SPACs became less popular partly because many companies that went public through them underperformed afterwards.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly as a reason for the fall from favour."
+        },
+        {
+          difficulty: "medium",
+          passage: "Special purpose acquisition companies (SPACs) saw a surge in popularity in 2020 and 2021, before falling sharply out of favour as many post-merger companies underperformed and regulatory scrutiny increased. Some bankers argue the structure still has a role for specific situations, such as companies seeking a faster route to public markets than a traditional IPO process allows.",
+          question: "No bankers believe SPACs have any future use.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says some bankers argue the structure still has a role — directly contradicting this statement."
+        },
+        {
+          difficulty: "easy",
+          passage: "Private credit has grown rapidly as a share of corporate lending, as direct lenders increasingly compete with traditional bank syndication for large deals. Proponents argue private credit offers borrowers greater speed and certainty of execution, while some regulators have raised concerns about reduced transparency in a market that operates largely outside public reporting requirements.",
+          question: "Speed and certainty of execution are cited as advantages of private credit for borrowers.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly as an argument made by proponents."
+        },
+        {
+          difficulty: "easy",
+          passage: "Private credit has grown rapidly as a share of corporate lending, as direct lenders increasingly compete with traditional bank syndication for large deals. Proponents argue private credit offers borrowers greater speed and certainty of execution, while some regulators have raised concerns about reduced transparency in a market that operates largely outside public reporting requirements.",
+          question: "Regulators have expressed no concerns about the private credit market.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says regulators have raised concerns about transparency — directly contradicting this."
+        },
+        {
+          difficulty: "medium",
+          passage: "Cross-border M&A activity involving UK targets declined in 2024 amid ongoing uncertainty about the regulatory environment, though domestic UK M&A activity held up comparatively well over the same period.",
+          question: "Domestic UK M&A activity also declined in 2024.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says domestic activity 'held up comparatively well' — the opposite of a decline."
+        },
+        {
+          difficulty: "easy",
+          passage: "Cross-border M&A activity involving UK targets declined in 2024 amid ongoing uncertainty about the regulatory environment, though domestic UK M&A activity held up comparatively well over the same period.",
+          question: "Regulatory uncertainty is cited as a factor in the decline of cross-border M&A involving UK targets.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly: the decline occurred 'amid ongoing uncertainty about the regulatory environment.'"
+        },
+        {
+          difficulty: "medium",
+          passage: "Quantitative hedge funds have increased their share of overall trading volume on major exchanges, employing strategies that rely on high-frequency data and algorithmic execution rather than fundamental company analysis. Some traditional fund managers argue this has made markets more volatile in the short term, though empirical evidence on this point remains mixed.",
+          question: "There is clear and undisputed evidence that quantitative trading increases short-term market volatility.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage explicitly says empirical evidence on this point 'remains mixed' — the opposite of clear and undisputed."
+        },
+        {
+          difficulty: "easy",
+          passage: "Quantitative hedge funds have increased their share of overall trading volume on major exchanges, employing strategies that rely on high-frequency data and algorithmic execution rather than fundamental company analysis. Some traditional fund managers argue this has made markets more volatile in the short term, though empirical evidence on this point remains mixed.",
+          question: "Quantitative strategies rely primarily on fundamental company analysis.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says these strategies rely on high-frequency data and algorithmic execution 'rather than fundamental company analysis.'"
+        },
+        {
+          difficulty: "easy",
+          passage: "Quantitative hedge funds have increased their share of overall trading volume on major exchanges, employing strategies that rely on high-frequency data and algorithmic execution rather than fundamental company analysis. Some traditional fund managers argue this has made markets more volatile in the short term, though empirical evidence on this point remains mixed.",
+          question: "Quant funds have increased their share of trading volume on major exchanges.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly in the first sentence."
+        },
+        {
+          difficulty: "medium",
+          passage: "The number of UK-listed companies has declined over the past decade, with several large firms choosing to list in New York instead, citing higher valuations and deeper pools of capital in the US market. The London Stock Exchange has introduced several reforms aimed at reversing this trend, though it remains too early to assess their full impact.",
+          question: "The passage concludes that the London Stock Exchange's reforms have failed.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says it's 'too early to assess their full impact' — not that they have failed."
+        },
+        {
+          difficulty: "easy",
+          passage: "The number of UK-listed companies has declined over the past decade, with several large firms choosing to list in New York instead, citing higher valuations and deeper pools of capital in the US market. The London Stock Exchange has introduced several reforms aimed at reversing this trend, though it remains too early to assess their full impact.",
+          question: "Higher valuations in the US market are cited as one reason firms have chosen to list in New York over London.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly as one of the cited reasons."
+        },
+        {
+          difficulty: "easy",
+          passage: "The number of UK-listed companies has declined over the past decade, with several large firms choosing to list in New York instead, citing higher valuations and deeper pools of capital in the US market. The London Stock Exchange has introduced several reforms aimed at reversing this trend, though it remains too early to assess their full impact.",
+          question: "The number of UK-listed companies has increased over the past decade.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage states the number 'has declined,' the opposite of increased."
+        },
+        {
+          difficulty: "medium",
+          passage: "Sovereign wealth funds have become increasingly active co-investors alongside private equity firms on large transactions, often accepting lower fees in exchange for direct exposure to specific deals rather than investing solely through blind-pool funds. This shift has given some sovereign funds greater influence over deal terms than they had a decade ago.",
+          question: "Sovereign wealth funds now only invest through blind-pool funds.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage describes funds co-investing directly on specific deals as an alternative to investing solely through blind-pool funds — the opposite of 'only.'"
+        },
+        {
+          difficulty: "easy",
+          passage: "Sovereign wealth funds have become increasingly active co-investors alongside private equity firms on large transactions, often accepting lower fees in exchange for direct exposure to specific deals rather than investing solely through blind-pool funds. This shift has given some sovereign funds greater influence over deal terms than they had a decade ago.",
+          question: "Sovereign wealth funds have gained more influence over deal terms than they had ten years ago.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 0,
+          explanation: "Stated directly: this shift 'has given some sovereign funds greater influence over deal terms than they had a decade ago.'"
+        },
+        {
+          difficulty: "hard",
+          passage: "Sovereign wealth funds have become increasingly active co-investors alongside private equity firms on large transactions, often accepting lower fees in exchange for direct exposure to specific deals rather than investing solely through blind-pool funds. This shift has given some sovereign funds greater influence over deal terms than they had a decade ago.",
+          question: "All sovereign wealth funds now have significant influence over deal terms.",
+          options: ["True", "False", "Cannot Say"],
+          correct: 1,
+          explanation: "The passage says 'some' sovereign funds have gained influence, not all — the statement overstates what's said, making it False rather than Cannot Say."
         }
       ]
     },
@@ -419,6 +754,166 @@
           ],
           correct: 0,
           explanation: "If every Partner is a Director, and no Director is an Intern, then no Partner can be an Intern either — a valid chain of deduction."
+        },
+        {
+          difficulty: "easy",
+          question: "What comes next in the sequence? 5, 10, 20, 40, __",
+          options: ["60", "70", "80", "90"],
+          correct: 2,
+          explanation: "Each number doubles: 40 × 2 = 80."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 81, 27, 9, 3, __",
+          options: ["0", "1", "2", "-3"],
+          correct: 1,
+          explanation: "Each number is divided by 3: 3 ÷ 3 = 1."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 1, 1, 2, 3, 5, 8, __",
+          options: ["10", "11", "13", "15"],
+          correct: 2,
+          explanation: "This is the Fibonacci sequence — each number is the sum of the two before it: 5 + 8 = 13."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 4, 9, 16, 25, __",
+          options: ["30", "32", "34", "36"],
+          correct: 3,
+          explanation: "These are square numbers from 2² onward (2²,3²,4²,5²), so the next is 6² = 36."
+        },
+        {
+          difficulty: "hard",
+          question: "What comes next in the letter sequence? B, D, G, K, __",
+          options: ["N", "O", "P", "Q"],
+          correct: 2,
+          explanation: "The gap between letters increases each time (+2, +3, +4), so the next gap is +5 from K, landing on P."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 10, 9, 11, 10, 12, 11, __",
+          options: ["12", "13", "14", "10"],
+          correct: 1,
+          explanation: "The pattern alternates −1, +2, repeating: after 11, +2 gives 13."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 2, 3, 5, 8, 13, __",
+          options: ["18", "19", "20", "21"],
+          correct: 3,
+          explanation: "Each number is the sum of the previous two: 8 + 13 = 21."
+        },
+        {
+          difficulty: "easy",
+          question: "What comes next in the sequence? 100, 50, 25, 12.5, __",
+          options: ["5", "6", "6.25", "7.5"],
+          correct: 2,
+          explanation: "Each number is halved: 12.5 ÷ 2 = 6.25."
+        },
+        {
+          difficulty: "easy",
+          question: "What comes next in the letter sequence? J, L, N, P, __",
+          options: ["Q", "R", "S", "T"],
+          correct: 1,
+          explanation: "Each letter moves forward 2 places in the alphabet: P → R."
+        },
+        {
+          difficulty: "easy",
+          question: "What comes next in the sequence? 3, 9, 27, 81, __",
+          options: ["162", "189", "216", "243"],
+          correct: 3,
+          explanation: "Each number is multiplied by 3: 81 × 3 = 243."
+        },
+        {
+          difficulty: "hard",
+          question: "What comes next in the sequence? 1, 8, 27, 64, __",
+          options: ["100", "121", "125", "144"],
+          correct: 2,
+          explanation: "These are cubes (1³, 2³, 3³, 4³), so the next is 5³ = 125."
+        },
+        {
+          difficulty: "hard",
+          question: "All traders are numerate. Some numerate people are engineers. What follows?",
+          options: [
+            "All traders are engineers",
+            "Some traders are definitely engineers",
+            "No valid conclusion about traders and engineers can be drawn",
+            "No traders are engineers"
+          ],
+          correct: 2,
+          explanation: "We only know numerate people overlap with engineers generally — not specifically which ones — so nothing definite follows about traders and engineers."
+        },
+        {
+          difficulty: "hard",
+          question: "All Managing Directors attended the conference. Some conference attendees are clients. Which conclusion is valid?",
+          options: [
+            "Some Managing Directors are clients",
+            "All clients are Managing Directors",
+            "It cannot be determined whether any Managing Director is a client",
+            "No Managing Directors are clients"
+          ],
+          correct: 2,
+          explanation: "We know conference attendees overlap with clients, but not specifically which attendees — so we can't determine anything definite about Managing Directors and clients."
+        },
+        {
+          difficulty: "hard",
+          question: "All research analysts are CFA charterholders. No CFA charterholders are unlicensed. What follows?",
+          options: [
+            "No research analysts are unlicensed",
+            "All CFA charterholders are research analysts",
+            "Some research analysts are unlicensed",
+            "Cannot be determined"
+          ],
+          correct: 0,
+          explanation: "If all research analysts are charterholders, and no charterholder is unlicensed, then no research analyst can be unlicensed — a valid chain of deduction."
+        },
+        {
+          difficulty: "hard",
+          question: "What comes next in the sequence? 6, 11, 21, 41, __",
+          options: ["61", "71", "81", "91"],
+          correct: 2,
+          explanation: "Each number roughly doubles and subtracts 1: 41 × 2 − 1 = 81."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the letter sequence? Z, Y, W, T, __",
+          options: ["Q", "P", "O", "N"],
+          correct: 1,
+          explanation: "The gap increases each time (−1, −2, −3), so the next gap is −4 from T, landing on P."
+        },
+        {
+          difficulty: "easy",
+          question: "What comes next in the sequence? 2, 4, 8, 16, 32, __",
+          options: ["48", "56", "64", "72"],
+          correct: 2,
+          explanation: "Each number doubles: 32 × 2 = 64."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 15, 20, 18, 23, 21, __",
+          options: ["24", "25", "26", "27"],
+          correct: 1,
+          explanation: "The pattern alternates +5, −2, repeating: 15→20 (+5), 20→18 (−2), 18→23 (+5), 23→21 (−2), so the next step is +5: 21 + 5 = 26."
+        },
+        {
+          difficulty: "medium",
+          question: "What comes next in the sequence? 1, 3, 6, 10, 15, __",
+          options: ["18", "19", "20", "21"],
+          correct: 3,
+          explanation: "These are triangular numbers — the gap increases by one each time (+2, +3, +4, +5), so the next gap is +6: 15 + 6 = 21."
+        },
+        {
+          difficulty: "medium",
+          question: "All Partners attended the AGM. No first-years attended the AGM. What follows?",
+          options: [
+            "No first-years are Partners",
+            "All Partners are first-years",
+            "Some first-years are Partners",
+            "Cannot be determined"
+          ],
+          correct: 0,
+          explanation: "If every Partner attended, and no first-year attended, then no first-year can be a Partner — otherwise they would have attended too."
         }
       ]
     },
@@ -556,6 +1051,266 @@
           ],
           correct: 1,
           explanation: "A calm, private, direct conversation gives the person a chance to understand the impact and adjust — proportionate to an unintentional comment, while still addressing it rather than avoiding it."
+        },
+        {
+          difficulty: "easy",
+          passage: "You made a small formatting error in a presentation that has already been sent to a senior banker for review, but not yet to the client.",
+          question: "What is the most effective action?",
+          options: [
+            "Wait for them to notice and fix it then",
+            "Send a quick, clear note flagging the specific error and offering a corrected version",
+            "Assume it's not important since it's just formatting",
+            "Fix it silently in the shared file without saying anything"
+          ],
+          correct: 1,
+          explanation: "Flagging it clearly and promptly, with a fix already in hand, resolves the issue efficiently and shows ownership."
+        },
+        {
+          difficulty: "medium",
+          passage: "Your manager asks you to complete a task using a method you believe is not the most efficient way to achieve the intended outcome.",
+          question: "What is the most effective approach?",
+          options: [
+            "Do it exactly as instructed without comment",
+            "Do it your own way without telling your manager",
+            "Complete it as instructed, but respectfully share your alternative approach afterwards in case it's useful next time",
+            "Refuse to do the task until they agree with your approach"
+          ],
+          correct: 2,
+          explanation: "Respecting the instruction while still offering your perspective afterwards balances reliability with constructive input."
+        },
+        {
+          difficulty: "medium",
+          passage: "You're asked to work over a weekend you'd already booked off for a personal commitment, due to an urgent deal requirement.",
+          question: "What is the most effective approach?",
+          options: [
+            "Refuse outright without explanation",
+            "Agree immediately without raising the conflict",
+            "Explain the conflict honestly, and discuss with your manager whether any flexibility or a partial solution is possible",
+            "Simply not show up to either commitment"
+          ],
+          correct: 2,
+          explanation: "Honest, early communication gives your manager the chance to find a workable solution, rather than you silently absorbing the conflict or refusing without context."
+        },
+        {
+          difficulty: "hard",
+          passage: "A colleague at your level takes credit for an idea that was originally yours during a meeting with senior staff.",
+          question: "What is the most effective response?",
+          options: [
+            "Publicly correct them in the moment, in front of everyone",
+            "Say nothing at all, ever",
+            "Raise it calmly and privately with the colleague afterwards to understand what happened",
+            "Immediately escalate to HR"
+          ],
+          correct: 2,
+          explanation: "A calm, private conversation first gives the colleague a chance to explain or correct the record, without creating unnecessary conflict in front of seniors."
+        },
+        {
+          difficulty: "easy",
+          passage: "You're unsure whether a compliance rule applies to a specific client interaction you're about to have.",
+          question: "What is the most effective action?",
+          options: [
+            "Proceed as normal since you're probably fine",
+            "Ask compliance or a senior colleague for clarification before proceeding",
+            "Avoid the interaction altogether",
+            "Assume the strictest possible interpretation without checking"
+          ],
+          correct: 1,
+          explanation: "Checking with the right people before proceeding is the standard 'most effective' response whenever compliance uncertainty is involved."
+        },
+        {
+          difficulty: "medium",
+          passage: "During a fast-paced trading desk rotation, you make a data entry error that is caught and corrected before causing any real impact.",
+          question: "What is the most effective action?",
+          options: [
+            "Say nothing since it was caught in time",
+            "Proactively mention it to your supervisor, explain what happened and what you'll do differently",
+            "Blame the system for being confusing",
+            "Ask a colleague to cover for the mistake"
+          ],
+          correct: 1,
+          explanation: "Owning the mistake and showing a concrete plan to avoid repeating it builds trust, even when the error itself caused no lasting harm."
+        },
+        {
+          difficulty: "medium",
+          passage: "You disagree with a decision your team has made, but you're in the minority.",
+          question: "What is the most effective approach?",
+          options: [
+            "Voice your concerns clearly once, then support the team's decision going forward",
+            "Continue to push back repeatedly after the decision has been made",
+            "Go along with it outwardly while undermining it quietly",
+            "Escalate above your manager immediately"
+          ],
+          correct: 0,
+          explanation: "Raising concerns clearly, then committing to the team's direction once a decision is made, is the standard model of constructive disagreement."
+        },
+        {
+          difficulty: "easy",
+          passage: "You receive critical, somewhat blunt feedback from a senior banker in front of other team members.",
+          question: "What is the most effective response?",
+          options: [
+            "Get visibly defensive and explain why they're wrong",
+            "Accept the feedback professionally in the moment, and reflect further on it privately afterwards",
+            "Ignore the feedback entirely",
+            "Complain to another senior person about how it was delivered"
+          ],
+          correct: 1,
+          explanation: "Taking feedback professionally in the moment, then reflecting privately, shows composure and openness to growth."
+        },
+        {
+          difficulty: "medium",
+          passage: "You notice that a junior colleague seems overwhelmed and is falling behind on a shared task that also affects your own deadline.",
+          question: "What is the most effective approach?",
+          options: [
+            "Report them to your manager immediately",
+            "Quietly redo their work yourself without saying anything",
+            "Check in with them directly, offer help if appropriate, and flag the risk to your deadline if it isn't resolved soon",
+            "Ignore it since it's not your responsibility"
+          ],
+          correct: 2,
+          explanation: "Direct, supportive communication addresses both the colleague's situation and the shared deadline risk, rather than silently absorbing the problem or escalating too fast."
+        },
+        {
+          difficulty: "easy",
+          passage: "You're asked in an interview to describe a weakness, and you genuinely struggle with a particular technical skill relevant to the role.",
+          question: "What is the most effective response?",
+          options: [
+            "Claim you have no weaknesses",
+            "Pick an irrelevant, safe weakness unrelated to the role",
+            "Honestly acknowledge the specific area and describe concrete steps you're taking to improve it",
+            "Deflect the question entirely"
+          ],
+          correct: 2,
+          explanation: "Genuine self-awareness paired with a concrete improvement plan is far more convincing than a deflection or an obviously safe non-answer."
+        },
+        {
+          difficulty: "hard",
+          passage: "A networking contact you've built a good relationship with offers to 'put in a good word' in a way that seems to bend the standard application process.",
+          question: "What is the most effective response?",
+          options: [
+            "Accept enthusiastically without question",
+            "Politely decline anything that isn't part of the standard, fair process, while still valuing the relationship",
+            "Ask them to do it but tell no one",
+            "Report the contact to the firm's HR immediately"
+          ],
+          correct: 1,
+          explanation: "Maintaining integrity in the process while preserving the relationship is the most effective balance — accepting an unfair shortcut carries real reputational risk."
+        },
+        {
+          difficulty: "medium",
+          passage: "You're the newest member of a case study team and disagree with the team's chosen approach, which you think has a flaw.",
+          question: "What is the most effective approach?",
+          options: [
+            "Stay quiet since you're the newest member",
+            "State your concern clearly and constructively, with reasoning, early enough to still change course",
+            "Wait until after the presentation to mention it",
+            "Take over the task alone to do it your way"
+          ],
+          correct: 1,
+          explanation: "Raising a well-reasoned concern early, while there's still time to act on it, demonstrates initiative regardless of seniority."
+        },
+        {
+          difficulty: "easy",
+          passage: "You've committed to attending a firm's insight event, but on the day, you're unexpectedly unwell.",
+          question: "What is the most effective action?",
+          options: [
+            "Attend anyway to avoid seeming uncommitted",
+            "Simply not show up without telling anyone",
+            "Contact the firm as early as possible to let them know and ask about alternatives",
+            "Ask a friend to pretend to be you"
+          ],
+          correct: 2,
+          explanation: "Early, honest communication is always the most professional response — silently not showing up leaves a poor impression."
+        },
+        {
+          difficulty: "medium",
+          passage: "During a HireVue-style recorded interview, you make a mistake partway through answering a question.",
+          question: "What is the most effective response?",
+          options: [
+            "Stop the recording and demand a redo immediately",
+            "Acknowledge it briefly if natural, and calmly continue or redirect to your point, rather than panicking",
+            "Give up on that question entirely",
+            "Restart your answer from scratch every time, however small the slip"
+          ],
+          correct: 1,
+          explanation: "Composure under pressure is itself part of what's being assessed — a brief, calm recovery reads far better than panicking or restarting unnecessarily."
+        },
+        {
+          difficulty: "medium",
+          passage: "Your manager gives you positive feedback on a task, but you know you got some help from a colleague that wasn't mentioned.",
+          question: "What is the most effective response?",
+          options: [
+            "Accept the credit fully and say nothing about the colleague's help",
+            "Politely mention the colleague's contribution when appropriate, without downplaying your own work",
+            "Insist the colleague be given equal credit publicly regardless of context",
+            "Feel guilty but do nothing"
+          ],
+          correct: 1,
+          explanation: "Acknowledging others' contributions when it's natural to do so builds trust and reputation, without needing to overcorrect or downplay your own role."
+        },
+        {
+          difficulty: "medium",
+          passage: "A client contact becomes visibly frustrated on a call due to a delay that wasn't your team's fault.",
+          question: "What is the most effective response?",
+          options: [
+            "Argue back to defend your team immediately",
+            "Stay calm, acknowledge their frustration, and focus on explaining next steps and a resolution",
+            "Hang up and let a senior handle it without warning them",
+            "Agree it was entirely your team's fault to smooth things over"
+          ],
+          correct: 1,
+          explanation: "Staying calm and solution-focused de-escalates the situation without either arguing or inaccurately accepting blame."
+        },
+        {
+          difficulty: "hard",
+          passage: "You're asked to complete a task that conflicts with something you believe may be a compliance or ethical grey area.",
+          question: "What is the most effective response?",
+          options: [
+            "Do the task without question since you were told to",
+            "Raise your concern with a manager or compliance before proceeding",
+            "Refuse outright without explanation",
+            "Do it, but complain about it to colleagues afterwards"
+          ],
+          correct: 1,
+          explanation: "Raising a genuine compliance or ethical concern through the right channel before acting protects both you and the firm."
+        },
+        {
+          difficulty: "easy",
+          passage: "You realise partway through a group assessment centre task that your group is running out of time and hasn't reached a conclusion.",
+          question: "What is the most effective action?",
+          options: [
+            "Stay quiet and let someone else manage time",
+            "Proactively flag the time constraint and help steer the group toward a workable conclusion",
+            "Take over the task entirely without input from others",
+            "Suggest giving up on finishing the task"
+          ],
+          correct: 1,
+          explanation: "Proactively managing time while still collaborating with the group shows leadership without dominating the exercise."
+        },
+        {
+          difficulty: "medium",
+          passage: "You've been offered two internships around the same time and need more time to decide, but one firm has given you a tight deadline to respond.",
+          question: "What is the most effective action?",
+          options: [
+            "Ignore the deadline and decide whenever you're ready",
+            "Contact the firm honestly, thank them, and politely ask if any flexibility on the deadline is possible",
+            "Accept immediately just to be safe, planning to withdraw later if needed",
+            "Ask a friend to ask on your behalf anonymously"
+          ],
+          correct: 1,
+          explanation: "A direct, honest, polite request for flexibility is far more professional than accepting insincerely or simply ignoring the deadline."
+        },
+        {
+          difficulty: "easy",
+          passage: "During onboarding, you realise the training materials contradict something a colleague told you informally.",
+          question: "What is the most effective action?",
+          options: [
+            "Assume the colleague is wrong and say nothing",
+            "Assume the materials are wrong and ignore them",
+            "Ask a manager or trainer directly to clarify which is correct",
+            "Just pick whichever seems easier to follow"
+          ],
+          correct: 2,
+          explanation: "Seeking direct clarification resolves the contradiction properly rather than guessing which source to trust."
         }
       ]
     },
@@ -693,6 +1448,266 @@
           ],
           correct: 0,
           explanation: "Comparing 3 people to 5 people is far too small a sample to draw a reliable conclusion about cause and effect — the difference could easily be chance."
+        },
+        {
+          difficulty: "medium",
+          passage: "Argument: \"Since Company X's stock outperformed the index last year, its management must be highly skilled.\"",
+          question: "What is the main flaw in this argument?",
+          options: [
+            "It ignores that outperformance could be due to sector-wide trends rather than management skill",
+            "It correctly proves management skill",
+            "It uses too short a timeframe of exactly one year",
+            "There is no flaw"
+          ],
+          correct: 0,
+          explanation: "Stock outperformance could stem from many external factors, such as sector-wide trends, rather than proving management skill specifically."
+        },
+        {
+          difficulty: "easy",
+          passage: "Statement: \"We should hire more analysts because our current team is understaffed.\"",
+          question: "Which assumption does this argument rely on?",
+          options: [
+            "Hiring more analysts would resolve the understaffing issue effectively",
+            "The company has never hired analysts before",
+            "All companies should be fully staffed",
+            "Analysts are the cheapest role to hire"
+          ],
+          correct: 0,
+          explanation: "The recommendation only makes sense if adding analysts would actually solve the understaffing problem."
+        },
+        {
+          difficulty: "hard",
+          passage: "All employees who complete the training pass the exam. Sarah passed the exam.",
+          question: "Which conclusion follows with certainty?",
+          options: [
+            "Sarah completed the training",
+            "Sarah may or may not have completed the training",
+            "Sarah did not complete the training",
+            "Sarah is the top performer"
+          ],
+          correct: 1,
+          explanation: "This is the 'affirming the consequent' trap: knowing training leads to passing doesn't mean passing proves training happened — Sarah could have passed some other way."
+        },
+        {
+          difficulty: "medium",
+          passage: "Argument: \"Since the new CEO took over, profits have declined. Therefore the CEO is responsible for the decline.\"",
+          question: "What is the main weakness in this argument?",
+          options: [
+            "It assumes no other factor explains the decline during the same period",
+            "It correctly identifies the sole cause",
+            "Profits declining is always the CEO's fault",
+            "There is no weakness"
+          ],
+          correct: 0,
+          explanation: "Many other factors (market conditions, one-off costs, prior decisions) could explain a decline occurring at the same time as a CEO change."
+        },
+        {
+          difficulty: "hard",
+          passage: "No unlicensed traders can execute client orders. Some employees who execute client orders are Vice Presidents.",
+          question: "Which conclusion is logically valid?",
+          options: [
+            "Some Vice Presidents are licensed traders",
+            "All Vice Presidents are licensed",
+            "No Vice Presidents execute client orders",
+            "Some unlicensed traders are Vice Presidents"
+          ],
+          correct: 0,
+          explanation: "Since executing client orders requires being licensed, and some of those executing orders are VPs, those specific VPs must be licensed — making 'some VPs are licensed traders' valid."
+        },
+        {
+          difficulty: "medium",
+          passage: "Statement: \"The fund should divest from the underperforming asset because it has lost value every quarter this year.\"",
+          question: "Which assumption does this argument rely on?",
+          options: [
+            "Past quarterly losses will continue into the future",
+            "The fund has other assets to invest in",
+            "Divestment always leads to gains",
+            "No other funds hold this asset"
+          ],
+          correct: 0,
+          explanation: "The recommendation only makes sense if the pattern of losses is expected to continue — otherwise past losses alone wouldn't justify divesting now."
+        },
+        {
+          difficulty: "medium",
+          passage: "Argument: \"Most successful entrepreneurs dropped out of university. Therefore dropping out of university increases your chances of success.\"",
+          question: "What is the main flaw in this argument?",
+          options: [
+            "It ignores the many people who dropped out and did not become successful (survivorship bias)",
+            "It correctly proves causation",
+            "University dropout rates are declining",
+            "There is no flaw"
+          ],
+          correct: 0,
+          explanation: "Looking only at successful dropouts, while ignoring unsuccessful ones, is a classic survivorship bias — it doesn't show dropping out actually improves your odds."
+        },
+        {
+          difficulty: "hard",
+          passage: "All senior associates review junior analysts' work. Tom's work was reviewed.",
+          question: "Which conclusion follows with certainty?",
+          options: [
+            "Tom is a junior analyst",
+            "A senior associate reviewed Tom's work, but we cannot say Tom is a junior analyst just from this",
+            "Tom is a senior associate",
+            "Tom's work was rejected"
+          ],
+          correct: 1,
+          explanation: "Knowing senior associates review junior analysts' work doesn't mean only junior analysts' work gets reviewed — Tom's role can't be determined with certainty from this alone."
+        },
+        {
+          difficulty: "medium",
+          passage: "Statement: \"The firm's advertising campaign must have driven the recent increase in applications, since applications rose right after the campaign launched.\"",
+          question: "What would most weaken this argument, if true?",
+          options: [
+            "The firm also raised its graduate starting salary at the same time as the campaign launched",
+            "The campaign was expensive to produce",
+            "The firm has run campaigns before",
+            "Applications are reviewed by a separate team"
+          ],
+          correct: 0,
+          explanation: "If a second, unrelated change (a salary rise) happened at the same time, it becomes unclear which change actually drove the increase — weakening the causal claim."
+        },
+        {
+          difficulty: "hard",
+          passage: "No junior bankers set client fee structures. All people who set client fee structures are partners.",
+          question: "Which conclusion is logically valid?",
+          options: [
+            "No junior bankers are partners",
+            "All partners set fee structures",
+            "Some junior bankers are partners",
+            "Cannot be determined whether any junior banker is a partner"
+          ],
+          correct: 3,
+          explanation: "The second statement only tells us fee-setters are partners, not that all partners set fees — so a junior banker could theoretically still be a partner who doesn't set fees. Nothing here rules that out."
+        },
+        {
+          difficulty: "easy",
+          passage: "Argument: \"This fund has beaten its benchmark for five consecutive years, so it will beat its benchmark next year too.\"",
+          question: "Is this conclusion logically guaranteed?",
+          options: [
+            "Yes, five years is enough to guarantee future performance",
+            "No, past performance is not a logical guarantee of future results, and no causal mechanism is given",
+            "Yes, because benchmarks never change",
+            "No, because five years is too short a period to mean anything"
+          ],
+          correct: 1,
+          explanation: "A streak continuing is never logically guaranteed just because it happened before — the argument would need to explain why it will continue, which it doesn't."
+        },
+        {
+          difficulty: "medium",
+          passage: "Statement: \"We shouldn't expand into this market because our last expansion attempt, into a different market, failed.\"",
+          question: "Which assumption does this argument rely on?",
+          options: [
+            "The two markets are similar enough that the same reasons for failure would likely apply again",
+            "The company has unlimited resources",
+            "Expansion is always risky",
+            "No other company has succeeded in the new market"
+          ],
+          correct: 0,
+          explanation: "The argument only holds if the new market is comparable enough to the one where the earlier failure happened — otherwise the past failure tells us little about this new attempt."
+        },
+        {
+          difficulty: "hard",
+          passage: "All interns who complete the rotation programme receive feedback reports. Maria received a feedback report.",
+          question: "Which conclusion follows with certainty?",
+          options: [
+            "Maria completed the rotation programme",
+            "Maria may or may not have completed the rotation programme",
+            "Maria is not an intern",
+            "Maria received the best feedback"
+          ],
+          correct: 1,
+          explanation: "Completing the programme guarantees a feedback report, but a feedback report doesn't guarantee the programme was completed — there could be other ways to receive one."
+        },
+        {
+          difficulty: "medium",
+          passage: "Argument: \"Since implementing the new risk model, the trading desk has had no major losses. Therefore the new risk model is solely responsible for avoiding losses.\"",
+          question: "What is the main flaw in this argument?",
+          options: [
+            "It ignores other possible factors, such as calmer market conditions, that could also explain the result",
+            "It correctly proves the model works",
+            "The time period studied is too long",
+            "There is no flaw"
+          ],
+          correct: 0,
+          explanation: "Claiming sole responsibility ignores other plausible explanations happening over the same period, such as generally calmer markets."
+        },
+        {
+          difficulty: "medium",
+          passage: "No graduate schemes guarantee a permanent offer. Some graduate schemes are highly competitive to enter.",
+          question: "Which conclusion is logically valid?",
+          options: [
+            "Highly competitive graduate schemes never guarantee a permanent offer",
+            "All highly competitive schemes guarantee an offer",
+            "Some non-competitive schemes guarantee an offer",
+            "No graduate schemes are competitive"
+          ],
+          correct: 0,
+          explanation: "Since the first statement applies to all graduate schemes without exception, it also applies to the competitive subset — so competitive schemes never guarantee an offer either."
+        },
+        {
+          difficulty: "easy",
+          passage: "Statement: \"The analyst's forecast must be accurate because they used a highly sophisticated financial model.\"",
+          question: "What is the main flaw in this argument?",
+          options: [
+            "A sophisticated model does not guarantee accurate real-world outputs, since its assumptions and inputs could still be flawed",
+            "Sophisticated models are always accurate",
+            "The analyst has no experience",
+            "There is no flaw in this reasoning"
+          ],
+          correct: 0,
+          explanation: "A model's sophistication doesn't protect against flawed assumptions or bad inputs — 'sophisticated' and 'accurate' aren't the same thing."
+        },
+        {
+          difficulty: "hard",
+          passage: "All employees who breach the code of conduct face disciplinary review. James did not face disciplinary review.",
+          question: "Which conclusion follows with certainty?",
+          options: [
+            "James breached the code of conduct",
+            "James did not breach the code of conduct",
+            "James may have breached the code of conduct but wasn't caught",
+            "Cannot be determined with certainty"
+          ],
+          correct: 1,
+          explanation: "This is a valid logical form: if breaching always leads to review, and James wasn't reviewed, then James cannot have breached — otherwise he would have been."
+        },
+        {
+          difficulty: "medium",
+          passage: "Argument: \"Our competitor cut prices and gained market share. Therefore, if we cut prices, we will also gain market share.\"",
+          question: "What is the main weakness in this argument?",
+          options: [
+            "It assumes market conditions and customer responses will be the same for us as for the competitor",
+            "It correctly guarantees the same outcome",
+            "Price cuts never work",
+            "There is no weakness"
+          ],
+          correct: 0,
+          explanation: "The outcome depends on many firm-specific and market-specific factors that may not transfer directly from the competitor's situation to your own."
+        },
+        {
+          difficulty: "easy",
+          passage: "All partners have at least ten years of experience. Some people with at least ten years of experience are not partners.",
+          question: "Which conclusion is logically valid?",
+          options: [
+            "Not everyone with ten years of experience is a partner",
+            "All experienced people are partners",
+            "No one with ten years of experience is a partner",
+            "All partners have exactly ten years of experience"
+          ],
+          correct: 0,
+          explanation: "This is stated directly in the second sentence: some experienced people are not partners, meaning experience alone doesn't make someone a partner."
+        },
+        {
+          difficulty: "medium",
+          passage: "Statement: \"The merger will likely fail because a similar merger between two other companies in the same sector failed last year.\"",
+          question: "Which assumption does this argument rely on?",
+          options: [
+            "The circumstances of the two mergers are comparable enough for the earlier outcome to be relevant",
+            "Mergers in this sector never succeed",
+            "The companies are direct competitors",
+            "The previous merger failed due to price"
+          ],
+          correct: 0,
+          explanation: "The argument only holds if the two situations are similar enough that one failure is actually informative about the other."
         }
       ]
     }
@@ -713,7 +1728,7 @@
   // ---------------------------------------------------------------
   const SRS_KEY = "assessment_srs_v1";
   const INTERVAL_DAYS = [0, 1, 3, 7, 14]; // days until next review, indexed by box
-  const SESSION_SIZE = 8;
+  const SESSION_SIZE = 5;
 
   function todayStr() {
     return new Date().toISOString().slice(0, 10);
