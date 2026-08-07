@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pipeline — Internship Tracker</title>
+<style>
+  body {
+    background: #14171C;
+    color: #ECE9E2;
+    font-family: system-ui, sans-serif;
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 16px;
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #8B92A0; font-size: 13px; margin-bottom: 24px; }
+  .top-nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 0 auto 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  }
+  .top-nav .brand {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #B08D57;
+    padding: 8px 14px 8px 12px;
+    margin-right: 4px;
+    border-right: 1px solid #2A2F38;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+  }
+  .top-nav a.nav-link {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8B92A0;
+    text-decoration: none;
+  }
+  .top-nav a.nav-link.active {
+    background: #B08D57;
+    color: #14171C;
+  }
+  .top-nav a.nav-link.soon {
+    color: #5C6270;
+  }
+  form {
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .field-row {
+    display: flex;
+    gap: 10px;
+  }
+  .field-row > * { flex: 1; }
+  input, select, textarea {
+    background: #14171C;
+    border: 1px solid #2A2F38;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #ECE9E2;
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  label.field-label {
+    font-size: 11px;
+    color: #8B92A0;
+    margin-bottom: 3px;
+    display: block;
+  }
+  button {
+    background: #B08D57;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* --- filter bar --- */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  .filters select {
+    width: auto;
+    font-size: 12.5px;
+    padding: 6px 8px;
+  }
+  .tab-group { display: flex; gap: 4px; }
+  .tab {
+    background: none;
+    border: none;
+    color: #8B92A0;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 400;
+  }
+  .tab.active { background: #22262E; color: #ECE9E2; }
+  .status { font-size: 12px; color: #5C6270; margin-left: auto; }
+
+  /* --- rows --- */
+  .row {
+    background: #1B1F26;
+    border: 1px solid #23272F;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 14px 16px 10px;
+    cursor: pointer;
+  }
+  .row .company { font-weight: 600; font-size: 15px; }
+  .row .role { font-size: 12.5px; color: #8B92A0; margin-top: 1px; }
+  .tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10.5px;
+    color: #B08D57;
+    background: #2A2318;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .deadline { font-size: 12px; color: #8B92A0; text-align: right; white-space: nowrap; }
+
+  /* --- stage track --- */
+  .stage-track { display: flex; align-items: center; padding: 0 16px 14px; }
+  .stage-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #3A4048; background: transparent;
+    cursor: pointer; padding: 0; flex-shrink: 0;
+  }
+  .stage-dot.done { background: #B08D57; border-color: #B08D57; }
+  .stage-line { flex: 1; height: 2px; background: #2A2F38; min-width: 6px; max-width: 26px; }
+  .stage-line.done { background: #B08D57; }
+  .stage-label { margin-left: 10px; font-size: 11px; color: #B08D57; white-space: nowrap; }
+
+  .row-expanded { border-top: 1px solid #23272F; padding: 12px 16px 14px; }
+  .row-expanded .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+  }
+  .row-expanded .grid div span { color: #5C6270; display: block; font-size: 10.5px; }
+  .desc {
+    font-size: 12.5px;
+    color: #C7CAD1;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .row-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .action-link {
+    background: none; border: none; color: #8B92A0;
+    font-size: 12.5px; padding: 0; cursor: pointer;
+  }
+  .empty {
+    padding: 48px 20px; text-align: center;
+    border: 1px dashed #2A2F38; border-radius: 10px;
+    color: #8B92A0; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link active">Tracker</a>
+  <a href="practice.html" class="nav-link">OA Prep</a>
+  <a href="resources.html" class="nav-link soon">Resources</a>
+  <a href="advice.html" class="nav-link soon">Advice</a>
+</nav>
+
+<h1>Pipeline</h1>
+<div class="sub">IB internship tracker — synced to your database</div>
+
+<form id="add-form">
+  <div class="field-row">
+    <div>
+      <label class="field-label">Firm</label>
+      <input type="text" id="company" placeholder="e.g. Goldman Sachs" required>
+    </div>
+    <div>
+      <label class="field-label">Role</label>
+      <input type="text" id="role" placeholder="e.g. Spring Week" required>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div>
+      <label class="field-label">Sector</label>
+      <select id="sector">
+        <option value="">— Select —</option>
+        <option>Investment Banking (M&A/ECM/DCM)</option>
+        <option>Sales & Trading</option>
+        <option>Private Equity</option>
+        <option>Asset & Investment Management</option>
+        <option>Quantitative / Research</option>
+        <option>Consulting</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-label">Programme type</label>
+      <select id="programme_type">
+        <option value="">— Select —</option>
+        <option>Insight Day / Spring Week</option>
+        <option>Summer Internship</option>
+        <option>Off-Cycle Internship</option>
+        <option>Industrial Placement</option>
+        <option>Graduate Scheme</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div>
+      <label class="field-label">Closing date</label>
+      <input type="date" id="deadline">
+    </div>
+    <div>
+      <label class="field-label">Applied date</label>
+      <input type="date" id="applied_date">
+    </div>
+  </div>
+
+  <div>
+    <label class="field-label">Application link</label>
+    <input type="text" id="link" placeholder="https://...">
+  </div>
+
+  <div>
+    <label class="field-label">Application description</label>
+    <textarea id="description" placeholder="Paste the role/programme description here"></textarea>
+  </div>
+
+  <div>
+    <label class="field-label">Your notes</label>
+    <textarea id="notes" placeholder="Referrals, contacts, test format, anything to remember"></textarea>
+  </div>
+
+  <button type="submit" id="submit-btn">Add to pipeline</button>
+  <button type="button" id="cancel-edit-btn" style="display:none; background:#2A2F38; color:#ECE9E2;">Cancel edit</button>
+</form>
+
+<div class="filters">
+  <div class="tab-group" id="status-tabs">
+    <button class="tab active" data-filter="active">Active</button>
+    <button class="tab" data-filter="closed">Closed</button>
+    <button class="tab" data-filter="all">All</button>
+  </div>
+  <select id="sector-filter">
+    <option value="">All sectors</option>
+  </select>
+  <select id="programme-filter">
+    <option value="">All programme types</option>
+  </select>
+  <span class="status" id="status-text">Loading...</span>
+</div>
+
+<div id="list"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const STAGES = [
+    "Researching", "Applied", "Online Tests", "Video Interview",
+    "Assessment Centre", "Final Round", "Offer"
+  ];
+
+  const form = document.getElementById("add-form");
+  const list = document.getElementById("list");
+  const statusText = document.getElementById("status-text");
+  const statusTabs = document.getElementById("status-tabs");
+  const sectorFilter = document.getElementById("sector-filter");
+  const programmeFilter = document.getElementById("programme-filter");
+
+  let allApps = [];
+  let currentTab = "active";
+  let editingId = null; // tracks whether the form is adding a new entry or editing an existing one
+
+  async function loadApps() {
+    statusText.textContent = "Loading...";
+    const { data, error } = await sb
+      .from("applications")
+      .select("*")
+      .order("deadline", { ascending: true });
+
+    if (error) {
+      statusText.textContent = "Error — check console (F12)";
+      console.error(error);
+      return;
+    }
+
+    allApps = data;
+    populateFilterOptions(data);
+    statusText.textContent = data.length + " total";
+    renderList();
+  }
+
+  // Fills the sector/programme dropdowns with whatever values actually exist in the data
+  function populateFilterOptions(apps) {
+    const sectors = [...new Set(apps.map(a => a.sector).filter(Boolean))];
+    const programmes = [...new Set(apps.map(a => a.programme_type).filter(Boolean))];
+
+    const currentSector = sectorFilter.value;
+    const currentProgramme = programmeFilter.value;
+
+    sectorFilter.innerHTML = '<option value="">All sectors</option>' +
+      sectors.map(s => `<option ${s === currentSector ? "selected" : ""}>${s}</option>`).join("");
+
+    programmeFilter.innerHTML = '<option value="">All programme types</option>' +
+      programmes.map(p => `<option ${p === currentProgramme ? "selected" : ""}>${p}</option>`).join("");
+  }
+
+  function renderList() {
+    let filtered = allApps;
+
+    if (currentTab === "active") filtered = filtered.filter(a => !a.closed);
+    if (currentTab === "closed") filtered = filtered.filter(a => a.closed);
+
+    if (sectorFilter.value) filtered = filtered.filter(a => a.sector === sectorFilter.value);
+    if (programmeFilter.value) filtered = filtered.filter(a => a.programme_type === programmeFilter.value);
+
+    list.innerHTML = "";
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty">Nothing here yet — add an entry above or adjust your filters.</div>';
+      return;
+    }
+
+    filtered.forEach(app => list.appendChild(buildRow(app)));
+  }
+
+  function buildRow(app) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const top = document.createElement("div");
+    top.className = "row-top";
+
+    const tagsHtml = [app.sector, app.programme_type]
+      .filter(Boolean)
+      .map(t => `<span class="tag">${t}</span>`)
+      .join("");
+
+    top.innerHTML = `
+      <div>
+        <div class="company">${app.company}</div>
+        <div class="role">${app.role}</div>
+        ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ""}
+      </div>
+      <div class="deadline">${app.deadline ? "Closes " + app.deadline : "No deadline"}</div>
+    `;
+    top.addEventListener("click", () => {
+      const exp = row.querySelector(".row-expanded");
+      exp.style.display = exp.style.display === "none" ? "block" : "none";
+    });
+    row.appendChild(top);
+
+    if (!app.closed) {
+      row.appendChild(buildStageTrack(app));
+    }
+
+    const expanded = document.createElement("div");
+    expanded.className = "row-expanded";
+    expanded.style.display = "none";
+    expanded.innerHTML = `
+      <div class="grid">
+        <div><span>Applied date</span>${app.applied_date || "—"}</div>
+        <div><span>Closing date</span>${app.deadline || "—"}</div>
+      </div>
+      ${app.description ? `<div class="desc">${app.description}</div>` : ""}
+      ${app.notes ? `<div class="desc" style="color:#8B92A0">${app.notes}</div>` : ""}
+      <div class="row-actions">
+        ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
+        <button class="action-link" data-edit="${app.id}">Edit</button>
+        ${!app.closed
+          ? `<button class="action-link" style="color:#4F9D69" data-offer="${app.id}">Mark offer</button>
+             <button class="action-link" style="color:#B85C4A" data-reject="${app.id}">Mark rejected</button>`
+          : `<button class="action-link" data-reopen="${app.id}">Reopen</button>`}
+        <button class="action-link" style="color:#8B4A42;margin-left:auto" data-delete="${app.id}">Delete</button>
+      </div>
+    `;
+    row.appendChild(expanded);
+
+    return row;
+  }
+
+  function buildStageTrack(app) {
+    let currentIndex = STAGES.indexOf(app.stage);
+    if (currentIndex === -1) currentIndex = 0;
+
+    const track = document.createElement("div");
+    track.className = "stage-track";
+
+    STAGES.forEach((stageName, i) => {
+      if (i > 0) {
+        const line = document.createElement("div");
+        line.className = "stage-line" + (i <= currentIndex ? " done" : "");
+        track.appendChild(line);
+      }
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "stage-dot" + (i <= currentIndex ? " done" : "");
+      dot.title = stageName;
+      dot.addEventListener("click", (e) => {
+        e.stopPropagation();
+        updateField(app.id, { stage: stageName });
+      });
+      track.appendChild(dot);
+    });
+
+    const label = document.createElement("span");
+    label.className = "stage-label";
+    label.textContent = STAGES[currentIndex];
+    track.appendChild(label);
+
+    return track;
+  }
+
+  async function updateField(id, fields) {
+    const { error } = await sb.from("applications").update(fields).eq("id", id);
+    if (error) {
+      alert("Couldn't update — check console (F12)");
+      console.error(error);
+      return;
+    }
+    loadApps();
+  }
+
+  // Makes sure a link always has "https://" in front, so the browser treats
+  // it as a full web address instead of a path on our own site.
+  function normalizeLink(value) {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
+  }
+
+  // Fills the form with an existing entry's data and switches it into "edit" mode
+  function startEdit(app) {
+    editingId = app.id;
+    document.getElementById("company").value = app.company || "";
+    document.getElementById("role").value = app.role || "";
+    document.getElementById("sector").value = app.sector || "";
+    document.getElementById("programme_type").value = app.programme_type || "";
+    document.getElementById("deadline").value = app.deadline || "";
+    document.getElementById("applied_date").value = app.applied_date || "";
+    document.getElementById("link").value = app.link || "";
+    document.getElementById("description").value = app.description || "";
+    document.getElementById("notes").value = app.notes || "";
+
+    document.getElementById("submit-btn").textContent = "Save changes";
+    document.getElementById("cancel-edit-btn").style.display = "inline-block";
+    form.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // Resets the form back to "add new entry" mode
+  function cancelEdit() {
+    editingId = null;
+    form.reset();
+    document.getElementById("submit-btn").textContent = "Add to pipeline";
+    document.getElementById("cancel-edit-btn").style.display = "none";
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const payload = {
+      company: document.getElementById("company").value,
+      role: document.getElementById("role").value,
+      sector: document.getElementById("sector").value || null,
+      programme_type: document.getElementById("programme_type").value || null,
+      deadline: document.getElementById("deadline").value || null,
+      applied_date: document.getElementById("applied_date").value || null,
+      link: normalizeLink(document.getElementById("link").value),
+      description: document.getElementById("description").value || null,
+      notes: document.getElementById("notes").value || null,
+    };
+
+    let error;
+    if (editingId) {
+      // Editing an existing entry — update it, keep its current stage untouched
+      ({ error } = await sb.from("applications").update(payload).eq("id", editingId));
+    } else {
+      // Adding a brand new entry — starts at the first stage
+      payload.stage = "Researching";
+      ({ error } = await sb.from("applications").insert([payload]));
+    }
+
+    if (error) {
+      alert("Couldn't save — check console (F12)");
+      console.error(error);
+      return;
+    }
+
+    cancelEdit();
+    loadApps();
+  });
+
+  list.addEventListener("click", async function (e) {
+    const t = e.target;
+    if (t.dataset.delete) {
+      const { error } = await sb.from("applications").delete().eq("id", t.dataset.delete);
+      if (error) { console.error(error); return; }
+      loadApps();
+    }
+    if (t.dataset.edit) {
+      const app = allApps.find(a => String(a.id) === t.dataset.edit);
+      if (app) startEdit(app);
+    }
+    if (t.dataset.offer) updateField(t.dataset.offer, { closed: "offer" });
+    if (t.dataset.reject) updateField(t.dataset.reject, { closed: "rejected" });
+    if (t.dataset.reopen) updateField(t.dataset.reopen, { closed: null });
+  });
+
+  document.getElementById("cancel-edit-btn").addEventListener("click", cancelEdit);
+
+  statusTabs.addEventListener("click", (e) => {
+    if (!e.target.dataset.filter) return;
+    currentTab = e.target.dataset.filter;
+    [...statusTabs.children].forEach(b => b.classList.toggle("active", b === e.target));
+    renderList();
+  });
+
+  sectorFilter.addEventListener("change", renderList);
+  programmeFilter.addEventListener("change", renderList);
+
+  loadApps();
+</script>
+
+</body>
+</html>
