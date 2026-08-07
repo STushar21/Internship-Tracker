@@ -14,6 +14,32 @@
   }
   h1 { font-size: 28px; margin-bottom: 4px; }
   .sub { color: #8B92A0; font-size: 13px; margin-bottom: 24px; }
+  .top-nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 0 auto 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  }
+  .top-nav a {
+    padding: 8px 20px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8B92A0;
+    text-decoration: none;
+  }
+  .top-nav a.active {
+    background: #B08D57;
+    color: #14171C;
+  }
   form {
     background: #1B1F26;
     border: 1px solid #2A2F38;
@@ -152,9 +178,13 @@
 </head>
 <body>
 
+<nav class="top-nav">
+  <a href="index.html" class="active">Tracker</a>
+  <a href="practice.html">OA Prep</a>
+</nav>
+
 <h1>Pipeline</h1>
 <div class="sub">IB internship tracker — synced to your database</div>
-<a href="practice.html" style="color:#B08D57; font-size:12.5px; display:inline-block; margin-bottom:20px;">→ Assessment Practice</a>
 
 <form id="add-form">
   <div class="field-row">
