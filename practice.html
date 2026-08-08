@@ -2,22 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Assessment Practice — Pipeline</title>
 <style>
   body {
-    background: #14171C;
-    color: #ECE9E2;
-    font-family: system-ui, sans-serif;
+    background: #F5F4EF;
+    color: #16233F;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     max-width: 640px;
     margin: 40px auto;
     padding: 0 16px 80px;
   }
-  a { color: #B08D57; }
+  a { color: #8C6A28; }
   h1 { font-size: 28px; margin-bottom: 4px; }
-  .sub { color: #8B92A0; font-size: 13px; margin-bottom: 24px; }
+  .sub { color: #5B6472; font-size: 13px; margin-bottom: 24px; }
   .back-link { font-size: 12.5px; margin-bottom: 18px; display: inline-block; }
   .top-nav {
     position: sticky;
@@ -27,21 +30,21 @@
     align-items: center;
     gap: 4px;
     width: fit-content;
-    background: #1B1F26;
-    border: 1px solid #2A2F38;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
     border-radius: 10px;
     padding: 5px;
     margin: 0 auto 28px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
   }
   .top-nav .brand {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Source Serif 4', Georgia, serif;
     font-weight: 700;
     font-size: 14px;
-    color: #B08D57;
+    color: #8C6A28;
     padding: 8px 14px 8px 12px;
     margin-right: 4px;
-    border-right: 1px solid #2A2F38;
+    border-right: 1px solid #D8DADD;
     text-decoration: none;
     letter-spacing: 0.03em;
   }
@@ -50,15 +53,15 @@
     border-radius: 7px;
     font-size: 13px;
     font-weight: 600;
-    color: #8B92A0;
+    color: #5B6472;
     text-decoration: none;
   }
   .top-nav a.nav-link.active {
     background: #B08D57;
-    color: #14171C;
+    color: #16233F;
   }
   .top-nav a.nav-link.soon {
-    color: #5C6270;
+    color: #8A8F99;
   }
 
   /* --- category picker --- */
@@ -70,24 +73,24 @@
   /* Buttons don't inherit page text color by default in most browsers —
      explicitly setting color here is what fixes the black-on-dark bug. */
   .cat-card {
-    background: #1B1F26;
-    border: 1px solid #2A2F38;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
     border-radius: 10px;
     padding: 16px;
     cursor: pointer;
     text-align: left;
-    color: #ECE9E2;
+    color: #16233F;
     font-family: inherit;
   }
-  .cat-card:hover { border-color: #B08D57; }
-  .cat-title { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; color: #ECE9E2; }
-  .cat-desc { font-size: 11.5px; color: #8B92A0; line-height: 1.4; }
-  .cat-count { font-size: 10.5px; color: #B08D57; margin-top: 8px; }
-  .cat-due { font-size: 10.5px; color: #4F9D69; margin-top: 2px; }
+  .cat-card:hover { border-color: #8C6A28; }
+  .cat-title { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; color: #16233F; }
+  .cat-desc { font-size: 11.5px; color: #5B6472; line-height: 1.4; }
+  .cat-count { font-size: 10.5px; color: #8C6A28; margin-top: 8px; }
+  .cat-due { font-size: 10.5px; color: #1F7A4C; margin-top: 2px; }
 
   /* --- quiz --- */
   #quiz-view { display: none; }
-  .progress { font-size: 11.5px; color: #8B92A0; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .progress { font-size: 11.5px; color: #5B6472; margin-bottom: 10px; display: flex; justify-content: space-between; }
   .difficulty {
     font-size: 10px;
     text-transform: uppercase;
@@ -95,54 +98,54 @@
     padding: 2px 8px;
     border-radius: 20px;
   }
-  .difficulty.easy { background: #1E3324; color: #4F9D69; }
-  .difficulty.medium { background: #332B18; color: #D9A441; }
-  .difficulty.hard { background: #33201C; color: #C97A64; }
+  .difficulty.easy { background: #E4F3EA; color: #1F7A4C; }
+  .difficulty.medium { background: #FBF1DB; color: #A9761F; }
+  .difficulty.hard { background: #FBEEE6; color: #A8572A; }
   .card {
-    background: #1B1F26;
-    border: 1px solid #2A2F38;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 16px;
-    color: #ECE9E2;
+    color: #16233F;
   }
   .passage {
     font-size: 13px;
-    color: #C7CAD1;
+    color: #333B4D;
     line-height: 1.6;
-    background: #14171C;
-    border: 1px solid #23272F;
+    background: #F6F6F3;
+    border: 1px solid #E8E9EA;
     border-radius: 8px;
     padding: 12px 14px;
     margin-bottom: 14px;
     white-space: pre-wrap;
   }
-  .question { font-size: 15px; font-weight: 600; margin-bottom: 14px; line-height: 1.4; color: #ECE9E2; }
+  .question { font-size: 15px; font-weight: 600; margin-bottom: 14px; line-height: 1.4; color: #16233F; }
   .option {
     display: block;
     width: 100%;
     text-align: left;
-    background: #14171C;
-    border: 1px solid #2A2F38;
+    background: #F6F6F3;
+    border: 1px solid #D8DADD;
     border-radius: 8px;
     padding: 10px 14px;
     margin-bottom: 8px;
-    color: #ECE9E2;
+    color: #16233F;
     font-size: 13.5px;
     cursor: pointer;
     font-family: inherit;
   }
-  .option:hover { border-color: #B08D57; }
-  .option.correct { border-color: #4F9D69; background: #1E3324; }
-  .option.incorrect { border-color: #B85C4A; background: #33201C; }
+  .option:hover { border-color: #8C6A28; }
+  .option.correct { border-color: #1F7A4C; background: #E4F3EA; }
+  .option.incorrect { border-color: #B14432; background: #FBEEE6; }
   .option:disabled { cursor: default; }
   .explanation {
     font-size: 12.5px;
-    color: #8B92A0;
+    color: #5B6472;
     line-height: 1.5;
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid #23272F;
+    border-top: 1px solid #E8E9EA;
     display: none;
   }
   .quiz-actions {
@@ -153,7 +156,7 @@
   }
   button.primary {
     background: #B08D57;
-    color: #14171C;
+    color: #16233F;
     border: none;
     border-radius: 6px;
     padding: 10px 18px;
@@ -165,7 +168,7 @@
   button.ghost {
     background: none;
     border: none;
-    color: #8B92A0;
+    color: #5B6472;
     font-size: 12.5px;
     cursor: pointer;
     font-family: inherit;
@@ -173,7 +176,7 @@
 
   /* --- results --- */
   #results-view { display: none; text-align: center; }
-  .score { font-size: 40px; font-weight: 700; color: #B08D57; margin: 10px 0; }
+  .score { font-size: 40px; font-weight: 700; color: #8C6A28; margin: 10px 0; }
 </style>
 </head>
 <body>
@@ -203,7 +206,7 @@
 <div id="results-view">
   <div class="sub">Session complete</div>
   <div class="score" id="score-display"></div>
-  <div id="score-note" style="color:#8B92A0; font-size:13px; margin-bottom:20px;"></div>
+  <div id="score-note" style="color:#5B6472; font-size:13px; margin-bottom:20px;"></div>
   <button class="primary" id="retry-btn">Another pass</button>
   <button class="ghost" id="back-to-cats-btn" style="margin-left:12px;">Choose another category</button>
 </div>
