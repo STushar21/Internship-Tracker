@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Outreach — STK</title>
+<style>
+  body {
+    background: #14171C;
+    color: #ECE9E2;
+    font-family: system-ui, sans-serif;
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 16px;
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #8B92A0; font-size: 13px; margin-bottom: 24px; }
+  .top-nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 0 auto 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  }
+  .top-nav .brand {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #B08D57;
+    padding: 8px 14px 8px 12px;
+    margin-right: 4px;
+    border-right: 1px solid #2A2F38;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+  }
+  .top-nav a.nav-link {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8B92A0;
+    text-decoration: none;
+  }
+  .top-nav a.nav-link.active {
+    background: #B08D57;
+    color: #14171C;
+  }
+  .top-nav a.nav-link.soon {
+    color: #5C6270;
+  }
+  form {
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .field-row {
+    display: flex;
+    gap: 10px;
+  }
+  .field-row > * { flex: 1; }
+  input, select, textarea {
+    background: #14171C;
+    border: 1px solid #2A2F38;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #ECE9E2;
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  label.field-label {
+    font-size: 11px;
+    color: #8B92A0;
+    margin-bottom: 3px;
+    display: block;
+  }
+  button {
+    background: #B08D57;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* --- filter bar --- */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  .filters select {
+    width: auto;
+    font-size: 12.5px;
+    padding: 6px 8px;
+  }
+  .tab-group { display: flex; gap: 4px; }
+  .tab {
+    background: none;
+    border: none;
+    color: #8B92A0;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 400;
+  }
+  .tab.active { background: #22262E; color: #ECE9E2; }
+  .status { font-size: 12px; color: #5C6270; margin-left: auto; }
+
+  /* --- rows --- */
+  .row {
+    background: #1B1F26;
+    border: 1px solid #23272F;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 14px 16px 10px;
+    cursor: pointer;
+  }
+  .row .company { font-weight: 600; font-size: 15px; }
+  .row .role { font-size: 12.5px; color: #8B92A0; margin-top: 1px; }
+  .tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10.5px;
+    color: #B08D57;
+    background: #2A2318;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .tag.overdue { color: #C97A64; background: #33201C; }
+  .deadline { font-size: 12px; color: #8B92A0; text-align: right; white-space: nowrap; }
+
+  /* --- stage track --- */
+  .stage-track { display: flex; align-items: center; padding: 0 16px 14px; }
+  .stage-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #3A4048; background: transparent;
+    cursor: pointer; padding: 0; flex-shrink: 0;
+  }
+  .stage-dot.done { background: #B08D57; border-color: #B08D57; }
+  .stage-line { flex: 1; height: 2px; background: #2A2F38; min-width: 6px; max-width: 22px; }
+  .stage-line.done { background: #B08D57; }
+  .stage-label { margin-left: 10px; font-size: 11px; color: #B08D57; white-space: nowrap; }
+
+  .row-expanded { border-top: 1px solid #23272F; padding: 12px 16px 14px; }
+  .row-expanded .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+  }
+  .row-expanded .grid div span { color: #5C6270; display: block; font-size: 10.5px; }
+  .desc {
+    font-size: 12.5px;
+    color: #C7CAD1;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .row-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .action-link {
+    background: none; border: none; color: #8B92A0;
+    font-size: 12.5px; padding: 0; cursor: pointer;
+  }
+  .empty {
+    padding: 48px 20px; text-align: center;
+    border: 1px dashed #2A2F38; border-radius: 10px;
+    color: #8B92A0; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link active">Outreach</a>
+  <a href="practice.html" class="nav-link">OA Prep</a>
+  <a href="resources.html" class="nav-link soon">Resources</a>
+  <a href="advice.html" class="nav-link soon">Advice</a>
+</nav>
+
+<h1>Outreach</h1>
+<div class="sub">Cold outreach & networking — synced to your database</div>
+
+<form id="add-form">
+  <div class="field-row">
+    <div>
+      <label class="field-label">Name</label>
+      <input type="text" id="name" placeholder="e.g. Priya Sharma" required>
+    </div>
+    <div>
+      <label class="field-label">Firm</label>
+      <input type="text" id="firm" placeholder="e.g. Rothschild & Co" required>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div>
+      <label class="field-label">Their role</label>
+      <input type="text" id="role_title" placeholder="e.g. Analyst, M&A">
+    </div>
+    <div>
+      <label class="field-label">Channel</label>
+      <select id="channel">
+        <option value="">— Select —</option>
+        <option>LinkedIn</option>
+        <option>Email</option>
+        <option>Event / In-person</option>
+        <option>Alumni network</option>
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div>
+      <label class="field-label">Date contacted</label>
+      <input type="date" id="date_contacted">
+    </div>
+    <div>
+      <label class="field-label">Next follow-up</label>
+      <input type="date" id="next_follow_up">
+    </div>
+  </div>
+
+  <div>
+    <label class="field-label">Profile / contact link</label>
+    <input type="text" id="link" placeholder="LinkedIn URL, email address, etc.">
+  </div>
+
+  <div>
+    <label class="field-label">Notes</label>
+    <textarea id="notes" placeholder="What you said, what they replied, anything to remember for the next touch"></textarea>
+  </div>
+
+  <button type="submit" id="submit-btn">Add contact</button>
+  <button type="button" id="cancel-edit-btn" style="display:none; background:#2A2F38; color:#ECE9E2;">Cancel edit</button>
+</form>
+
+<div class="filters">
+  <div class="tab-group" id="status-tabs">
+    <button class="tab active" data-filter="active">Active</button>
+    <button class="tab" data-filter="closed">Closed</button>
+    <button class="tab" data-filter="all">All</button>
+  </div>
+  <select id="due-filter">
+    <option value="">All contacts</option>
+    <option value="due">Follow-up due</option>
+  </select>
+  <span class="status" id="status-text">Loading...</span>
+</div>
+
+<div id="list"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // The stages a contact moves through, in order.
+  const STAGES = [
+    "Researching", "Contacted", "Followed Up", "Replied",
+    "Call Booked", "Call Completed", "Referral / Intro"
+  ];
+
+  const CLOSED_LABELS = { referral: "Referral / Intro", no_response: "No Response", dead_end: "Dead End" };
+
+  const form = document.getElementById("add-form");
+  const list = document.getElementById("list");
+  const statusText = document.getElementById("status-text");
+  const statusTabs = document.getElementById("status-tabs");
+  const dueFilter = document.getElementById("due-filter");
+
+  let allContacts = [];
+  let currentTab = "active";
+  let editingId = null;
+
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  async function loadContacts() {
+    statusText.textContent = "Loading...";
+    const { data, error } = await sb
+      .from("contacts")
+      .select("*")
+      .order("next_follow_up", { ascending: true });
+
+    if (error) {
+      statusText.textContent = "Error — check console (F12)";
+      console.error(error);
+      return;
+    }
+
+    allContacts = data;
+    statusText.textContent = data.length + " total";
+    renderList();
+  }
+
+  function renderList() {
+    let filtered = allContacts;
+
+    if (currentTab === "active") filtered = filtered.filter(c => !c.closed);
+    if (currentTab === "closed") filtered = filtered.filter(c => c.closed);
+
+    if (dueFilter.value === "due") {
+      filtered = filtered.filter(c => !c.closed && c.next_follow_up && c.next_follow_up <= todayStr());
+    }
+
+    list.innerHTML = "";
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty">Nothing here yet — add a contact above or adjust your filters.</div>';
+      return;
+    }
+
+    filtered.forEach(c => list.appendChild(buildRow(c)));
+  }
+
+  function buildRow(c) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const top = document.createElement("div");
+    top.className = "row-top";
+
+    const followUpOverdue = !c.closed && c.next_follow_up && c.next_follow_up <= todayStr();
+    const tagsHtml = [c.role_title, c.channel]
+      .filter(Boolean)
+      .map(t => `<span class="tag">${t}</span>`)
+      .join("");
+
+    top.innerHTML = `
+      <div>
+        <div class="company">${c.name}</div>
+        <div class="role">${c.firm}</div>
+        ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ""}
+      </div>
+      <div class="deadline">
+        ${c.closed
+          ? ""
+          : c.next_follow_up
+            ? `<span class="${followUpOverdue ? "tag overdue" : ""}" style="${followUpOverdue ? "" : "background:none;padding:0;"}">Follow up ${c.next_follow_up}</span>`
+            : "No follow-up set"}
+      </div>
+    `;
+    top.addEventListener("click", () => {
+      const exp = row.querySelector(".row-expanded");
+      exp.style.display = exp.style.display === "none" ? "block" : "none";
+    });
+    row.appendChild(top);
+
+    if (!c.closed) {
+      row.appendChild(buildStageTrack(c));
+    } else {
+      const badge = document.createElement("div");
+      const positive = c.closed === "referral";
+      badge.style.cssText = `padding:0 16px 14px; font-size:11px; color:${positive ? "#4F9D69" : "#8B92A0"};`;
+      badge.textContent = CLOSED_LABELS[c.closed] || c.closed;
+      row.appendChild(badge);
+    }
+
+    const expanded = document.createElement("div");
+    expanded.className = "row-expanded";
+    expanded.style.display = "none";
+    expanded.innerHTML = `
+      <div class="grid">
+        <div><span>Date contacted</span>${c.date_contacted || "—"}</div>
+        <div><span>Next follow-up</span>${c.next_follow_up || "—"}</div>
+      </div>
+      ${c.notes ? `<div class="desc">${c.notes}</div>` : ""}
+      <div class="row-actions">
+        ${c.link ? `<a class="action-link" href="${c.link}" target="_blank" rel="noopener">Open profile</a>` : ""}
+        <button class="action-link" data-edit="${c.id}">Edit</button>
+        ${!c.closed
+          ? `<button class="action-link" style="color:#4F9D69" data-referral="${c.id}">Mark referral/intro</button>
+             <button class="action-link" style="color:#B85C4A" data-noresponse="${c.id}">No response</button>
+             <button class="action-link" style="color:#B85C4A" data-deadend="${c.id}">Dead end</button>`
+          : `<button class="action-link" data-reopen="${c.id}">Reopen</button>`}
+        <button class="action-link" style="color:#8B4A42;margin-left:auto" data-delete="${c.id}">Delete</button>
+      </div>
+    `;
+    row.appendChild(expanded);
+
+    return row;
+  }
+
+  function buildStageTrack(c) {
+    let currentIndex = STAGES.indexOf(c.stage);
+    if (currentIndex === -1) currentIndex = 0;
+
+    const track = document.createElement("div");
+    track.className = "stage-track";
+
+    STAGES.forEach((stageName, i) => {
+      if (i > 0) {
+        const line = document.createElement("div");
+        line.className = "stage-line" + (i <= currentIndex ? " done" : "");
+        track.appendChild(line);
+      }
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "stage-dot" + (i <= currentIndex ? " done" : "");
+      dot.title = stageName;
+      dot.addEventListener("click", (e) => {
+        e.stopPropagation();
+        updateField(c.id, { stage: stageName });
+      });
+      track.appendChild(dot);
+    });
+
+    const label = document.createElement("span");
+    label.className = "stage-label";
+    label.textContent = STAGES[currentIndex];
+    track.appendChild(label);
+
+    return track;
+  }
+
+  async function updateField(id, fields) {
+    const { error } = await sb.from("contacts").update(fields).eq("id", id);
+    if (error) {
+      alert("Couldn't update — check console (F12)");
+      console.error(error);
+      return;
+    }
+    loadContacts();
+  }
+
+  function normalizeLink(value) {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (trimmed.includes("@") && !trimmed.startsWith("mailto:")) return "mailto:" + trimmed;
+    return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
+  }
+
+  function startEdit(c) {
+    editingId = c.id;
+    document.getElementById("name").value = c.name || "";
+    document.getElementById("firm").value = c.firm || "";
+    document.getElementById("role_title").value = c.role_title || "";
+    document.getElementById("channel").value = c.channel || "";
+    document.getElementById("date_contacted").value = c.date_contacted || "";
+    document.getElementById("next_follow_up").value = c.next_follow_up || "";
+    document.getElementById("link").value = c.link || "";
+    document.getElementById("notes").value = c.notes || "";
+
+    document.getElementById("submit-btn").textContent = "Save changes";
+    document.getElementById("cancel-edit-btn").style.display = "inline-block";
+    form.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    form.reset();
+    document.getElementById("submit-btn").textContent = "Add contact";
+    document.getElementById("cancel-edit-btn").style.display = "none";
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const payload = {
+      name: document.getElementById("name").value,
+      firm: document.getElementById("firm").value,
+      role_title: document.getElementById("role_title").value || null,
+      channel: document.getElementById("channel").value || null,
+      date_contacted: document.getElementById("date_contacted").value || null,
+      next_follow_up: document.getElementById("next_follow_up").value || null,
+      link: normalizeLink(document.getElementById("link").value),
+      notes: document.getElementById("notes").value || null,
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await sb.from("contacts").update(payload).eq("id", editingId));
+    } else {
+      payload.stage = "Researching";
+      ({ error } = await sb.from("contacts").insert([payload]));
+    }
+
+    if (error) {
+      alert("Couldn't save — check console (F12)");
+      console.error(error);
+      return;
+    }
+
+    cancelEdit();
+    loadContacts();
+  });
+
+  list.addEventListener("click", async function (e) {
+    const t = e.target;
+    if (t.dataset.delete) {
+      const { error } = await sb.from("contacts").delete().eq("id", t.dataset.delete);
+      if (error) { console.error(error); return; }
+      loadContacts();
+    }
+    if (t.dataset.edit) {
+      const c = allContacts.find(a => String(a.id) === t.dataset.edit);
+      if (c) startEdit(c);
+    }
+    if (t.dataset.referral) updateField(t.dataset.referral, { closed: "referral" });
+    if (t.dataset.noresponse) updateField(t.dataset.noresponse, { closed: "no_response" });
+    if (t.dataset.deadend) updateField(t.dataset.deadend, { closed: "dead_end" });
+    if (t.dataset.reopen) updateField(t.dataset.reopen, { closed: null });
+  });
+
+  document.getElementById("cancel-edit-btn").addEventListener("click", cancelEdit);
+
+  statusTabs.addEventListener("click", (e) => {
+    if (!e.target.dataset.filter) return;
+    currentTab = e.target.dataset.filter;
+    [...statusTabs.children].forEach(b => b.classList.toggle("active", b === e.target));
+    renderList();
+  });
+
+  dueFilter.addEventListener("change", renderList);
+
+  loadContacts();
+</script>
+
+</body>
+</html>
