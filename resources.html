@@ -11,10 +11,12 @@
     background: #14171C;
     color: #ECE9E2;
     font-family: system-ui, sans-serif;
-    max-width: 640px;
+    max-width: 680px;
     margin: 40px auto;
     padding: 0 16px 80px;
   }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #8B92A0; font-size: 13px; margin-bottom: 28px; }
   .top-nav {
     position: sticky;
     top: 16px;
@@ -27,7 +29,7 @@
     border: 1px solid #2A2F38;
     border-radius: 10px;
     padding: 5px;
-    margin: 0 auto 40px;
+    margin: 0 auto 28px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   }
   .top-nav .brand {
@@ -57,23 +59,97 @@
     color: #5C6270;
   }
 
-  .placeholder {
-    text-align: center;
-    padding: 70px 20px;
-    border: 1px dashed #2A2F38;
-    border-radius: 12px;
-  }
-  .placeholder-title {
+  .section-title {
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 24px;
-    margin-bottom: 10px;
+    font-size: 20px;
+    margin: 32px 0 4px;
   }
-  .placeholder-desc {
+  .section-intro {
     color: #8B92A0;
-    font-size: 13.5px;
-    max-width: 380px;
-    margin: 0 auto;
+    font-size: 13px;
     line-height: 1.6;
+    margin-bottom: 18px;
+  }
+
+  .sector {
+    background: #1B1F26;
+    border: 1px solid #2A2F38;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .sector-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    cursor: pointer;
+  }
+  .sector-name { font-weight: 600; font-size: 15.5px; }
+  .sector-desc { font-size: 12px; color: #8B92A0; margin-top: 3px; }
+  .chevron {
+    color: #5C6270;
+    transition: transform 150ms ease;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+  .sector.open .chevron { transform: rotate(180deg); }
+
+  .sector-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid #23272F;
+  }
+  .sector.open .sector-body { display: block; }
+
+  .explainer {
+    font-size: 13px;
+    color: #C7CAD1;
+    line-height: 1.6;
+    margin: 14px 0 16px;
+  }
+  .note {
+    font-size: 12px;
+    color: #D9A441;
+    background: #2A2318;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .tier { margin-bottom: 14px; }
+  .tier:last-child { margin-bottom: 0; }
+  .tier-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .tier-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .tier-label.t1 { background: #33201C; color: #C97A64; }
+  .tier-label.t2 { background: #332B18; color: #D9A441; }
+  .tier-label.t3 { background: #1E3324; color: #4F9D69; }
+  .tier-difficulty { font-size: 11px; color: #5C6270; }
+  .firm-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .firm {
+    font-size: 12px;
+    background: #14171C;
+    border: 1px solid #2A2F38;
+    color: #ECE9E2;
+    padding: 5px 11px;
+    border-radius: 20px;
   }
 </style>
 </head>
@@ -88,12 +164,161 @@
   <a href="advice.html" class="nav-link soon">Advice</a>
 </nav>
 
-<div class="placeholder">
-  <div class="placeholder-title">Coming soon</div>
-  <div class="placeholder-desc">
-    Firm-specific prep questions, quick facts and recent headlines by firm, and networking event prep will live here.
-  </div>
-</div>
+<h1>Resources</h1>
+<div class="sub">The map of finance — what each area actually is, and who's who within it</div>
+
+<div class="section-title">Areas of finance</div>
+<div class="section-intro">Tap a sector to see what the work actually involves and how firms within it are generally tiered by prestige and difficulty to break into. Tiers are a rough industry consensus, not a precise ranking — they shift, and plenty of great careers are built outside Tier 1.</div>
+
+<div id="sector-list"></div>
+
+<script>
+  const SECTORS = [
+    {
+      name: "Investment Banking (M&A / ECM / DCM)",
+      short: "Advising companies on mergers, acquisitions, and raising capital",
+      explainer: "Investment bankers advise companies on major transactions — buying or selling other companies (M&A), or raising money by issuing shares (Equity Capital Markets) or debt (Debt Capital Markets). The work is deal-driven: building financial models, valuing companies, preparing pitch materials, and supporting live transactions. It's the most commonly targeted path for non-target students because the analyst programmes are large and structured, with defined recruiting cycles.",
+      tiers: [
+        {
+          label: "Tier 1", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Goldman Sachs", "Morgan Stanley", "J.P. Morgan", "Bank of America", "Citi", "Barclays", "UBS"]
+        },
+        {
+          label: "Tier 2 — Elite Boutique", cls: "t2", difficulty: "Extremely competitive, smaller classes",
+          firms: ["Centerview Partners", "Evercore", "Lazard", "Moelis & Company", "PJT Partners", "Rothschild & Co", "Guggenheim Securities", "Houlihan Lokey"]
+        },
+        {
+          label: "Tier 3 — Middle Market", cls: "t3", difficulty: "Competitive, more realistic entry point",
+          firms: ["Jefferies", "William Blair", "Robert W. Baird", "Lincoln International", "Piper Sandler", "Stifel", "RBC Capital Markets", "Wells Fargo"]
+        }
+      ]
+    },
+    {
+      name: "Sales & Trading",
+      short: "Trading securities and executing orders for clients within a bank",
+      explainer: "Sales & Trading sits inside the same banks as investment banking, but the work is different — traders price and execute transactions in stocks, bonds, currencies, and derivatives, often reacting in real time to markets, while salespeople maintain relationships with institutional clients. It suits people who like faster feedback loops than the multi-month deal cycles of M&A.",
+      tiers: [
+        {
+          label: "Tier 1", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Goldman Sachs", "Morgan Stanley", "J.P. Morgan", "Bank of America", "Citi", "Barclays", "UBS"]
+        },
+        {
+          label: "Tier 2 — Specialist Trading Firms", cls: "t2", difficulty: "Extremely competitive, different process (heavy on maths/probability tests)",
+          firms: ["Jane Street", "Optiver", "IMC Trading", "Susquehanna (SIG)", "DRW", "Flow Traders"]
+        }
+      ]
+    },
+    {
+      name: "Private Equity",
+      short: "Buying, improving, and eventually selling private companies",
+      explainer: "Private equity firms raise capital from investors and use it to buy companies outright, aiming to improve and grow them before selling a few years later. Compared to IB, PE offers more ownership over fewer companies and less pure execution work.",
+      tiers: [
+        {
+          label: "Tier 1 — Mega-Funds", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Blackstone", "KKR", "Apollo Global Management", "Carlyle Group", "TPG", "Bain Capital", "Hellman & Friedman", "Silver Lake", "Vista Equity Partners", "Thoma Bravo", "Advent International", "CVC Capital Partners", "Warburg Pincus"]
+        },
+        {
+          label: "Tier 2 — Upper Middle Market", cls: "t2", difficulty: "Very competitive",
+          firms: ["General Atlantic", "Providence Equity", "Leonard Green & Partners", "Genstar Capital", "Berkshire Partners"]
+        },
+        {
+          label: "Tier 3 — Middle Market & Growth", cls: "t3", difficulty: "Competitive, more accessible",
+          firms: ["Audax Group", "HGGC", "TA Associates", "Insight Partners", "Summit Partners"]
+        }
+      ],
+      note: "Important: almost all private equity hiring is indirect. The standard path is 2 years as an investment banking analyst first, then a highly compressed \"on-cycle\" recruiting process (sometimes just days) run by headhunters, typically in your first year on the job. Very few firms hire directly from university — so for most people, the realistic first move toward PE is actually getting an IB seat, not applying to PE directly."
+    },
+    {
+      name: "Asset & Investment Management",
+      short: "Managing pooled investment portfolios for clients (funds, pensions, individuals)",
+      explainer: "Asset managers invest client money — pension funds, endowments, individuals — across stocks, bonds, and other assets, aiming to grow it over time. Roles range from research analyst (picking investments) to portfolio management to distribution/client-facing work. Hours are typically more predictable than IB.",
+      tiers: [
+        {
+          label: "Tier 1", cls: "t1", difficulty: "Very competitive",
+          firms: ["BlackRock", "Vanguard", "Fidelity", "State Street Global Advisors", "PIMCO", "Capital Group", "T. Rowe Price", "Wellington Management"]
+        },
+        {
+          label: "Tier 2", cls: "t2", difficulty: "Competitive",
+          firms: ["Schroders", "abrdn", "Janus Henderson", "M&G Investments", "Fidelity International"]
+        }
+      ]
+    },
+    {
+      name: "Quantitative Finance & Trading",
+      short: "Using mathematical models and code to trade or invest systematically",
+      explainer: "Quant roles apply statistics, mathematics, and programming to markets — building trading strategies, pricing models, or risk systems. Recruiting looks different from traditional IB: expect maths/probability tests, coding assessments, and less emphasis on the standard \"finance CV.\" Strong for students from maths, physics, engineering, or CS backgrounds as much as finance ones.",
+      tiers: [
+        {
+          label: "Tier 1", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Citadel", "Citadel Securities", "Millennium Management", "Two Sigma", "D.E. Shaw", "Renaissance Technologies", "Jane Street", "Point72"]
+        },
+        {
+          label: "Tier 2", cls: "t2", difficulty: "Very competitive",
+          firms: ["Optiver", "IMC Trading", "Susquehanna (SIG)", "Man Group", "DRW", "Qube Research & Technologies"]
+        }
+      ]
+    },
+    {
+      name: "Consulting",
+      short: "Advising companies on strategy, operations, and major business problems",
+      explainer: "Consultants are brought in by companies to solve specific problems — entering a new market, cutting costs, restructuring operations. Work happens in project teams over weeks to months, with heavy client interaction and structured problem-solving frameworks. Recruiting relies heavily on case interviews, a distinct skill from finance technical questions.",
+      tiers: [
+        {
+          label: "Tier 1 — MBB", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["McKinsey & Company", "Boston Consulting Group (BCG)", "Bain & Company"]
+        },
+        {
+          label: "Tier 2", cls: "t2", difficulty: "Very competitive",
+          firms: ["Oliver Wyman", "Kearney", "L.E.K. Consulting", "Strategy&", "Roland Berger"]
+        },
+        {
+          label: "Tier 3", cls: "t3", difficulty: "Competitive, more realistic entry point",
+          firms: ["Deloitte Consulting", "PwC Strategy&", "EY-Parthenon", "KPMG Consulting", "Accenture Strategy"]
+        }
+      ]
+    }
+  ];
+
+  const list = document.getElementById("sector-list");
+
+  SECTORS.forEach((sector, idx) => {
+    const el = document.createElement("div");
+    el.className = "sector";
+
+    const tiersHtml = sector.tiers.map(tier => `
+      <div class="tier">
+        <div class="tier-head">
+          <span class="tier-label ${tier.cls}">${tier.label}</span>
+          <span class="tier-difficulty">${tier.difficulty}</span>
+        </div>
+        <div class="firm-list">
+          ${tier.firms.map(f => `<span class="firm">${f}</span>`).join("")}
+        </div>
+      </div>
+    `).join("");
+
+    el.innerHTML = `
+      <div class="sector-head" data-idx="${idx}">
+        <div>
+          <div class="sector-name">${sector.name}</div>
+          <div class="sector-desc">${sector.short}</div>
+        </div>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="sector-body">
+        <div class="explainer">${sector.explainer}</div>
+        ${sector.note ? `<div class="note">${sector.note}</div>` : ""}
+        ${tiersHtml}
+      </div>
+    `;
+
+    el.querySelector(".sector-head").addEventListener("click", () => {
+      el.classList.toggle("open");
+    });
+
+    list.appendChild(el);
+  });
+</script>
 
 </body>
 </html>
