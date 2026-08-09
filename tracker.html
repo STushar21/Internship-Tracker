@@ -62,6 +62,62 @@
   .top-nav a.nav-link.soon {
     color: #8A8F99;
   }
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret {
+    background: none;
+    border: none;
+    color: #8A8F99;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 8px 10px 8px 2px;
+    margin-right: -6px;
+  }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 120%;
+    left: 0;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #16233F;
+    text-decoration: none;
+  }
+  .nav-dropdown-menu a:hover { background: #F6F6F3; }
+  .nav-dropdown-menu a.active { color: #8C6A28; font-weight: 600; }
+  .sub-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .sub-nav a {
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #5B6472;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+  }
+  .sub-nav a.active {
+    background: #B08D57;
+    color: #16233F;
+    border-color: #B08D57;
+  }
   form {
     background: #FFFFFF;
     border: 1px solid #D8DADD;
@@ -205,7 +261,15 @@
   <a href="tracker.html" class="nav-link active">Tracker</a>
   <a href="outreach.html" class="nav-link">Outreach</a>
   <a href="practice.html" class="nav-link">OA Prep</a>
-  <a href="resources.html" class="nav-link">Resources</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html" class="active">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
   <a href="advice.html" class="nav-link soon">Advice</a>
 </nav>
 
@@ -571,5 +635,22 @@
   loadApps();
 </script>
 
+<script>
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+</script>
 </body>
 </html>
