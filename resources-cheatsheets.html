@@ -137,6 +137,109 @@
     margin: 0 auto;
     line-height: 1.6;
   }
+
+  .section-title {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+  .section-intro {
+    color: #5B6472;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .pill {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 13px;
+    border-radius: 20px;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    color: #5B6472;
+    cursor: pointer;
+  }
+  .pill.active {
+    background: #B08D57;
+    color: #16233F;
+    border-color: #B08D57;
+  }
+
+  .term-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .term-card {
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .term-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .term-cat {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8C6A28;
+    margin-bottom: 6px;
+  }
+  .term-def { font-size: 12.5px; color: #333B4D; line-height: 1.5; }
+
+  .qa-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8A8F99;
+    margin: 24px 0 8px;
+  }
+  .qa-section-label:first-child { margin-top: 0; }
+  .qa-item {
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .qa-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .qa-question .chevron {
+    color: #8A8F99;
+    transition: transform 150ms ease;
+    flex-shrink: 0;
+    margin-left: 12px;
+    font-size: 12px;
+  }
+  .qa-item.open .qa-question .chevron { transform: rotate(180deg); }
+  .qa-answer {
+    display: none;
+    padding: 0 16px 16px;
+    font-size: 13px;
+    color: #333B4D;
+    line-height: 1.6;
+    border-top: 1px solid #E8E9EA;
+    padding-top: 12px;
+  }
+  .qa-item.open .qa-answer { display: block; }
+
+  @media (max-width: 560px) {
+    .term-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -167,12 +270,213 @@
   <a href="resources-calendar.html">Recruitment Calendar</a>
 </div>
 
-<div class="placeholder">
-  <div class="placeholder-title">Coming soon</div>
-  <div class="placeholder-desc">
-    A glossary of commonly used finance terms, plus common interview questions with short model answers, will live here.
-  </div>
-</div>
+<div class="section-title">Glossary</div>
+<div class="section-intro">Terms that come up constantly in applications, interviews, and on the desk — filter by category or just scan the lot.</div>
+
+<div class="filter-pills" id="glossary-filters"></div>
+<div class="term-grid" id="glossary-grid"></div>
+
+<div class="section-title" style="margin-top:44px;">Common interview questions</div>
+<div class="section-intro">Short model answers — treat these as a structure to build your own answer around, not a script to recite word for word. Interviewers can tell.</div>
+
+<div class="qa-list" id="qa-list"></div>
+
+<script>
+  // ---------------------------------------------------------------
+  // GLOSSARY
+  // ---------------------------------------------------------------
+  const GLOSSARY = [
+    { term: "Income Statement", cat: "Financial Statements", def: "Shows a company's revenue, costs, and resulting profit over a period of time (a quarter or a year)." },
+    { term: "Balance Sheet", cat: "Financial Statements", def: "A snapshot at one point in time of what a company owns (assets), owes (liabilities), and the difference between the two (equity)." },
+    { term: "Cash Flow Statement", cat: "Financial Statements", def: "Tracks actual cash moving in and out of a business across operating, investing, and financing activities — distinct from the profit shown on the income statement." },
+    { term: "EBITDA", cat: "Financial Statements", def: "Earnings Before Interest, Tax, Depreciation & Amortisation — a rough proxy for operating cash profit, widely used to compare companies regardless of how they're financed or taxed." },
+    { term: "EBIT", cat: "Financial Statements", def: "Earnings Before Interest & Tax — EBITDA minus depreciation and amortisation. Closer to accounting operating profit." },
+    { term: "Net Income", cat: "Financial Statements", def: "The bottom-line profit after all expenses, interest, and tax — what's left for shareholders." },
+    { term: "Working Capital", cat: "Financial Statements", def: "Current assets minus current liabilities — a measure of the short-term cash tied up in running the business day-to-day." },
+    { term: "D&A", cat: "Financial Statements", def: "Depreciation & Amortisation — the non-cash expense of spreading the cost of an asset (physical or intangible) over its useful life." },
+    { term: "Capex", cat: "Financial Statements", def: "Capital Expenditure — cash spent on acquiring or upgrading physical assets like property, equipment, or technology." },
+    { term: "Goodwill", cat: "Financial Statements", def: "An intangible asset created in an acquisition when the buyer pays more than the fair value of the target's identifiable net assets." },
+
+    { term: "DCF", cat: "Valuation", def: "Discounted Cash Flow — a valuation method that projects a company's future free cash flows and discounts them back to today's value." },
+    { term: "WACC", cat: "Valuation", def: "Weighted Average Cost of Capital — the blended rate a company is expected to pay its debt and equity investors, used as the discount rate in a DCF." },
+    { term: "Terminal Value", cat: "Valuation", def: "The estimated value of all cash flows beyond the explicit forecast period in a DCF, usually the majority of the total valuation." },
+    { term: "Comparable Company Analysis (Comps)", cat: "Valuation", def: "Valuing a company by looking at the trading multiples (e.g. EV/EBITDA) of similar publicly listed companies." },
+    { term: "Precedent Transactions", cat: "Valuation", def: "Valuing a company based on multiples paid in past M&A deals for similar companies — usually implies a control premium versus trading comps." },
+    { term: "Enterprise Value (EV)", cat: "Valuation", def: "The total value of a company's core business, capital-structure neutral: market cap plus debt minus cash." },
+    { term: "Equity Value", cat: "Valuation", def: "The value belonging to shareholders specifically — enterprise value minus net debt, or share price times shares outstanding." },
+    { term: "P/E Ratio", cat: "Valuation", def: "Price-to-Earnings — share price divided by earnings per share, a common quick valuation multiple for equities." },
+    { term: "EV/EBITDA", cat: "Valuation", def: "A capital-structure-neutral valuation multiple comparing enterprise value to operating cash profit, commonly used in comps and precedents." },
+    { term: "IRR", cat: "Valuation", def: "Internal Rate of Return — the annualised percentage return an investment is expected to generate, accounting for the timing of cash flows." },
+    { term: "MOIC", cat: "Valuation", def: "Multiple on Invested Capital — total cash returned divided by cash invested, e.g. a 3x MOIC means you got back 3 times what you put in (regardless of how long it took)." },
+    { term: "NPV", cat: "Valuation", def: "Net Present Value — the sum of all future cash flows from a project or investment, discounted back to today, minus the initial cost." },
+
+    { term: "Synergies", cat: "M&A", def: "Extra value created by combining two companies — cost synergies (cutting duplicate costs) or revenue synergies (cross-selling, new markets)." },
+    { term: "Accretion / Dilution", cat: "M&A", def: "Whether an acquisition increases (accretive) or decreases (dilutive) the acquirer's earnings per share." },
+    { term: "Hostile Takeover", cat: "M&A", def: "An acquisition attempt made directly to shareholders or via a tender offer, without the target company's board agreeing to it." },
+    { term: "Due Diligence", cat: "M&A", def: "The investigation process a buyer runs on a target company's financials, legal position, and operations before completing a deal." },
+    { term: "Sell-side vs Buy-side", cat: "M&A", def: "Sell-side advisors represent the company being sold; buy-side advisors represent the company doing the buying." },
+    { term: "Fairness Opinion", cat: "M&A", def: "A formal opinion from an independent advisor stating that the price of a deal is fair to shareholders, from a financial point of view." },
+    { term: "Earnout", cat: "M&A", def: "A deal structure where part of the purchase price is paid later, contingent on the target hitting agreed performance targets." },
+    { term: "Control Premium", cat: "M&A", def: "The extra amount an acquirer pays above the current market price to gain a controlling stake in a company." },
+
+    { term: "IPO", cat: "Capital Markets", def: "Initial Public Offering — the first time a private company sells shares to the public and lists on a stock exchange." },
+    { term: "ECM", cat: "Capital Markets", def: "Equity Capital Markets — the division that helps companies raise money by issuing shares (IPOs, follow-on offerings, convertibles)." },
+    { term: "DCM", cat: "Capital Markets", def: "Debt Capital Markets — the division that helps companies and governments raise money by issuing bonds and other debt." },
+    { term: "Bond", cat: "Capital Markets", def: "A loan made by an investor to a borrower (company or government), which pays regular interest and returns the principal at maturity." },
+    { term: "Coupon", cat: "Capital Markets", def: "The interest rate a bond pays its holder, usually expressed as an annual percentage of its face value." },
+    { term: "Yield", cat: "Capital Markets", def: "The actual return an investor gets on a bond given its current price — moves inversely to bond prices." },
+    { term: "Underwriting", cat: "Capital Markets", def: "A bank committing to buy and resell newly issued securities, taking on the risk that they might not sell at the expected price." },
+    { term: "High-Yield Bond", cat: "Capital Markets", def: "A bond issued by a company with a lower credit rating, paying a higher interest rate to compensate for the extra risk." },
+    { term: "Credit Rating", cat: "Capital Markets", def: "A score (e.g. from S&P, Moody's) assessing how likely a borrower is to repay its debt, which directly affects its borrowing cost." },
+
+    { term: "LBO", cat: "Private Equity", def: "Leveraged Buyout — acquiring a company using a large amount of borrowed money, with the target's own cash flows used to pay down that debt over time." },
+    { term: "Sponsor", cat: "Private Equity", def: "Industry term for the private equity firm backing a deal — as in \"sponsor-backed transaction.\"" },
+    { term: "Portfolio Company", cat: "Private Equity", def: "A company that a private equity fund has invested in and now owns (in full or in part)." },
+    { term: "Dry Powder", cat: "Private Equity", def: "Capital that a fund has raised but not yet invested — money sitting ready to deploy." },
+    { term: "Add-on Acquisition", cat: "Private Equity", def: "A smaller company bought by an existing portfolio company to grow it, rather than a fund's fresh standalone investment." },
+    { term: "Exit", cat: "Private Equity", def: "How a fund realises its return on an investment — selling to another buyer, an IPO, or a sale to another PE firm." },
+    { term: "Carried Interest", cat: "Private Equity", def: "The share of a fund's profits (typically around 20%) that goes to the fund managers, on top of their management fee, once investors are paid back." },
+
+    { term: "Bid-Ask Spread", cat: "Markets & Trading", def: "The gap between the highest price a buyer will pay (bid) and the lowest price a seller will accept (ask) for a security." },
+    { term: "Liquidity", cat: "Markets & Trading", def: "How easily an asset can be bought or sold without significantly moving its price." },
+    { term: "Derivative", cat: "Markets & Trading", def: "A financial contract whose value is based on an underlying asset — e.g. an option, future, or swap." },
+    { term: "Hedge", cat: "Markets & Trading", def: "Taking a position specifically designed to offset potential losses from another position." },
+    { term: "Long / Short", cat: "Markets & Trading", def: "Going \"long\" means buying an asset expecting its price to rise; going \"short\" means betting its price will fall." },
+    { term: "Basis Point", cat: "Markets & Trading", def: "One hundredth of one percent (0.01%) — the standard unit for describing small changes in interest rates or yields." },
+    { term: "Volatility", cat: "Markets & Trading", def: "How much and how quickly an asset's price moves — higher volatility means bigger, faster price swings." }
+  ];
+
+  const glossaryFilters = document.getElementById("glossary-filters");
+  const glossaryGrid = document.getElementById("glossary-grid");
+  const CATEGORIES = ["All", ...new Set(GLOSSARY.map(g => g.cat))];
+  let activeCat = "All";
+
+  function renderGlossaryFilters() {
+    glossaryFilters.innerHTML = "";
+    CATEGORIES.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.className = "pill" + (cat === activeCat ? " active" : "");
+      btn.textContent = cat;
+      btn.addEventListener("click", () => {
+        activeCat = cat;
+        renderGlossaryFilters();
+        renderGlossaryGrid();
+      });
+      glossaryFilters.appendChild(btn);
+    });
+  }
+
+  function renderGlossaryGrid() {
+    const filtered = activeCat === "All" ? GLOSSARY : GLOSSARY.filter(g => g.cat === activeCat);
+    glossaryGrid.innerHTML = "";
+    filtered.forEach(g => {
+      const card = document.createElement("div");
+      card.className = "term-card";
+      card.innerHTML = `
+        <div class="term-name">${g.term}</div>
+        <div class="term-cat">${g.cat}</div>
+        <div class="term-def">${g.def}</div>
+      `;
+      glossaryGrid.appendChild(card);
+    });
+  }
+
+  renderGlossaryFilters();
+  renderGlossaryGrid();
+
+  // ---------------------------------------------------------------
+  // INTERVIEW Q&A
+  // ---------------------------------------------------------------
+  const QA = [
+    {
+      section: "Technical",
+      question: "Walk me through a DCF.",
+      answer: "Project a company's unlevered free cash flows for 5–10 years, discount each one back to today using the WACC, then estimate a terminal value for everything beyond the forecast (usually via a perpetuity growth rate or an exit multiple) and discount that back too. Sum the discounted cash flows and terminal value to get enterprise value, then adjust for net debt to get equity value."
+    },
+    {
+      section: "Technical",
+      question: "What are the three financial statements and how do they link?",
+      answer: "The income statement, balance sheet, and cash flow statement. Net income from the income statement flows into retained earnings on the balance sheet and is the starting point for the cash flow statement. Cash from the cash flow statement flows into the cash balance on the balance sheet. Capex on the cash flow statement increases PP&E on the balance sheet, which then depreciates back through the income statement."
+    },
+    {
+      section: "Technical",
+      question: "Walk me through what happens if depreciation increases by $10.",
+      answer: "Income statement: EBIT falls by $10, so net income falls by $10 × (1 − tax rate). Cash flow statement: net income is down, but depreciation is added back (it's non-cash), so cash flow from operations actually rises by $10 × tax rate. Balance sheet: PP&E falls by $10 (accumulated depreciation), cash rises by the tax saving, and retained earnings falls by the net income change — the balance sheet still balances."
+    },
+    {
+      section: "Technical",
+      question: "Walk me through an LBO.",
+      answer: "A private equity firm buys a company using a mix of equity and a large amount of debt. The target's own cash flows are used to pay down that debt over the holding period (typically 3–7 years), while the firm looks to grow EBITDA through operational improvements. At exit, the firm sells the company — the return comes from debt paydown, EBITDA growth, and any multiple expansion, all amplified by the leverage used."
+    },
+    {
+      section: "Technical",
+      question: "What's the difference between enterprise value and equity value?",
+      answer: "Enterprise value is the value of the whole business, independent of how it's financed. Equity value is what's left for shareholders specifically. Equity Value = Enterprise Value − Net Debt (and minus other claims like preferred stock or minority interest, if relevant)."
+    },
+    {
+      section: "Technical",
+      question: "Why would a company raise money through debt instead of equity?",
+      answer: "Debt is usually cheaper than equity (interest is tax-deductible, and lenders take less risk than shareholders so demand lower returns), and it doesn't dilute existing shareholders' ownership. The trade-off is that debt has to be repaid on a fixed schedule regardless of performance, which adds financial risk if cash flows are volatile."
+    },
+    {
+      section: "Technical",
+      question: "How would you value a company with negative earnings?",
+      answer: "P/E and earnings-based multiples won't work. Use revenue multiples (EV/Revenue) instead, or a DCF if future cash flows can be reasonably projected even though current ones are negative — common for early-stage or high-growth companies. EBITDA-based multiples can also work if EBITDA is positive even when net income isn't."
+    },
+    {
+      section: "Fit / Behavioral",
+      question: "Why investment banking?",
+      answer: "Give a specific, personal reason rather than a generic one — e.g. a real experience that got you interested in deals or markets, what you enjoy about the technical/analytical work, and why the steep early learning curve appeals to you specifically. Avoid answers centred purely on pay or prestige."
+    },
+    {
+      section: "Fit / Behavioral",
+      question: "Why this bank?",
+      answer: "Reference something specific and genuine — a deal they worked on that interested you, a group or sector coverage team you'd want to be part of, a conversation with someone at the firm, or something distinctive about their culture or platform. Generic answers that could apply to any bank are the most common way people lose points here."
+    },
+    {
+      section: "Fit / Behavioral",
+      question: "Walk me through your CV.",
+      answer: "Keep it tight and narrative-driven, not a re-read of your CV line by line — pick a through-line (e.g. growing interest in finance, a skill you kept building) and connect 2–3 key experiences to it, ending with why that leads you here, to this role, now."
+    },
+    {
+      section: "Fit / Behavioral",
+      question: "Tell me about a time you worked in a team under pressure.",
+      answer: "Use a structured answer (Situation, Task, Action, Result): briefly set the scene, say what you specifically did (not just what the team did), and end with a concrete result or what you learned. Specificity is what makes these answers land — vague team stories are forgettable."
+    },
+    {
+      section: "Fit / Behavioral",
+      question: "What's a recent deal or market development that interested you, and why?",
+      answer: "Pick something genuinely recent, be able to explain the basic mechanics of the deal (parties involved, rough size, strategic rationale), and have a real opinion on why it's interesting — not just a headline you can recite. This tests whether you actually read the news, not just whether you memorised one."
+    }
+  ];
+
+  const qaList = document.getElementById("qa-list");
+  const SECTIONS = [...new Set(QA.map(q => q.section))];
+
+  SECTIONS.forEach(sectionName => {
+    const heading = document.createElement("div");
+    heading.className = "qa-section-label";
+    heading.textContent = sectionName;
+    qaList.appendChild(heading);
+
+    QA.filter(q => q.section === sectionName).forEach(q => {
+      const item = document.createElement("div");
+      item.className = "qa-item";
+      item.innerHTML = `
+        <div class="qa-question">
+          <span>${q.question}</span>
+          <span class="chevron">&#9662;</span>
+        </div>
+        <div class="qa-answer">${q.answer}</div>
+      `;
+      item.querySelector(".qa-question").addEventListener("click", () => {
+        item.classList.toggle("open");
+      });
+      qaList.appendChild(item);
+    });
+  });
+</script>
+
 
 <script>
   document.querySelectorAll('.nav-caret').forEach(function (btn) {
