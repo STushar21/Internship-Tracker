@@ -135,6 +135,60 @@
     margin: 0 auto;
     line-height: 1.6;
   }
+
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #5B6472; font-size: 13px; margin-bottom: 24px; }
+  .section-intro {
+    color: #5B6472;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 26px;
+    max-width: 620px;
+  }
+
+  .qa-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8A8F99;
+    margin: 26px 0 8px;
+  }
+  .qa-section-label:first-of-type { margin-top: 0; }
+  .qa-item {
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .qa-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .qa-question .chevron {
+    color: #8A8F99;
+    transition: transform 150ms ease;
+    flex-shrink: 0;
+    font-size: 12px;
+  }
+  .qa-item.open .qa-question .chevron { transform: rotate(180deg); }
+  .qa-answer {
+    display: none;
+    padding: 0 16px 16px;
+    font-size: 13.5px;
+    color: #333B4D;
+    line-height: 1.65;
+    border-top: 1px solid #E8E9EA;
+    padding-top: 13px;
+  }
+  .qa-item.open .qa-answer { display: block; }
 </style>
 </head>
 <body>
@@ -156,12 +210,147 @@
   <a href="advice.html" class="nav-link active">Advice</a>
 </nav>
 
-<div class="placeholder">
-  <div class="placeholder-title">Coming soon</div>
-  <div class="placeholder-desc">
-    Goals-based recruiting strategy and planning will live here — taking into account your university, target firms, and networking access to help map out what to focus on and when.
-  </div>
-</div>
+<h1>Advice</h1>
+<div class="sub">Real situations, not templates</div>
+<div class="section-intro">These are judgment calls, not facts — reasonable people would handle some of these differently, and your specific situation might change the answer. Treat this as one grounded perspective to weigh against your own read of things, not a rulebook.</div>
+
+<div id="qa-list"></div>
+
+<script>
+  const QA = [
+    {
+      section: "Getting Started",
+      question: "I'm already in my second year and haven't done any spring weeks — is it too late?",
+      answer: "Spring weeks are aimed at first-years, so yes, that specific door has likely closed for this cycle. But it's not remotely game over — summer internship applications don't require a spring week first, off-cycle internships exist precisely for people in this position, and cold outreach doesn't care what year you're in. The mistake is spending months mourning a missed door instead of immediately working the ones still open."
+    },
+    {
+      section: "Getting Started",
+      question: "How much time should I actually be spending on this versus just focusing on my degree?",
+      answer: "Your grades matter more than most people in the middle of recruiting will admit — a bad transcript can quietly rule you out before a human ever reads your CV. Treat this like a second, lower-priority course: consistent small effort (an hour or two most days) beats sporadic all-nighters before deadlines, and it should never be the reason you're doing badly academically. If you're choosing between finishing an assignment properly and squeezing in one more application the night before a soft deadline, finish the assignment."
+    },
+    {
+      section: "Getting Started",
+      question: "I missed this year's applications entirely — what do I actually do now?",
+      answer: "Stop treating it as a lost year and start treating it as a head start on next year. Use the dead months to build what you were missing when the deadlines hit — a proper CV, a couple of real projects, some cold outreach contacts — so that when the next window opens, you're not starting from zero under time pressure again. The thing that actually costs people years isn't one missed cycle, it's repeating the same unprepared scramble every cycle after."
+    },
+
+    {
+      section: "Rejections & Setbacks",
+      question: "I've been rejected from every spring week I applied to — should I keep going?",
+      answer: "Depends what's actually causing it. If you're getting rejected before any test or interview, the problem is almost always the CV or cover letter, not you — and that's fixable within days. If you're failing online tests, that's a preparation problem, also fixable. If you're getting to interview and losing there consistently, that's the one that takes longer to fix and is worth being honest with yourself about. Keep applying, but change something each cycle rather than resubmitting the same materials expecting a different result."
+    },
+    {
+      section: "Rejections & Setbacks",
+      question: "Should I ask for feedback after a rejection, and does it actually help?",
+      answer: "Ask — it costs you one slightly awkward email and firms increasingly expect it. The honest caveat: a lot of feedback you get back will be vague boilerplate ('strong field this year') that tells you nothing. When you do get something specific, take it seriously; when you don't, don't over-interpret the silence as a verdict on you personally — it usually just means whoever wrote it didn't have time to write more."
+    },
+    {
+      section: "Rejections & Setbacks",
+      question: "I bombed a HireVue — is that firm gone for good?",
+      answer: "For this cycle, probably yes — most firms won't let you reapply to the same programme in the same year. For next cycle, in most cases yes you can try again, and a bad HireVue this year isn't held against you as a black mark later, especially at large firms with high application volume. Use the specific thing that went wrong (froze up, rambled, didn't know a technical answer) as your prep focus next time rather than treating the whole firm as burned."
+    },
+
+    {
+      section: "Choosing Where to Apply",
+      question: "Should I apply everywhere, or focus on a shortlist?",
+      answer: "Early on, cast wide — you don't yet know where you're actually competitive, and a rejection from a reach firm costs you almost nothing. As deadlines cluster and your time gets scarce, narrow toward firms where your application is genuinely tailored, not copy-pasted; a tailored application to 15 firms will consistently outperform a generic one sent to 50. The volume matters less than most people think once you're past the first-round test stage."
+    },
+    {
+      section: "Choosing Where to Apply",
+      question: "Is it worth taking an offer from a firm I'm not excited about, just to have something?",
+      answer: "Usually yes, with one condition: it should genuinely build a relevant skill or credential, not just fill time. A real internship — even somewhere you're lukewarm on — teaches you things a rejection doesn't, gives you interview material, and often opens doors you didn't expect. The trap to avoid is holding out for your dream firm indefinitely while your CV stays empty; a decent bird in hand usually beats a hypothetical one you might never catch."
+    },
+    {
+      section: "Choosing Where to Apply",
+      question: "Boutique vs bulge bracket — which should I actually prioritise as a non-target?",
+      answer: "As a starting point, prioritise whichever one will actually say yes to you this cycle. Boutiques and middle-market firms are frequently far more realistic entry points for non-targets, often give more hands-on deal exposure earlier, and a boutique internship on your CV makes the next bulge bracket application meaningfully stronger than a blank one does. Chasing brand-name prestige straight out the gate, with nothing to show for it after a year of rejections, is a worse outcome than a strong boutique internship most people would recognise as a smart, deliberate move."
+    },
+    {
+      section: "Choosing Where to Apply",
+      question: "Should I turn down a lower-tier insight day while waiting to hear back from a bigger name?",
+      answer: "Almost never turn down a confirmed opportunity for a hypothetical one. Insight days are usually a single day, rarely clash badly enough to force a real choice, and even a firm you're not that excited about gives you interview practice, a networking contact, and something concrete for your CV. If they do clash on the exact same day, take the confirmed one — a bird in hand principle applies here just as much as with internship offers."
+    },
+
+    {
+      section: "Networking & Outreach",
+      question: "How many people should I actually be messaging?",
+      answer: "Think in terms of a steady weekly habit rather than a single big push — five to ten thoughtful messages a week is more sustainable and effective than fifty generic ones in one sitting, because quality of the message matters more than volume, and burnout is real. Expect a reply rate somewhere around 10–20% even when you're doing it well; that's normal, not a sign you're doing something wrong."
+    },
+    {
+      section: "Networking & Outreach",
+      question: "Is cold outreach actually worth it, or does it rarely lead anywhere?",
+      answer: "It's genuinely one of the highest-leverage things a non-target can do, precisely because most of your competition isn't doing it properly, if at all. It won't usually hand you a job directly — what it actually gets you is insider context (what a firm's actually looking for, when they're hiring, what the process looks like), a warm referral that gets your CV an actual read instead of an algorithm scan, and sometimes a heads-up about an opening before it's ever advertised. Judge it over months, not after ten emails."
+    },
+    {
+      section: "Networking & Outreach",
+      question: "I feel like I'm bothering people when I follow up — how do I know when to stop?",
+      answer: "One follow-up after a week or two of silence is completely normal and expected — most people are just busy, not ignoring you on purpose. A second follow-up a few weeks after that is still reasonable. Beyond two follow-ups with zero response of any kind, move on; at that point persistence reads as pressure rather than genuine interest, and your time is better spent on a fresh contact."
+    },
+    {
+      section: "Networking & Outreach",
+      question: "Should I mention that I'm not from a target school when networking?",
+      answer: "You don't need to lead with it or apologise for it, but you shouldn't hide it either — it'll come up naturally and trying to obscure it reads worse than just owning it. Most people who actually reply to a cold message and take the time to talk to you are doing so because you were specific and genuine, not because of your university's name. If anything, being upfront about a non-target background and asking direct, well-informed questions tends to land better than pretending the gap doesn't exist."
+    },
+
+    {
+      section: "Presenting Yourself",
+      question: "Should I bring up my weak A-level grades if no one asks?",
+      answer: "No — don't volunteer it. If it comes up directly, be honest and brief: acknowledge it, then pivot quickly to what you've done since (your university results, projects, effort) rather than dwelling on it or over-explaining. Most interviewers care far more about your trajectory and what you've done recently than a result from years ago that you've clearly already grown past."
+    },
+    {
+      section: "Presenting Yourself",
+      question: "How honest should I be about not having a strong finance background?",
+      answer: "Completely honest — trying to fake deep finance familiarity you don't have is one of the easiest ways to get caught out in a technical question, and it's far more damaging than the honest gap itself. A genuine, well-told story of how and why you got interested, plus visible effort since (courses, projects, reading), reads as authentic and is usually more compelling than a rehearsed answer from someone who's always known they wanted this."
+    },
+    {
+      section: "Presenting Yourself",
+      question: "Do I need a 'polished' story, or is it okay to admit I didn't always know what I wanted?",
+      answer: "You don't need a suspiciously clean narrative where everything led inevitably to this moment — interviewers hear that version constantly and it often reads as rehearsed. A more honest arc (tried something else, realised it wasn't right, found this instead, and here's specifically why) is usually more memorable and more believable, as long as you can speak to it with genuine conviction rather than sounding apologetic about the detour."
+    },
+
+    {
+      section: "Mindset",
+      question: "How do I stop comparing myself to people at target universities?",
+      answer: "You probably won't stop entirely, and that's fine — some comparison is useful motivation. What's worth actively resisting is comparing your Chapter 1 to someone else's Chapter 10: a target-school student with family connections and campus recruiting genuinely has a shorter path, but a shorter path isn't the same as the only path. Judge your own progress against where you were three months ago, not against someone with a completely different starting line."
+    },
+    {
+      section: "Mindset",
+      question: "It feels like everyone else has a head start — does that actually matter long-term?",
+      answer: "It matters for the first job, meaningfully less for the tenth year of a career. Early advantages compound less than they feel like they do at 19 — how you perform once you're actually in a seat, and the relationships and skills you build after that, start to matter far more than which door you walked through first. That's genuinely not just something people say to feel better; it's a real, observable pattern once you look a few years out."
+    },
+    {
+      section: "Mindset",
+      question: "How do I know if I should keep pushing for IB, or consider it's not for me?",
+      answer: "Separate two different questions: 'is this hard to get into' and 'do I actually want this once I picture the day-to-day.' Difficulty alone isn't a good reason to quit — everyone finds this hard. But if you find you're only chasing it for prestige or money and dread every part of the actual work when you talk to people who do it, that's worth taking seriously. If it's still the difficulty of getting in that's wearing you down rather than the substance of the job itself, that's usually a signal to change your approach, not your target."
+    }
+  ];
+
+  const qaList = document.getElementById("qa-list");
+  const SECTIONS = [...new Set(QA.map(q => q.section))];
+
+  SECTIONS.forEach(sectionName => {
+    const heading = document.createElement("div");
+    heading.className = "qa-section-label";
+    heading.textContent = sectionName;
+    qaList.appendChild(heading);
+
+    QA.filter(q => q.section === sectionName).forEach(q => {
+      const item = document.createElement("div");
+      item.className = "qa-item";
+      item.innerHTML = `
+        <div class="qa-question">
+          <span>${q.question}</span>
+          <span class="chevron">&#9662;</span>
+        </div>
+        <div class="qa-answer">${q.answer}</div>
+      `;
+      item.querySelector(".qa-question").addEventListener("click", () => {
+        item.classList.toggle("open");
+      });
+      qaList.appendChild(item);
+    });
+  });
+</script>
 
 <script>
   document.querySelectorAll('.nav-caret').forEach(function (btn) {
