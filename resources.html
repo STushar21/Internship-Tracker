@@ -242,7 +242,7 @@
 </div>
 
 <div class="section-title">Areas of finance</div>
-<div class="section-intro">Tap a sector to see what the work actually involves and how firms within it are generally tiered by prestige and difficulty to break into. Tiers are a rough industry consensus, not a precise ranking — they shift, and plenty of great careers are built outside Tier 1.</div>
+<div class="section-intro">Tap a sector to see what the work actually involves and how firms within it are generally grouped by prestige and difficulty to break into. Each sector uses the category names actually used in that space (e.g. "Bulge Bracket" for IB) rather than a generic Tier 1/2/3 — but groupings are still a rough industry consensus, not a precise ranking. They shift, and plenty of great careers are built outside the top group.</div>
 
 <div id="sector-list"></div>
 
@@ -254,18 +254,19 @@
       explainer: "Investment bankers advise companies on major transactions — buying or selling other companies (M&A), or raising money by issuing shares (Equity Capital Markets) or debt (Debt Capital Markets). The work is deal-driven: building financial models, valuing companies, preparing pitch materials, and supporting live transactions. It's the most commonly targeted path for non-target students because the analyst programmes are large and structured, with defined recruiting cycles.",
       tiers: [
         {
-          label: "Tier 1", cls: "t1", difficulty: "Extremely competitive",
-          firms: ["Goldman Sachs", "Morgan Stanley", "J.P. Morgan", "Bank of America", "Citi", "Barclays", "UBS"]
+          label: "Bulge Bracket", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Goldman Sachs", "Morgan Stanley", "J.P. Morgan", "Bank of America", "Citi", "Barclays", "UBS", "Deutsche Bank", "BNP Paribas"]
         },
         {
-          label: "Tier 2 — Elite Boutique", cls: "t2", difficulty: "Extremely competitive, smaller classes",
-          firms: ["Centerview Partners", "Evercore", "Lazard", "Moelis & Company", "PJT Partners", "Rothschild & Co", "Guggenheim Securities", "Houlihan Lokey"]
+          label: "Elite Boutique", cls: "t2", difficulty: "Extremely competitive, much smaller intake",
+          firms: ["Centerview Partners", "Evercore", "Lazard", "Moelis & Company", "PJT Partners", "Perella Weinberg Partners", "Qatalyst Partners", "Guggenheim Securities", "Ducera Partners", "Robey Warshaw"]
         },
         {
-          label: "Tier 3 — Middle Market", cls: "t3", difficulty: "Competitive, more realistic entry point",
-          firms: ["Jefferies", "William Blair", "Robert W. Baird", "Lincoln International", "Piper Sandler", "Stifel", "RBC Capital Markets", "Wells Fargo"]
+          label: "Middle Market", cls: "t3", difficulty: "Competitive, more realistic entry point",
+          firms: ["Jefferies", "Houlihan Lokey", "William Blair", "Robert W. Baird", "Lincoln International", "Piper Sandler", "Stifel", "Raymond James", "Harris Williams", "RBC Capital Markets", "Wells Fargo", "TD Cowen"]
         }
-      ]
+      ],
+      note: "Rothschild & Co is a genuine edge case worth knowing: it's generally treated as an elite boutique in Europe (including the UK), but as middle market in the US. Which list you'll see it on depends on which market's guide you're reading."
     },
     {
       name: "Sales & Trading",
@@ -273,12 +274,12 @@
       explainer: "Sales & Trading sits inside the same banks as investment banking, but the work is different — traders price and execute transactions in stocks, bonds, currencies, and derivatives, often reacting in real time to markets, while salespeople maintain relationships with institutional clients. It suits people who like faster feedback loops than the multi-month deal cycles of M&A.",
       tiers: [
         {
-          label: "Tier 1", cls: "t1", difficulty: "Extremely competitive",
-          firms: ["Goldman Sachs", "Morgan Stanley", "J.P. Morgan", "Bank of America", "Citi", "Barclays", "UBS"]
+          label: "Bulge Bracket", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Goldman Sachs", "Morgan Stanley", "J.P. Morgan", "Bank of America", "Citi", "Barclays", "UBS", "Deutsche Bank"]
         },
         {
-          label: "Tier 2 — Specialist Trading Firms", cls: "t2", difficulty: "Extremely competitive, different process (heavy on maths/probability tests)",
-          firms: ["Jane Street", "Optiver", "IMC Trading", "Susquehanna (SIG)", "DRW", "Flow Traders"]
+          label: "Specialist Trading Firms", cls: "t2", difficulty: "Extremely competitive, different process (heavy on maths/probability tests)",
+          firms: ["Jane Street", "Optiver", "IMC Trading", "Susquehanna (SIG)", "DRW", "Flow Traders", "Citadel Securities"]
         }
       ]
     },
@@ -288,16 +289,16 @@
       explainer: "Private equity firms raise capital from investors and use it to buy companies outright, aiming to improve and grow them before selling a few years later. Compared to IB, PE offers more ownership over fewer companies and less pure execution work.",
       tiers: [
         {
-          label: "Tier 1 — Mega-Funds", cls: "t1", difficulty: "Extremely competitive",
-          firms: ["Blackstone", "KKR", "Apollo Global Management", "Carlyle Group", "TPG", "Bain Capital", "Hellman & Friedman", "Silver Lake", "Vista Equity Partners", "Thoma Bravo", "Advent International", "CVC Capital Partners", "Warburg Pincus"]
+          label: "Mega-Fund", cls: "t1", difficulty: "Extremely competitive",
+          firms: ["Blackstone", "KKR", "Apollo Global Management", "Carlyle Group", "TPG", "Bain Capital", "Hellman & Friedman", "Silver Lake", "Vista Equity Partners", "Thoma Bravo", "Advent International", "CVC Capital Partners", "Warburg Pincus", "EQT", "Clayton, Dubilier & Rice"]
         },
         {
-          label: "Tier 2 — Upper Middle Market", cls: "t2", difficulty: "Very competitive",
-          firms: ["General Atlantic", "Providence Equity", "Leonard Green & Partners", "Genstar Capital", "Berkshire Partners"]
+          label: "Upper Middle Market", cls: "t2", difficulty: "Very competitive",
+          firms: ["General Atlantic", "Providence Equity", "Leonard Green & Partners", "Genstar Capital", "Berkshire Partners", "Permira", "Cinven", "BC Partners"]
         },
         {
-          label: "Tier 3 — Middle Market & Growth", cls: "t3", difficulty: "Competitive, more accessible",
-          firms: ["Audax Group", "HGGC", "TA Associates", "Insight Partners", "Summit Partners"]
+          label: "Middle Market & Growth Equity", cls: "t3", difficulty: "Competitive, more accessible",
+          firms: ["Audax Group", "HGGC", "TA Associates", "Insight Partners", "Summit Partners", "Great Hill Partners", "Francisco Partners"]
         }
       ],
       note: "Important: almost all private equity hiring is indirect. The standard path is 2 years as an investment banking analyst first, then a highly compressed \"on-cycle\" recruiting process (sometimes just days) run by headhunters, typically in your first year on the job. Very few firms hire directly from university — so for most people, the realistic first move toward PE is actually getting an IB seat, not applying to PE directly."
@@ -308,12 +309,12 @@
       explainer: "Asset managers invest client money — pension funds, endowments, individuals — across stocks, bonds, and other assets, aiming to grow it over time. Roles range from research analyst (picking investments) to portfolio management to distribution/client-facing work. Hours are typically more predictable than IB.",
       tiers: [
         {
-          label: "Tier 1", cls: "t1", difficulty: "Very competitive",
-          firms: ["BlackRock", "Vanguard", "Fidelity", "State Street Global Advisors", "PIMCO", "Capital Group", "T. Rowe Price", "Wellington Management"]
+          label: "Global Majors", cls: "t1", difficulty: "Very competitive",
+          firms: ["BlackRock", "Vanguard", "Fidelity", "State Street Global Advisors", "PIMCO", "Capital Group", "T. Rowe Price", "Wellington Management", "J.P. Morgan Asset Management", "Goldman Sachs Asset Management"]
         },
         {
-          label: "Tier 2", cls: "t2", difficulty: "Competitive",
-          firms: ["Schroders", "abrdn", "Janus Henderson", "M&G Investments", "Fidelity International"]
+          label: "Established Managers", cls: "t2", difficulty: "Competitive",
+          firms: ["Schroders", "abrdn", "Janus Henderson", "M&G Investments", "Fidelity International", "Legal & General Investment Management"]
         }
       ]
     },
@@ -323,12 +324,12 @@
       explainer: "Quant roles apply statistics, mathematics, and programming to markets — building trading strategies, pricing models, or risk systems. Recruiting looks different from traditional IB: expect maths/probability tests, coding assessments, and less emphasis on the standard \"finance CV.\" Strong for students from maths, physics, engineering, or CS backgrounds as much as finance ones.",
       tiers: [
         {
-          label: "Tier 1", cls: "t1", difficulty: "Extremely competitive",
+          label: "Top-Tier Quant Funds", cls: "t1", difficulty: "Extremely competitive",
           firms: ["Citadel", "Citadel Securities", "Millennium Management", "Two Sigma", "D.E. Shaw", "Renaissance Technologies", "Jane Street", "Point72"]
         },
         {
-          label: "Tier 2", cls: "t2", difficulty: "Very competitive",
-          firms: ["Optiver", "IMC Trading", "Susquehanna (SIG)", "Man Group", "DRW", "Qube Research & Technologies"]
+          label: "Established Quant / Prop Trading Firms", cls: "t2", difficulty: "Very competitive",
+          firms: ["Optiver", "IMC Trading", "Susquehanna (SIG)", "Man Group", "DRW", "Qube Research & Technologies", "Balyasny Asset Management", "ExodusPoint"]
         }
       ]
     },
@@ -338,15 +339,15 @@
       explainer: "Consultants are brought in by companies to solve specific problems — entering a new market, cutting costs, restructuring operations. Work happens in project teams over weeks to months, with heavy client interaction and structured problem-solving frameworks. Recruiting relies heavily on case interviews, a distinct skill from finance technical questions.",
       tiers: [
         {
-          label: "Tier 1 — MBB", cls: "t1", difficulty: "Extremely competitive",
+          label: "MBB", cls: "t1", difficulty: "Extremely competitive",
           firms: ["McKinsey & Company", "Boston Consulting Group (BCG)", "Bain & Company"]
         },
         {
-          label: "Tier 2", cls: "t2", difficulty: "Very competitive",
+          label: "Strategy Boutiques", cls: "t2", difficulty: "Very competitive",
           firms: ["Oliver Wyman", "Kearney", "L.E.K. Consulting", "Strategy&", "Roland Berger"]
         },
         {
-          label: "Tier 3", cls: "t3", difficulty: "Competitive, more realistic entry point",
+          label: "Big 4 & Accenture Strategy", cls: "t3", difficulty: "Competitive, more realistic entry point",
           firms: ["Deloitte Consulting", "PwC Strategy&", "EY-Parthenon", "KPMG Consulting", "Accenture Strategy"]
         }
       ]
