@@ -376,10 +376,19 @@
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const STAGES = [
-    "Researching", "Applied", "Online Tests", "Video Interview",
-    "Assessment Centre", "Final Round", "Offer"
-  ];
+  // Different programme types genuinely have different funnels — a spring
+  // week is often just application → selection, with no OA or interview
+  // stage at all, while a summer internship or grad scheme usually has
+  // several distinct rounds. Rather than forcing everything through one
+  // fixed pipeline, each programme type gets its own stage list here.
+  const STAGE_SETS = {
+    "Insight Day / Spring Week": ["Researching", "Applied", "Selection", "Offer"],
+    "default": ["Researching", "Applied", "Online Tests", "Video Interview", "Assessment Centre", "Final Round", "Offer"]
+  };
+
+  function getStages(app) {
+    return STAGE_SETS[app.programme_type] || STAGE_SETS.default;
+  }
 
   const form = document.getElementById("add-form");
   const list = document.getElementById("list");
@@ -531,13 +540,14 @@
   }
 
   function buildStageTrack(app) {
-    let currentIndex = STAGES.indexOf(app.stage);
+    const stages = getStages(app);
+    let currentIndex = stages.indexOf(app.stage);
     if (currentIndex === -1) currentIndex = 0;
 
     const track = document.createElement("div");
     track.className = "stage-track";
 
-    STAGES.forEach((stageName, i) => {
+    stages.forEach((stageName, i) => {
       if (i > 0) {
         const line = document.createElement("div");
         line.className = "stage-line" + (i <= currentIndex ? " done" : "");
@@ -556,7 +566,7 @@
 
     const label = document.createElement("span");
     label.className = "stage-label";
-    label.textContent = STAGES[currentIndex];
+    label.textContent = stages[currentIndex];
     track.appendChild(label);
 
     return track;
