@@ -288,6 +288,13 @@
     </div>
   </div>
 
+  <div>
+    <label class="field-label">Sourced via contact (optional)</label>
+    <select id="source_contact_id">
+      <option value="">— None / found independently —</option>
+    </select>
+  </div>
+
   <div class="field-row">
     <div>
       <label class="field-label">Sector</label>
@@ -382,8 +389,36 @@
   const programmeFilter = document.getElementById("programme-filter");
 
   let allApps = [];
+  let allContacts = [];
   let currentTab = "active";
   let editingId = null; // tracks whether the form is adding a new entry or editing an existing one
+
+  // Loads contacts from the outreach tracker so applications can be linked to
+  // whichever contact led to them.
+  async function loadContactsForDropdown() {
+    const { data, error } = await sb
+      .from("contacts")
+      .select("id, name, firm")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    allContacts = data;
+    const select = document.getElementById("source_contact_id");
+    const current = select.value;
+    select.innerHTML = '<option value="">— None / found independently —</option>' +
+      data.map(c => `<option value="${c.id}">${c.name} (${c.firm})</option>`).join("");
+    select.value = current;
+  }
+
+  // Looks up a contact's display name by id, for showing on application rows
+  function contactLabel(id) {
+    const c = allContacts.find(c => String(c.id) === String(id));
+    return c ? `${c.name} (${c.firm})` : null;
+  }
 
   async function loadApps() {
     statusText.textContent = "Loading...";
@@ -445,10 +480,11 @@
     const top = document.createElement("div");
     top.className = "row-top";
 
+    const sourceLabel = app.source_contact_id ? contactLabel(app.source_contact_id) : null;
     const tagsHtml = [app.sector, app.programme_type]
       .filter(Boolean)
       .map(t => `<span class="tag">${t}</span>`)
-      .join("");
+      .join("") + (sourceLabel ? `<span class="tag" style="color:#1F7A4C;background:#E4F3EA;">via ${sourceLabel}</span>` : "");
 
     top.innerHTML = `
       <div>
@@ -475,6 +511,7 @@
       <div class="grid">
         <div><span>Applied date</span>${app.applied_date || "—"}</div>
         <div><span>Closing date</span>${app.deadline || "—"}</div>
+        <div><span>Sourced via</span>${sourceLabel || "Found independently"}</div>
       </div>
       ${app.description ? `<div class="desc">${app.description}</div>` : ""}
       ${app.notes ? `<div class="desc" style="color:#5B6472">${app.notes}</div>` : ""}
@@ -549,6 +586,7 @@
     editingId = app.id;
     document.getElementById("company").value = app.company || "";
     document.getElementById("role").value = app.role || "";
+    document.getElementById("source_contact_id").value = app.source_contact_id || "";
     document.getElementById("sector").value = app.sector || "";
     document.getElementById("programme_type").value = app.programme_type || "";
     document.getElementById("deadline").value = app.deadline || "";
@@ -575,6 +613,7 @@
     const payload = {
       company: document.getElementById("company").value,
       role: document.getElementById("role").value,
+      source_contact_id: document.getElementById("source_contact_id").value || null,
       sector: document.getElementById("sector").value || null,
       programme_type: document.getElementById("programme_type").value || null,
       deadline: document.getElementById("deadline").value || null,
@@ -632,7 +671,7 @@
   sectorFilter.addEventListener("change", renderList);
   programmeFilter.addEventListener("change", renderList);
 
-  loadApps();
+  loadContactsForDropdown().then(loadApps);
 </script>
 
 <script>
