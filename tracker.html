@@ -376,18 +376,18 @@
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Different programme types genuinely have different funnels — a spring
-  // week is often just application → selection, with no OA or interview
-  // stage at all, while a summer internship or grad scheme usually has
-  // several distinct rounds. Rather than forcing everything through one
-  // fixed pipeline, each programme type gets its own stage list here.
-  const STAGE_SETS = {
-    "Insight Day / Spring Week": ["Researching", "Applied", "Selection", "Offer"],
-    "default": ["Researching", "Applied", "Online Tests", "Video Interview", "Assessment Centre", "Final Round", "Offer"]
-  };
+  // One universal funnel for every programme type. Every stage dot is
+  // independently clickable at any time (not gated in sequence), so an
+  // application that skips straight from "Applied" to "Final Round" — like
+  // a spring week with no OA — is handled by just clicking ahead, rather
+  // than needing a separate shorter funnel per programme type. That keeps
+  // it flexible enough for the fact that every insight day/spring week
+  // process is genuinely a bit different, without hardcoding assumptions
+  // about which stages apply.
+  const STAGES = ["Researching", "Applied", "Online Tests", "Video Interview", "Assessment Centre", "Final Round", "Offer"];
 
   function getStages(app) {
-    return STAGE_SETS[app.programme_type] || STAGE_SETS.default;
+    return STAGES;
   }
 
   const form = document.getElementById("add-form");
