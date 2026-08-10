@@ -369,6 +369,7 @@
   const dueFilter = document.getElementById("due-filter");
 
   let allContacts = [];
+  let allApps = [];
   let currentTab = "active";
   let editingId = null;
 
@@ -376,8 +377,28 @@
     return new Date().toISOString().slice(0, 10);
   }
 
+  // Loads applications that reference contacts, so each contact can show
+  // what it actually converted into — the outreach → application feedback loop.
+  async function loadLinkedApps() {
+    const { data, error } = await sb
+      .from("applications")
+      .select("id, company, role, source_contact_id")
+      .not("source_contact_id", "is", null);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+    allApps = data;
+  }
+
+  function appsFromContact(contactId) {
+    return allApps.filter(a => String(a.source_contact_id) === String(contactId));
+  }
+
   async function loadContacts() {
     statusText.textContent = "Loading...";
+    await loadLinkedApps();
     const { data, error } = await sb
       .from("contacts")
       .select("*")
@@ -421,11 +442,12 @@
     const top = document.createElement("div");
     top.className = "row-top";
 
+    const linkedApps = appsFromContact(c.id);
     const followUpOverdue = !c.closed && c.next_follow_up && c.next_follow_up <= todayStr();
     const tagsHtml = [c.role_title, c.channel]
       .filter(Boolean)
       .map(t => `<span class="tag">${t}</span>`)
-      .join("");
+      .join("") + (linkedApps.length ? `<span class="tag" style="color:#1F7A4C;background:#E4F3EA;">→ ${linkedApps.length} application${linkedApps.length > 1 ? "s" : ""}</span>` : "");
 
     top.innerHTML = `
       <div>
@@ -457,6 +479,10 @@
       row.appendChild(badge);
     }
 
+    const linkedAppsHtml = linkedApps.length
+      ? `<div class="desc" style="color:#1F7A4C">Converted to: ${linkedApps.map(a => `${a.company} — ${a.role}`).join("; ")}</div>`
+      : `<div class="desc" style="color:#8A8F99">Not yet linked to an application — add one in the tracker and select this contact under "Sourced via."</div>`;
+
     const expanded = document.createElement("div");
     expanded.className = "row-expanded";
     expanded.style.display = "none";
@@ -466,6 +492,7 @@
         <div><span>Next follow-up</span>${c.next_follow_up || "—"}</div>
       </div>
       ${c.notes ? `<div class="desc">${c.notes}</div>` : ""}
+      ${linkedAppsHtml}
       <div class="row-actions">
         ${c.link ? `<a class="action-link" href="${c.link}" target="_blank" rel="noopener">Open profile</a>` : ""}
         <button class="action-link" data-edit="${c.id}">Edit</button>
