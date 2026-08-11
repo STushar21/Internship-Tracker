@@ -20,7 +20,7 @@ def clean_env(name):
 SUPABASE_URL = clean_env("SUPABASE_URL").rstrip("/")
 SUPABASE_KEY = clean_env("SUPABASE_KEY")
 GMAIL_ADDRESS = clean_env("GMAIL_ADDRESS")
-GMAIL_APP_PASSWORD = clean_env("GMAIL_APP_PASSWORD").replace(" ", "")
+GMAIL_APP_PASSWORD = "".join(clean_env("GMAIL_APP_PASSWORD").split())
 DIGEST_RECIPIENT = clean_env("DIGEST_RECIPIENT")
 
 # How many days ahead counts as "closing soon"
