@@ -6,11 +6,11 @@ from email.mime.text import MIMEText
 
 import requests
 
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"]
-GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
-DIGEST_RECIPIENT = os.environ["DIGEST_RECIPIENT"]
+SUPABASE_URL = os.environ["SUPABASE_URL"].strip().rstrip("/")
+SUPABASE_KEY = os.environ["SUPABASE_KEY"].strip()
+GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"].strip()
+GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"].strip().replace(" ", "")
+DIGEST_RECIPIENT = os.environ["DIGEST_RECIPIENT"].strip()
 
 # How many days ahead counts as "closing soon"
 LOOKAHEAD_DAYS = 7
