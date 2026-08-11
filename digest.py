@@ -6,11 +6,22 @@ from email.mime.text import MIMEText
 
 import requests
 
-SUPABASE_URL = os.environ["SUPABASE_URL"].strip().rstrip("/")
-SUPABASE_KEY = os.environ["SUPABASE_KEY"].strip()
-GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"].strip()
-GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"].strip().replace(" ", "")
-DIGEST_RECIPIENT = os.environ["DIGEST_RECIPIENT"].strip()
+def clean_env(name):
+    """Reads an environment variable and strips whitespace plus any
+    accidental surrounding quote marks — a common copy-paste artifact
+    when a secret is pulled from inside a code file instead of fresh
+    from its source (e.g. Supabase's dashboard)."""
+    value = os.environ[name].strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+        value = value[1:-1].strip()
+    return value
+
+
+SUPABASE_URL = clean_env("SUPABASE_URL").rstrip("/")
+SUPABASE_KEY = clean_env("SUPABASE_KEY")
+GMAIL_ADDRESS = clean_env("GMAIL_ADDRESS")
+GMAIL_APP_PASSWORD = clean_env("GMAIL_APP_PASSWORD").replace(" ", "")
+DIGEST_RECIPIENT = clean_env("DIGEST_RECIPIENT")
 
 # How many days ahead counts as "closing soon"
 LOOKAHEAD_DAYS = 7
