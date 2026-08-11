@@ -338,6 +338,19 @@
     <input type="text" id="link" placeholder="https://...">
   </div>
 
+  <div class="field-row">
+    <div>
+      <label class="field-label">CV (PDF)</label>
+      <input type="file" id="cv_file" accept="application/pdf,.pdf">
+      <div id="current-cv-status" style="font-size:11px;color:#5B6472;margin-top:4px;"></div>
+    </div>
+    <div>
+      <label class="field-label">Cover letter (PDF)</label>
+      <input type="file" id="cover_letter_file" accept="application/pdf,.pdf">
+      <div id="current-cover-status" style="font-size:11px;color:#5B6472;margin-top:4px;"></div>
+    </div>
+  </div>
+
   <div>
     <label class="field-label">Application description</label>
     <textarea id="description" placeholder="Paste the role/programme description here"></textarea>
@@ -526,6 +539,8 @@
       ${app.notes ? `<div class="desc" style="color:#5B6472">${app.notes}</div>` : ""}
       <div class="row-actions">
         ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
+        ${app.cv_url ? `<a class="action-link" href="${app.cv_url}" target="_blank" rel="noopener">View CV</a>` : ""}
+        ${app.cover_letter_url ? `<a class="action-link" href="${app.cover_letter_url}" target="_blank" rel="noopener">View cover letter</a>` : ""}
         <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
@@ -591,6 +606,26 @@
     return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
   }
 
+  // Turns "Goldman Sachs" into "goldman-sachs" for clean, readable storage paths
+  function sanitizeForPath(str) {
+    return (str || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+
+  // Uploads a single PDF to the "documents" bucket and returns its public URL.
+  // Returns null (and alerts) if the upload fails.
+  async function uploadDocument(file, kind, company, role) {
+    if (!file) return undefined; // no file chosen — caller leaves the field untouched
+    const path = `${kind}/${Date.now()}-${sanitizeForPath(company)}-${sanitizeForPath(role)}.pdf`;
+    const { error } = await sb.storage.from("documents").upload(path, file);
+    if (error) {
+      alert(`Couldn't upload ${kind === "cv" ? "CV" : "cover letter"} — check console (F12)`);
+      console.error(error);
+      return null;
+    }
+    const { data } = sb.storage.from("documents").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   // Fills the form with an existing entry's data and switches it into "edit" mode
   function startEdit(app) {
     editingId = app.id;
@@ -605,6 +640,13 @@
     document.getElementById("description").value = app.description || "";
     document.getElementById("notes").value = app.notes || "";
 
+    document.getElementById("current-cv-status").innerHTML = app.cv_url
+      ? `Current: <a href="${app.cv_url}" target="_blank" rel="noopener">view existing CV</a> — choose a file to replace it`
+      : "No CV uploaded yet";
+    document.getElementById("current-cover-status").innerHTML = app.cover_letter_url
+      ? `Current: <a href="${app.cover_letter_url}" target="_blank" rel="noopener">view existing cover letter</a> — choose a file to replace it`
+      : "No cover letter uploaded yet";
+
     document.getElementById("submit-btn").textContent = "Save changes";
     document.getElementById("cancel-edit-btn").style.display = "inline-block";
     form.scrollIntoView({ behavior: "smooth" });
@@ -614,15 +656,39 @@
   function cancelEdit() {
     editingId = null;
     form.reset();
+    document.getElementById("current-cv-status").textContent = "";
+    document.getElementById("current-cover-status").textContent = "";
     document.getElementById("submit-btn").textContent = "Add to pipeline";
     document.getElementById("cancel-edit-btn").style.display = "none";
   }
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
+
+    const company = document.getElementById("company").value;
+    const role = document.getElementById("role").value;
+    const cvFile = document.getElementById("cv_file").files[0];
+    const coverFile = document.getElementById("cover_letter_file").files[0];
+
+    const submitBtn = document.getElementById("submit-btn");
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = "Uploading...";
+    submitBtn.disabled = true;
+
+    // undefined = "no new file chosen, leave whatever's already saved untouched"
+    const cv_url = await uploadDocument(cvFile, "cv", company, role);
+    const cover_letter_url = await uploadDocument(coverFile, "cover-letter", company, role);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalBtnText;
+
+    // A failed upload returns null specifically (not undefined) — stop rather
+    // than save the application with a broken/missing document silently.
+    if (cv_url === null || cover_letter_url === null) return;
+
     const payload = {
-      company: document.getElementById("company").value,
-      role: document.getElementById("role").value,
+      company,
+      role,
       source_contact_id: document.getElementById("source_contact_id").value || null,
       sector: document.getElementById("sector").value || null,
       programme_type: document.getElementById("programme_type").value || null,
@@ -632,6 +698,8 @@
       description: document.getElementById("description").value || null,
       notes: document.getElementById("notes").value || null,
     };
+    if (cv_url !== undefined) payload.cv_url = cv_url;
+    if (cover_letter_url !== undefined) payload.cover_letter_url = cover_letter_url;
 
     let error;
     if (editingId) {
