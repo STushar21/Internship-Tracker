@@ -252,6 +252,40 @@
     border: 1px dashed #D8DADD; border-radius: 10px;
     color: #5B6472; font-size: 13px;
   }
+
+  /* --- login gate --- */
+  #login-gate {
+    max-width: 360px;
+    margin: 60px auto;
+  }
+  #login-gate h2 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  #login-gate .sub { text-align: center; margin-bottom: 20px; }
+  #login-error {
+    color: #B14432;
+    font-size: 12.5px;
+    margin-top: -2px;
+    display: none;
+  }
+  .logout-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+  #logout-btn {
+    background: none;
+    border: 1px solid #D8DADD;
+    color: #5B6472;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -271,7 +305,28 @@
     </div>
   </div>
   <a href="advice.html" class="nav-link">Advice</a>
+  <button id="logout-btn" class="nav-link" type="button" style="background:none;border:none;font-family:inherit;cursor:pointer;">Log out</button>
 </nav>
+
+<div id="login-gate">
+  <h2>Sign in</h2>
+  <div class="sub">This tracker holds personal data — sign in to continue</div>
+  <form id="login-form">
+    <div style="margin-bottom:10px;">
+      <label class="field-label">Email</label>
+      <input type="email" id="login-email" required>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label class="field-label">Password</label>
+      <input type="password" id="login-password" required>
+    </div>
+    <div id="login-error">Incorrect email or password.</div>
+    <button type="submit" style="width:100%;margin-top:6px;">Sign in</button>
+  </form>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
 
 <h1>Pipeline</h1>
 <div class="sub">IB internship tracker — synced to your database</div>
@@ -381,6 +436,7 @@
 </div>
 
 <div id="list"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -388,6 +444,22 @@
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Auth guard — this page holds real personal data (CVs, cover letters,
+  // application notes), so it's gated behind login. If there's no active
+  // session, bounce to the login page before anything on this page runs.
+  let authReady = sb.auth.getSession().then(({ data: { session } }) => {
+    if (!session) {
+      window.location.href = "login.html";
+      return false;
+    }
+    return true;
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "login.html";
+  });
 
   // One universal funnel for every programme type. Every stage dot is
   // independently clickable at any time (not gated in sequence), so an
@@ -539,8 +611,8 @@
       ${app.notes ? `<div class="desc" style="color:#5B6472">${app.notes}</div>` : ""}
       <div class="row-actions">
         ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
-        ${app.cv_url ? `<a class="action-link" href="${app.cv_url}" target="_blank" rel="noopener">View CV</a>` : ""}
-        ${app.cover_letter_url ? `<a class="action-link" href="${app.cover_letter_url}" target="_blank" rel="noopener">View cover letter</a>` : ""}
+        ${app.cv_url ? `<button type="button" class="action-link" data-view-doc="${app.cv_url}">View CV</button>` : ""}
+        ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${app.cover_letter_url}">View cover letter</button>` : ""}
         <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
@@ -611,8 +683,9 @@
     return (str || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   }
 
-  // Uploads a single PDF to the "documents" bucket and returns its public URL.
-  // Returns null (and alerts) if the upload fails.
+  // Uploads a single PDF to the "documents" bucket and returns its storage
+  // path (not a public URL — the bucket is private, so viewing later goes
+  // through a freshly-generated signed link instead).
   async function uploadDocument(file, kind, company, role) {
     if (!file) return undefined; // no file chosen — caller leaves the field untouched
     const path = `${kind}/${Date.now()}-${sanitizeForPath(company)}-${sanitizeForPath(role)}.pdf`;
@@ -622,8 +695,7 @@
       console.error(error);
       return null;
     }
-    const { data } = sb.storage.from("documents").getPublicUrl(path);
-    return data.publicUrl;
+    return path;
   }
 
   // Fills the form with an existing entry's data and switches it into "edit" mode
@@ -641,10 +713,10 @@
     document.getElementById("notes").value = app.notes || "";
 
     document.getElementById("current-cv-status").innerHTML = app.cv_url
-      ? `Current: <a href="${app.cv_url}" target="_blank" rel="noopener">view existing CV</a> — choose a file to replace it`
+      ? `Current CV attached — <button type="button" class="action-link" style="display:inline;padding:0;text-decoration:underline;" data-view-doc="${app.cv_url}">view it</button> — choose a file to replace it`
       : "No CV uploaded yet";
     document.getElementById("current-cover-status").innerHTML = app.cover_letter_url
-      ? `Current: <a href="${app.cover_letter_url}" target="_blank" rel="noopener">view existing cover letter</a> — choose a file to replace it`
+      ? `Current cover letter attached — <button type="button" class="action-link" style="display:inline;padding:0;text-decoration:underline;" data-view-doc="${app.cover_letter_url}">view it</button> — choose a file to replace it`
       : "No cover letter uploaded yet";
 
     document.getElementById("submit-btn").textContent = "Save changes";
@@ -749,7 +821,43 @@
   sectorFilter.addEventListener("change", renderList);
   programmeFilter.addEventListener("change", renderList);
 
-  loadContactsForDropdown().then(loadApps);
+  // --- Auth gate ---
+  // onAuthStateChange fires once immediately with whatever session already
+  // exists (or null), then again on every future sign-in/sign-out — so this
+  // one listener handles the initial page load AND all later auth changes.
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) {
+      loadContactsForDropdown().then(loadApps);
+    }
+  });
+
+  document.getElementById("login-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    document.getElementById("login-error").style.display = error ? "block" : "none";
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+  });
+
+  // Opens a document via a fresh, temporary signed link rather than a
+  // permanent public URL — generated on click since the bucket is private.
+  document.addEventListener("click", async function (e) {
+    const btn = e.target.closest("[data-view-doc]");
+    if (!btn) return;
+    const { data, error } = await sb.storage.from("documents").createSignedUrl(btn.dataset.viewDoc, 3600);
+    if (error) {
+      alert("Couldn't open document — check console (F12)");
+      console.error(error);
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  });
 </script>
 
 <script>
