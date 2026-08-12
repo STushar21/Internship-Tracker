@@ -180,9 +180,123 @@
     background: #E8E9EA;
     color: #8A8F99;
   }
+
+  /* --- auth widget --- */
+  .auth-widget {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+  }
+  #auth-signed-out {
+    display: flex;
+    align-items: center;
+  }
+  #auth-toggle-btn {
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    color: #16233F;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  #auth-form-panel {
+    display: none;
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 10px;
+    padding: 16px;
+    width: 240px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+  }
+  #auth-form-panel.open { display: block; }
+  #auth-form-panel label {
+    font-size: 11px;
+    color: #5B6472;
+    margin-bottom: 3px;
+    display: block;
+  }
+  #auth-form-panel input {
+    width: 100%;
+    background: #F6F6F3;
+    border: 1px solid #D8DADD;
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-size: 13px;
+    margin-bottom: 9px;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  #auth-form-panel button {
+    width: 100%;
+    background: #B08D57;
+    border: none;
+    color: #16233F;
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  #auth-error {
+    color: #B14432;
+    font-size: 11.5px;
+    margin-bottom: 8px;
+    display: none;
+  }
+  #auth-signed-in {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #5B6472;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  #signed-in-email { color: #16233F; font-weight: 600; }
+  #auth-signout-btn {
+    background: none;
+    border: 1px solid #D8DADD;
+    color: #5B6472;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
+
+<div class="auth-widget">
+  <div id="auth-signed-out">
+    <button id="auth-toggle-btn" type="button">Sign in</button>
+    <div id="auth-form-panel">
+      <form id="login-form">
+        <label>Email</label>
+        <input type="email" id="login-email" required>
+        <label>Password</label>
+        <input type="password" id="login-password" required>
+        <div id="auth-error">Incorrect email or password.</div>
+        <button type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+  <div id="auth-signed-in">
+    Signed in as <span id="signed-in-email"></span>
+    <button id="auth-signout-btn" type="button">Sign out</button>
+  </div>
+</div>
+
 
 <nav class="top-nav">
   <a href="index.html" class="brand">STK</a>
@@ -233,6 +347,46 @@
     <div class="card-desc">Real situations and judgment calls — rejections, choices, networking, mindset — not templates.</div>
   </a>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const toggleBtn = document.getElementById("auth-toggle-btn");
+  const formPanel = document.getElementById("auth-form-panel");
+  const signedOutView = document.getElementById("auth-signed-out");
+  const signedInView = document.getElementById("auth-signed-in");
+
+  toggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    formPanel.classList.toggle("open");
+  });
+  document.addEventListener("click", () => formPanel.classList.remove("open"));
+  formPanel.addEventListener("click", (e) => e.stopPropagation());
+
+  document.getElementById("login-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    document.getElementById("auth-error").style.display = error ? "block" : "none";
+  });
+
+  document.getElementById("auth-signout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+  });
+
+  sb.auth.onAuthStateChange((event, session) => {
+    signedOutView.style.display = session ? "none" : "flex";
+    signedInView.style.display = session ? "flex" : "none";
+    if (session) {
+      formPanel.classList.remove("open");
+      document.getElementById("signed-in-email").textContent = session.user.email;
+    }
+  });
+</script>
 
 <script>
   document.querySelectorAll('.nav-caret').forEach(function (btn) {
