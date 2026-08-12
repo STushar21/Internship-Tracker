@@ -305,24 +305,11 @@
     </div>
   </div>
   <a href="advice.html" class="nav-link">Advice</a>
-  <button id="logout-btn" class="nav-link" type="button" style="background:none;border:none;font-family:inherit;cursor:pointer;">Log out</button>
 </nav>
 
 <div id="login-gate">
-  <h2>Sign in</h2>
-  <div class="sub">This tracker holds personal data — sign in to continue</div>
-  <form id="login-form">
-    <div style="margin-bottom:10px;">
-      <label class="field-label">Email</label>
-      <input type="email" id="login-email" required>
-    </div>
-    <div style="margin-bottom:10px;">
-      <label class="field-label">Password</label>
-      <input type="password" id="login-password" required>
-    </div>
-    <div id="login-error">Incorrect email or password.</div>
-    <button type="submit" style="width:100%;margin-top:6px;">Sign in</button>
-  </form>
+  <h2>Locked</h2>
+  <div class="sub">This tracker holds personal data. <a href="index.html" style="color:#8C6A28;">Sign in from the home page</a>, then come back.</div>
 </div>
 
 <div id="app-content" style="display:none;">
@@ -444,22 +431,6 @@
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // Auth guard — this page holds real personal data (CVs, cover letters,
-  // application notes), so it's gated behind login. If there's no active
-  // session, bounce to the login page before anything on this page runs.
-  let authReady = sb.auth.getSession().then(({ data: { session } }) => {
-    if (!session) {
-      window.location.href = "login.html";
-      return false;
-    }
-    return true;
-  });
-
-  document.getElementById("logout-btn").addEventListener("click", async () => {
-    await sb.auth.signOut();
-    window.location.href = "login.html";
-  });
 
   // One universal funnel for every programme type. Every stage dot is
   // independently clickable at any time (not gated in sequence), so an
@@ -833,16 +804,9 @@
     }
   });
 
-  document.getElementById("login-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    document.getElementById("login-error").style.display = error ? "block" : "none";
-  });
-
   document.getElementById("logout-btn").addEventListener("click", async () => {
     await sb.auth.signOut();
+    window.location.href = "index.html";
   });
 
   // Opens a document via a fresh, temporary signed link rather than a
