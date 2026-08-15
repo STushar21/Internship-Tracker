@@ -243,18 +243,69 @@
     overflow-y: auto;
   }
   .row-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
-  .tailor-result {
-    margin-top: 14px;
-    padding: 14px 16px;
-    background: #F6EFDE;
-    border: 1px solid #E8DCC0;
-    border-radius: 8px;
-    font-size: 12.5px;
-    color: #16233F;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    max-height: 400px;
+  .tailor-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(22,35,63,0.5);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .tailor-modal-backdrop.open { display: flex; }
+  .tailor-modal {
+    background: #FFFFFF;
+    border-radius: 14px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+  }
+  .tailor-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 24px 14px;
+    border-bottom: 1px solid #E8E9EA;
+  }
+  .tailor-modal-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; }
+  .tailor-modal-sub { font-size: 12px; color: #5B6472; margin-top: 3px; }
+  .tailor-modal-close {
+    background: none; border: none; color: #8A8F99;
+    font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
+  }
+  .tailor-modal-body {
+    padding: 20px 24px;
     overflow-y: auto;
+    font-size: 13.5px;
+    color: #16233F;
+    line-height: 1.65;
+  }
+  .tailor-modal-body h2, .tailor-modal-body h3, .tailor-modal-body h4 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: #16233F;
+    margin: 18px 0 8px;
+  }
+  .tailor-modal-body h2:first-child, .tailor-modal-body h3:first-child { margin-top: 0; }
+  .tailor-modal-body h2 { font-size: 16px; }
+  .tailor-modal-body h3 { font-size: 14.5px; color: #8C6A28; }
+  .tailor-modal-body h4 { font-size: 13.5px; }
+  .tailor-modal-body p { margin: 0 0 10px; }
+  .tailor-modal-body strong { color: #16233F; }
+  .tailor-modal-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    border-top: 1px solid #E8E9EA;
+  }
+  .tailor-modal-regen {
+    background: none; border: 1px solid #D8DADD; color: #5B6472;
+    font-size: 12px; font-weight: 600; padding: 7px 14px;
+    border-radius: 6px; cursor: pointer;
   }
   .action-link {
     background: none; border: none; color: #5B6472;
@@ -436,6 +487,23 @@
 </div>
 
 <div id="list"></div>
+
+<div class="tailor-modal-backdrop" id="tailor-modal-backdrop">
+  <div class="tailor-modal">
+    <div class="tailor-modal-head">
+      <div>
+        <div class="tailor-modal-title" id="tailor-modal-title">Tailored CV advice</div>
+        <div class="tailor-modal-sub" id="tailor-modal-sub"></div>
+      </div>
+      <button class="tailor-modal-close" id="tailor-modal-close" type="button">&times;</button>
+    </div>
+    <div class="tailor-modal-body" id="tailor-modal-body"></div>
+    <div class="tailor-modal-foot">
+      <span class="tailor-modal-sub" id="tailor-modal-timestamp"></span>
+      <button class="tailor-modal-regen" id="tailor-modal-regen" type="button">↻ Regenerate</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -597,7 +665,9 @@
         ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
         ${app.cv_url ? `<button type="button" class="action-link" data-view-doc="${app.cv_url}">View CV</button>` : ""}
         ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${app.cover_letter_url}">View cover letter</button>` : ""}
-        ${app.cv_url && app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}">Tailor CV ✨</button>` : ""}
+        ${app.cv_tailoring_result
+          ? `<button type="button" class="action-link" style="color:#8C6A28" data-show-tailor="${app.id}">View tailored CV advice</button>`
+          : (app.cv_url && app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}">Tailor CV ✨</button>` : "")}
         <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
@@ -605,7 +675,6 @@
           : `<button class="action-link" data-reopen="${app.id}">Reopen</button>`}
         <button class="action-link" style="color:#8A3A2E;margin-left:auto" data-delete="${app.id}">Delete</button>
       </div>
-      <div class="tailor-result" id="tailor-result-${app.id}" style="display:none;"></div>
     `;
     row.appendChild(expanded);
 
@@ -839,29 +908,100 @@
       return;
     }
 
-    // Calls the tailor-cv Edge Function and shows the result inline under the row
+    // Generating for the first time — calls the Edge Function, which also saves the result
     const tailorBtn = e.target.closest("[data-tailor-cv]");
     if (tailorBtn) {
-      const appId = tailorBtn.dataset.tailorCv;
-      const resultBox = document.getElementById(`tailor-result-${appId}`);
-      const originalText = tailorBtn.textContent;
-      tailorBtn.textContent = "Analyzing...";
-      tailorBtn.disabled = true;
-      resultBox.style.display = "block";
-      resultBox.textContent = "Reading your CV and comparing it against the job description — this takes a few seconds...";
-
-      const { data, error } = await sb.functions.invoke("tailor-cv", { body: { applicationId: appId } });
-
-      tailorBtn.textContent = originalText;
-      tailorBtn.disabled = false;
-
-      if (error || data?.error) {
-        resultBox.textContent = `Couldn't generate this — ${data?.error || error.message || "check console (F12)"}`;
-        console.error(error || data.error);
-        return;
-      }
-      resultBox.textContent = data.result;
+      await runTailorCV(tailorBtn.dataset.tailorCv, tailorBtn);
+      return;
     }
+
+    // Already have a saved result — just open it, no API call, no cost
+    const showBtn = e.target.closest("[data-show-tailor]");
+    if (showBtn) {
+      const app = allApps.find(a => String(a.id) === showBtn.dataset.showTailor);
+      if (app) openTailorModal(app);
+      return;
+    }
+  });
+
+  // Very lightweight markdown-to-HTML — just enough for the headers, bold
+  // text, and paragraphs Claude's tailoring output actually uses.
+  function renderMarkdown(text) {
+    let html = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    html = html.replace(/^#### (.*)$/gm, "<h4>$1</h4>");
+    html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+    html = html.replace(/^## (.*)$/gm, "<h3>$1</h3>");
+    html = html.replace(/^# (.*)$/gm, "<h2>$1</h2>");
+    html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+    return html
+      .split(/\n{2,}/)
+      .map(block => (/^<h[2-4]>/.test(block.trim()) ? block : `<p>${block.replace(/\n/g, "<br>")}</p>`))
+      .join("");
+  }
+
+  function formatTailorTimestamp(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return "Generated " + d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+      " at " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function openTailorModal(app) {
+    document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
+    document.getElementById("tailor-modal-sub").textContent = `${app.company} — ${app.role}`;
+    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(app.cv_tailoring_result || "");
+    document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(app.cv_tailoring_generated_at);
+    document.getElementById("tailor-modal-regen").dataset.appId = app.id;
+    document.getElementById("tailor-modal-backdrop").classList.add("open");
+  }
+
+  function closeTailorModal() {
+    document.getElementById("tailor-modal-backdrop").classList.remove("open");
+  }
+
+  // Shared by both the first-time "Tailor CV ✨" button and the modal's
+  // "Regenerate" button — calls the Edge Function, shows the modal with a
+  // loading state, then fills it in once the result (which the function has
+  // already saved to the database) comes back.
+  async function runTailorCV(appId, triggerBtn) {
+    const app = allApps.find(a => String(a.id) === String(appId));
+    document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
+    document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
+    document.getElementById("tailor-modal-body").innerHTML = '<p style="color:#5B6472;">Reading your CV and comparing it against the job description — this takes a few seconds...</p>';
+    document.getElementById("tailor-modal-timestamp").textContent = "";
+    document.getElementById("tailor-modal-backdrop").classList.add("open");
+
+    if (triggerBtn) triggerBtn.disabled = true;
+
+    const { data, error } = await sb.functions.invoke("tailor-cv", { body: { applicationId: appId } });
+
+    if (triggerBtn) triggerBtn.disabled = false;
+
+    if (error || data?.error) {
+      document.getElementById("tailor-modal-body").innerHTML =
+        `<p style="color:#B14432;">Couldn't generate this — ${data?.error || error.message || "check console (F12)"}</p>`;
+      console.error(error || data.error);
+      return;
+    }
+
+    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(data.result);
+    document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(new Date().toISOString());
+    document.getElementById("tailor-modal-regen").dataset.appId = appId;
+
+    loadApps(); // refresh so the row button switches to "View tailored CV advice"
+  }
+
+  document.getElementById("tailor-modal-close").addEventListener("click", closeTailorModal);
+  document.getElementById("tailor-modal-backdrop").addEventListener("click", (e) => {
+    if (e.target.id === "tailor-modal-backdrop") closeTailorModal();
+  });
+  document.getElementById("tailor-modal-regen").addEventListener("click", function () {
+    runTailorCV(this.dataset.appId, null);
   });
 </script>
 
