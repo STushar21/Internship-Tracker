@@ -243,6 +243,19 @@
     overflow-y: auto;
   }
   .row-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .tailor-result {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: #F6EFDE;
+    border: 1px solid #E8DCC0;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #16233F;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow-y: auto;
+  }
   .action-link {
     background: none; border: none; color: #5B6472;
     font-size: 12.5px; padding: 0; cursor: pointer;
@@ -584,6 +597,7 @@
         ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
         ${app.cv_url ? `<button type="button" class="action-link" data-view-doc="${app.cv_url}">View CV</button>` : ""}
         ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${app.cover_letter_url}">View cover letter</button>` : ""}
+        ${app.cv_url && app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}">Tailor CV ✨</button>` : ""}
         <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
@@ -591,6 +605,7 @@
           : `<button class="action-link" data-reopen="${app.id}">Reopen</button>`}
         <button class="action-link" style="color:#8A3A2E;margin-left:auto" data-delete="${app.id}">Delete</button>
       </div>
+      <div class="tailor-result" id="tailor-result-${app.id}" style="display:none;"></div>
     `;
     row.appendChild(expanded);
 
@@ -812,15 +827,41 @@
   // Opens a document via a fresh, temporary signed link rather than a
   // permanent public URL — generated on click since the bucket is private.
   document.addEventListener("click", async function (e) {
-    const btn = e.target.closest("[data-view-doc]");
-    if (!btn) return;
-    const { data, error } = await sb.storage.from("documents").createSignedUrl(btn.dataset.viewDoc, 3600);
-    if (error) {
-      alert("Couldn't open document — check console (F12)");
-      console.error(error);
+    const viewBtn = e.target.closest("[data-view-doc]");
+    if (viewBtn) {
+      const { data, error } = await sb.storage.from("documents").createSignedUrl(viewBtn.dataset.viewDoc, 3600);
+      if (error) {
+        alert("Couldn't open document — check console (F12)");
+        console.error(error);
+        return;
+      }
+      window.open(data.signedUrl, "_blank");
       return;
     }
-    window.open(data.signedUrl, "_blank");
+
+    // Calls the tailor-cv Edge Function and shows the result inline under the row
+    const tailorBtn = e.target.closest("[data-tailor-cv]");
+    if (tailorBtn) {
+      const appId = tailorBtn.dataset.tailorCv;
+      const resultBox = document.getElementById(`tailor-result-${appId}`);
+      const originalText = tailorBtn.textContent;
+      tailorBtn.textContent = "Analyzing...";
+      tailorBtn.disabled = true;
+      resultBox.style.display = "block";
+      resultBox.textContent = "Reading your CV and comparing it against the job description — this takes a few seconds...";
+
+      const { data, error } = await sb.functions.invoke("tailor-cv", { body: { applicationId: appId } });
+
+      tailorBtn.textContent = originalText;
+      tailorBtn.disabled = false;
+
+      if (error || data?.error) {
+        resultBox.textContent = `Couldn't generate this — ${data?.error || error.message || "check console (F12)"}`;
+        console.error(error || data.error);
+        return;
+      }
+      resultBox.textContent = data.result;
+    }
   });
 </script>
 
