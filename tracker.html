@@ -488,6 +488,8 @@
 
 <div id="list"></div>
 
+<input type="file" id="tailor-ref-cv-picker" accept="application/pdf,.pdf" style="display:none;">
+
 <div class="tailor-modal-backdrop" id="tailor-modal-backdrop">
   <div class="tailor-modal">
     <div class="tailor-modal-head">
@@ -667,7 +669,7 @@
         ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${app.cover_letter_url}">View cover letter</button>` : ""}
         ${app.cv_tailoring_result
           ? `<button type="button" class="action-link" style="color:#8C6A28" data-show-tailor="${app.id}">View tailored CV advice</button>`
-          : (app.cv_url && app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}">Tailor CV ✨</button>` : "")}
+          : (app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}">Tailor CV ✨</button>` : "")}
         <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
@@ -908,10 +910,11 @@
       return;
     }
 
-    // Generating for the first time — calls the Edge Function, which also saves the result
+    // Generating (or regenerating) — first ask for a reference CV to tailor
+    // from, since it might not be the CV already attached to this application
     const tailorBtn = e.target.closest("[data-tailor-cv]");
     if (tailorBtn) {
-      await runTailorCV(tailorBtn.dataset.tailorCv, tailorBtn);
+      requestReferenceCV(tailorBtn.dataset.tailorCv, tailorBtn);
       return;
     }
 
@@ -964,23 +967,50 @@
     document.getElementById("tailor-modal-backdrop").classList.remove("open");
   }
 
-  // Shared by both the first-time "Tailor CV ✨" button and the modal's
-  // "Regenerate" button — calls the Edge Function, shows the modal with a
-  // loading state, then fills it in once the result (which the function has
-  // already saved to the database) comes back.
-  async function runTailorCV(appId, triggerBtn) {
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]); // strip the "data:...;base64," prefix
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Opens the file picker to choose a reference CV — could be the CV
+  // already attached to this application, or (just as often, per how this
+  // actually gets used) a CV from a similar recent application being
+  // adapted for this new one. Either way, the picked file is used purely
+  // to generate advice and is never saved as this application's CV.
+  const refCvPicker = document.getElementById("tailor-ref-cv-picker");
+  let pendingTailorAppId = null;
+
+  function requestReferenceCV(appId, triggerBtn) {
+    pendingTailorAppId = appId;
+    refCvPicker.dataset.triggerBtnId = triggerBtn ? triggerBtn.id || "" : "";
+    refCvPicker.value = ""; // clear any previous selection so picking the same file again still fires "change"
+    refCvPicker.click();
+  }
+
+  refCvPicker.addEventListener("change", async function () {
+    const file = refCvPicker.files[0];
+    if (!file || !pendingTailorAppId) return;
+    const base64 = await readFileAsBase64(file);
+    runTailorCV(pendingTailorAppId, base64, file.name);
+  });
+
+  // Calls the Edge Function with the chosen reference CV, shows the modal
+  // with a loading state, then fills it in once the result (which the
+  // function has already saved to the database) comes back.
+  async function runTailorCV(appId, cvBase64, filename) {
     const app = allApps.find(a => String(a.id) === String(appId));
     document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
-    document.getElementById("tailor-modal-body").innerHTML = '<p style="color:#5B6472;">Reading your CV and comparing it against the job description — this takes a few seconds...</p>';
+    document.getElementById("tailor-modal-body").innerHTML =
+      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this takes a few seconds...</p>`;
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
-    if (triggerBtn) triggerBtn.disabled = true;
-
-    const { data, error } = await sb.functions.invoke("tailor-cv", { body: { applicationId: appId } });
-
-    if (triggerBtn) triggerBtn.disabled = false;
+    const { data, error } = await sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvBase64 } });
 
     if (error || data?.error) {
       document.getElementById("tailor-modal-body").innerHTML =
@@ -1001,7 +1031,7 @@
     if (e.target.id === "tailor-modal-backdrop") closeTailorModal();
   });
   document.getElementById("tailor-modal-regen").addEventListener("click", function () {
-    runTailorCV(this.dataset.appId, null);
+    requestReferenceCV(this.dataset.appId, null);
   });
 </script>
 
