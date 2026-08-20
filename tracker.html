@@ -509,6 +509,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
 
 <script>
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
@@ -967,13 +968,22 @@
     document.getElementById("tailor-modal-backdrop").classList.remove("open");
   }
 
-  function readFileAsBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]); // strip the "data:...;base64," prefix
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+  // Extracts plain text from a PDF entirely in the browser using PDF.js —
+  // sending Claude ready-made text instead of the raw PDF is both faster
+  // and lighter, since Claude no longer has to visually process each page
+  // like an image before it can read it.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js";
+
+  async function extractTextFromPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      fullText += textContent.items.map(item => item.str).join(" ") + "\n\n";
+    }
+    return fullText.trim();
   }
 
   // Opens the file picker to choose a reference CV — could be the CV
@@ -994,8 +1004,21 @@
   refCvPicker.addEventListener("change", async function () {
     const file = refCvPicker.files[0];
     if (!file || !pendingTailorAppId) return;
-    const base64 = await readFileAsBase64(file);
-    runTailorCV(pendingTailorAppId, base64, file.name);
+
+    let text;
+    try {
+      text = await extractTextFromPDF(file);
+    } catch (extractErr) {
+      alert("Couldn't read that PDF — it may be corrupted or an unusual format. Try a different file.");
+      console.error(extractErr);
+      return;
+    }
+    if (!text || text.length < 50) {
+      alert("Couldn't find readable text in that PDF — it may be a scanned image rather than a text-based document. Try a different file.");
+      return;
+    }
+
+    runTailorCV(pendingTailorAppId, text, file.name);
   });
 
   // Wraps a promise with a hard timeout, so "waiting forever with no idea
@@ -1020,42 +1043,64 @@
       <p style="color:#B14432;">${message}</p>
       <button type="button" class="tailor-modal-regen" id="tailor-retry-btn" style="width:auto;">Try again</button>`;
     document.getElementById("tailor-retry-btn").addEventListener("click", () => {
-      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvBase64, lastTailorAttempt.filename);
+      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvText, lastTailorAttempt.filename);
     });
+  }
+
+  // One attempt at calling the Edge Function. Returns { ok, data, timedOut }
+  // rather than throwing, so the caller can decide whether to retry.
+  async function attemptTailorCall(appId, cvText) {
+    try {
+      const { data, error } = await withTimeout(
+        sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText } }),
+        35000
+      );
+      if (error || data?.error) {
+        return { ok: false, timedOut: false, message: data?.error || error.message };
+      }
+      return { ok: true, data };
+    } catch (timeoutErr) {
+      return { ok: false, timedOut: true, message: "timed out" };
+    }
   }
 
   // Calls the Edge Function with the chosen reference CV, shows the modal
   // with a loading state, then fills it in once the result (which the
-  // function has already saved to the database) comes back.
-  async function runTailorCV(appId, cvBase64, filename) {
-    lastTailorAttempt = { appId, cvBase64, filename };
+  // function has already saved to the database) comes back. Retries
+  // automatically once, silently, before ever showing an error — most
+  // one-off blips resolve on the second try, so this alone cuts down how
+  // often a failure is actually visible.
+  async function runTailorCV(appId, cvText, filename) {
+    lastTailorAttempt = { appId, cvText, filename };
 
     const app = allApps.find(a => String(a.id) === String(appId));
     document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
     document.getElementById("tailor-modal-body").innerHTML =
-      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this usually takes 10-20 seconds.</p>`;
+      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this usually takes 5-15 seconds.</p>`;
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
-    let data, error;
-    try {
-      ({ data, error } = await withTimeout(
-        sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvBase64 } }),
-        35000
-      ));
-    } catch (timeoutErr) {
-      showTailorError("This is taking much longer than usual and has timed out on this end. It may be a one-off — worth trying again.");
+    let result = await attemptTailorCall(appId, cvText);
+
+    if (!result.ok) {
+      // Silent first retry — no error shown yet, just an updated status line
+      document.getElementById("tailor-modal-body").innerHTML =
+        `<p style="color:#5B6472;">That attempt didn't come through — trying once more automatically...</p>`;
+      result = await attemptTailorCall(appId, cvText);
+    }
+
+    if (!result.ok) {
+      showTailorError(
+        result.timedOut
+          ? "This is taking much longer than usual and has timed out twice. It may be a one-off — worth trying again."
+          : `Couldn't generate this — ${result.message || "check console (F12)"}`
+      );
+      console.error(result.message);
       return;
     }
 
-    if (error || data?.error) {
-      showTailorError(`Couldn't generate this — ${data?.error || error.message || "check console (F12)"}`);
-      console.error(error || data.error);
-      return;
-    }
-
-    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(data.result);
+    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(result.data.result);
     document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(new Date().toISOString());
     document.getElementById("tailor-modal-regen").dataset.appId = appId;
 
