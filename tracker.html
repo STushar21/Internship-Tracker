@@ -998,23 +998,59 @@
     runTailorCV(pendingTailorAppId, base64, file.name);
   });
 
+  // Wraps a promise with a hard timeout, so "waiting forever with no idea
+  // what's happening" is never possible — after 35s (longer than the
+  // server's own 25s timeout, so the server's cleaner error message wins
+  // most of the time) this fires instead.
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), ms)),
+    ]);
+  }
+
+  // Keeps the last-used reference CV in memory so "Try again" after a
+  // failure or timeout doesn't force picking the file all over again.
+  let lastTailorAttempt = null;
+
+  // Shared by both failure paths below — shows an error message plus a
+  // "Try again" button that retries with the exact same reference CV.
+  function showTailorError(message) {
+    document.getElementById("tailor-modal-body").innerHTML = `
+      <p style="color:#B14432;">${message}</p>
+      <button type="button" class="tailor-modal-regen" id="tailor-retry-btn" style="width:auto;">Try again</button>`;
+    document.getElementById("tailor-retry-btn").addEventListener("click", () => {
+      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvBase64, lastTailorAttempt.filename);
+    });
+  }
+
   // Calls the Edge Function with the chosen reference CV, shows the modal
   // with a loading state, then fills it in once the result (which the
   // function has already saved to the database) comes back.
   async function runTailorCV(appId, cvBase64, filename) {
+    lastTailorAttempt = { appId, cvBase64, filename };
+
     const app = allApps.find(a => String(a.id) === String(appId));
     document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
     document.getElementById("tailor-modal-body").innerHTML =
-      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this takes a few seconds...</p>`;
+      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this usually takes 10-20 seconds.</p>`;
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
-    const { data, error } = await sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvBase64 } });
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvBase64 } }),
+        35000
+      ));
+    } catch (timeoutErr) {
+      showTailorError("This is taking much longer than usual and has timed out on this end. It may be a one-off — worth trying again.");
+      return;
+    }
 
     if (error || data?.error) {
-      document.getElementById("tailor-modal-body").innerHTML =
-        `<p style="color:#B14432;">Couldn't generate this — ${data?.error || error.message || "check console (F12)"}</p>`;
+      showTailorError(`Couldn't generate this — ${data?.error || error.message || "check console (F12)"}`);
       console.error(error || data.error);
       return;
     }
