@@ -509,7 +509,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
@@ -972,9 +972,20 @@
   // sending Claude ready-made text instead of the raw PDF is both faster
   // and lighter, since Claude no longer has to visually process each page
   // like an image before it can read it.
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js";
+  // Guarded so that if PDF.js somehow fails to load (CDN hiccup, etc.), it
+  // only breaks the PDF-reading feature specifically — not every other
+  // button and handler defined later in this same script block, which is
+  // exactly what happened when this line crashed unguarded before.
+  if (typeof pdfjsLib !== "undefined") {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  } else {
+    console.error("PDF.js failed to load — Tailor CV's file picker won't work until this is fixed.");
+  }
 
   async function extractTextFromPDF(file) {
+    if (typeof pdfjsLib === "undefined") {
+      throw new Error("PDF.js didn't load — try refreshing the page");
+    }
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let fullText = "";
