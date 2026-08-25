@@ -1066,9 +1066,28 @@
         sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText } }),
         35000
       );
-      if (error || data?.error) {
-        return { ok: false, timedOut: false, message: data?.error || error.message };
+
+      if (data?.error) {
+        return { ok: false, timedOut: false, message: typeof data.error === "string" ? data.error : JSON.stringify(data.error) };
       }
+
+      if (error) {
+        // supabase-js doesn't automatically read the JSON body of a non-2xx
+        // response — it just gives a generic "non-2xx status code" message
+        // by default. The function's actual error text lives on
+        // error.context, so read it directly to get the real reason.
+        let message = error.message;
+        if (error.context && typeof error.context.json === "function") {
+          try {
+            const body = await error.context.json();
+            if (body?.error) message = typeof body.error === "string" ? body.error : JSON.stringify(body.error);
+          } catch (parseErr) {
+            // context wasn't valid JSON — fall back to the generic message
+          }
+        }
+        return { ok: false, timedOut: false, message };
+      }
+
       return { ok: true, data };
     } catch (timeoutErr) {
       return { ok: false, timedOut: true, message: "timed out" };
