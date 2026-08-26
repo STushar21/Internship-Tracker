@@ -1059,12 +1059,12 @@
   }
 
   // One attempt at calling the Edge Function. Returns { ok, data, timedOut }
-  // rather than throwing, so the caller can decide whether to retry.
+  // rather than throwing, so the caller can decide what to do next.
   async function attemptTailorCall(appId, cvText) {
     try {
       const { data, error } = await withTimeout(
         sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText } }),
-        35000
+        55000
       );
 
       if (data?.error) {
@@ -1094,12 +1094,34 @@
     }
   }
 
+  // Checks whether the result actually landed in the database despite the
+  // client giving up on it — the server has its own 45s window and can
+  // legitimately still be working (or have just finished) even after our
+  // 55s client-side patience runs out. This is specifically what happened
+  // once already: the function succeeded and saved correctly, but the
+  // client had already shown a timeout with nothing to show for it.
+  // Checking here — instead of blindly firing a second paid API call —
+  // avoids both the wasted cost and the confusing "it worked but you never
+  // saw it" outcome.
+  async function checkForLateResult(appId) {
+    const { data, error } = await sb
+      .from("applications")
+      .select("cv_tailoring_result, cv_tailoring_generated_at")
+      .eq("id", appId)
+      .single();
+
+    if (error || !data?.cv_tailoring_result || !data.cv_tailoring_generated_at) return null;
+
+    // Only count it as "from this attempt" if it was generated very recently —
+    // an old saved result from a previous session shouldn't be mistaken for
+    // this one just finishing late.
+    const ageSeconds = (Date.now() - new Date(data.cv_tailoring_generated_at).getTime()) / 1000;
+    return ageSeconds < 120 ? data : null;
+  }
+
   // Calls the Edge Function with the chosen reference CV, shows the modal
   // with a loading state, then fills it in once the result (which the
-  // function has already saved to the database) comes back. Retries
-  // automatically once, silently, before ever showing an error — most
-  // one-off blips resolve on the second try, so this alone cuts down how
-  // often a failure is actually visible.
+  // function has already saved to the database) comes back.
   async function runTailorCV(appId, cvText, filename) {
     lastTailorAttempt = { appId, cvText, filename };
 
@@ -1107,23 +1129,30 @@
     document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
     document.getElementById("tailor-modal-body").innerHTML =
-      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this usually takes 5-15 seconds.</p>`;
+      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this can take up to a minute.</p>`;
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
-    let result = await attemptTailorCall(appId, cvText);
+    const result = await attemptTailorCall(appId, cvText);
 
     if (!result.ok) {
-      // Silent first retry — no error shown yet, just an updated status line
+      // Before showing any error or retrying (which costs money again),
+      // check whether it actually succeeded on the server anyway.
       document.getElementById("tailor-modal-body").innerHTML =
-        `<p style="color:#5B6472;">That attempt didn't come through — trying once more automatically...</p>`;
-      result = await attemptTailorCall(appId, cvText);
-    }
+        `<p style="color:#5B6472;">That took longer than expected — checking whether it finished anyway before trying again...</p>`;
+      const late = await checkForLateResult(appId);
 
-    if (!result.ok) {
+      if (late) {
+        document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(late.cv_tailoring_result);
+        document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(late.cv_tailoring_generated_at);
+        document.getElementById("tailor-modal-regen").dataset.appId = appId;
+        loadApps();
+        return;
+      }
+
       showTailorError(
         result.timedOut
-          ? "This is taking much longer than usual and has timed out twice. It may be a one-off — worth trying again."
+          ? "This timed out and doesn't appear to have completed on the server either. Worth trying again."
           : `Couldn't generate this — ${result.message || "check console (F12)"}`
       );
       console.error(result.message);
