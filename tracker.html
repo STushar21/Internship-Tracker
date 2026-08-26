@@ -1061,11 +1061,13 @@
   // One attempt at calling the Edge Function. Returns { ok, data, timedOut }
   // rather than throwing, so the caller can decide what to do next.
   async function attemptTailorCall(appId, cvText) {
+    console.log(`[tailor-cv] Invoking function for application ${appId} at ${new Date().toISOString()}`);
     try {
       const { data, error } = await withTimeout(
         sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText } }),
         55000
       );
+      console.log(`[tailor-cv] Response received at ${new Date().toISOString()}`, { data, error });
 
       if (data?.error) {
         return { ok: false, timedOut: false, message: typeof data.error === "string" ? data.error : JSON.stringify(data.error) };
@@ -1090,6 +1092,7 @@
 
       return { ok: true, data };
     } catch (timeoutErr) {
+      console.error(`[tailor-cv] Exception in attemptTailorCall at ${new Date().toISOString()}:`, timeoutErr);
       return { ok: false, timedOut: true, message: "timed out" };
     }
   }
