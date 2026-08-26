@@ -1159,8 +1159,11 @@
       return;
     }
 
-    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(result.data.result);
-    document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(new Date().toISOString());
+    const saveWarning = result.data.saveFailed
+      ? '<p style="color:#B14432; font-size:12px; margin-bottom:12px;">⚠ This generated correctly but didn\'t save — it won\'t be here if you leave and come back. Worth screenshotting or copying it now.</p>'
+      : "";
+    document.getElementById("tailor-modal-body").innerHTML = saveWarning + renderMarkdown(result.data.result);
+    document.getElementById("tailor-modal-timestamp").textContent = result.data.saveFailed ? "Not saved" : formatTailorTimestamp(new Date().toISOString());
     document.getElementById("tailor-modal-regen").dataset.appId = appId;
 
     loadApps(); // refresh so the row button switches to "View tailored CV advice"
