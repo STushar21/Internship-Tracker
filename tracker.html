@@ -931,6 +931,10 @@
   // Very lightweight markdown-to-HTML — just enough for the headers, bold
   // text, and paragraphs Claude's tailoring output actually uses.
   function renderMarkdown(text) {
+    if (typeof text !== "string") {
+      console.error("[tailor-cv] renderMarkdown received a non-string value:", text);
+      return '<p style="color:#B14432;">Received an unexpected response format — check console (F12) for details.</p>';
+    }
     let html = text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -1161,6 +1165,8 @@
       console.error(result.message);
       return;
     }
+
+    console.log("[tailor-cv] Full data object about to be rendered:", result.data);
 
     const saveWarning = result.data.saveFailed
       ? '<p style="color:#B14432; font-size:12px; margin-bottom:12px;">⚠ This generated correctly but didn\'t save — it won\'t be here if you leave and come back. Worth screenshotting or copying it now.</p>'
