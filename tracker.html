@@ -295,6 +295,26 @@
   .tailor-modal-body h4 { font-size: 13.5px; }
   .tailor-modal-body p { margin: 0 0 10px; }
   .tailor-modal-body strong { color: #16233F; }
+  .tailor-modal-body .bullet-pair {
+    margin: 12px 0;
+    padding: 10px 14px;
+    background: #F9F8F4;
+    border-radius: 8px;
+    border-left: 3px solid #B08D57;
+  }
+  .tailor-modal-body .bullet-before {
+    font-size: 12px;
+    color: #8A8F99;
+    text-decoration: line-through;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .tailor-modal-body .bullet-after {
+    font-size: 13.5px;
+    color: #16233F;
+    font-weight: 500;
+    line-height: 1.5;
+  }
   .tailor-modal-foot {
     display: flex;
     justify-content: space-between;
@@ -940,6 +960,13 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
+    // Style BEFORE/AFTER bullet pairs as their own distinct card — struck-
+    // through grey original above a bold rewrite below — so they can be
+    // scanned and copied at a glance rather than read as plain text.
+    html = html.replace(/^BEFORE: (.*)\n^AFTER: (.*)$/gm, (match, before, after) =>
+      `<div class="bullet-pair"><div class="bullet-before">${before}</div><div class="bullet-after">${after}</div></div>`
+    );
+
     html = html.replace(/^#### (.*)$/gm, "<h4>$1</h4>");
     html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
     html = html.replace(/^## (.*)$/gm, "<h3>$1</h3>");
@@ -948,7 +975,11 @@
 
     return html
       .split(/\n{2,}/)
-      .map(block => (/^<h[2-4]>/.test(block.trim()) ? block : `<p>${block.replace(/\n/g, "<br>")}</p>`))
+      .map(block => {
+        const trimmed = block.trim();
+        if (/^<h[2-4]>/.test(trimmed) || /^<div class="bullet-pair"/.test(trimmed)) return block;
+        return `<p>${block.replace(/\n/g, "<br>")}</p>`;
+      })
       .join("");
   }
 
