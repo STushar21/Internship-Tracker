@@ -1039,12 +1039,48 @@
   // to generate advice and is never saved as this application's CV.
   const refCvPicker = document.getElementById("tailor-ref-cv-picker");
   let pendingTailorAppId = null;
+  let pendingTailorContext = "";
+  let lastUsedContext = ""; // pre-fills the box on Regenerate for convenience
 
   function requestReferenceCV(appId, triggerBtn) {
-    pendingTailorAppId = appId;
-    refCvPicker.dataset.triggerBtnId = triggerBtn ? triggerBtn.id || "" : "";
-    refCvPicker.value = ""; // clear any previous selection so picking the same file again still fires "change"
-    refCvPicker.click();
+    showContextStep(appId);
+  }
+
+  // A brief optional step before the file picker: lets you add anything
+  // relevant that isn't captured in the CV or job description — something
+  // you mentioned in conversation with a recruiter, a specific reason
+  // you're drawn to this role, anything you'd naturally tell a person
+  // helping you tailor a CV in conversation but that the AI otherwise has
+  // no way of knowing.
+  function showContextStep(appId) {
+    const app = allApps.find(a => String(a.id) === String(appId));
+    document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
+    document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
+    document.getElementById("tailor-modal-timestamp").textContent = "";
+    document.getElementById("tailor-modal-body").innerHTML = `
+      <p style="color:#5B6472; margin-bottom:10px;">Anything extra worth knowing for this one? Optional — a conversation with a recruiter, a specific reason this role stands out to you, anything not already in your CV or the job description.</p>
+      <textarea id="tailor-context-input" placeholder="e.g. Spoke with an analyst at their insight day who mentioned the team is expanding into private credit..." style="width:100%; min-height:80px; background:#F6F6F3; border:1px solid #D8DADD; border-radius:6px; padding:9px; font-size:13px; font-family:inherit; box-sizing:border-box; margin-bottom:10px;"></textarea>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="tailor-modal-regen" id="tailor-context-continue" style="width:auto;">Continue</button>
+        <button type="button" class="action-link" id="tailor-context-skip">Skip</button>
+      </div>
+    `;
+    document.getElementById("tailor-context-input").value = lastUsedContext;
+    document.getElementById("tailor-modal-backdrop").classList.add("open");
+
+    const proceed = () => {
+      pendingTailorAppId = appId;
+      pendingTailorContext = document.getElementById("tailor-context-input").value.trim();
+      lastUsedContext = pendingTailorContext;
+      refCvPicker.value = ""; // clear any previous selection so picking the same file again still fires "change"
+      refCvPicker.click();
+    };
+
+    document.getElementById("tailor-context-continue").addEventListener("click", proceed);
+    document.getElementById("tailor-context-skip").addEventListener("click", () => {
+      pendingTailorContext = "";
+      proceed();
+    });
   }
 
   refCvPicker.addEventListener("change", async function () {
@@ -1064,7 +1100,7 @@
       return;
     }
 
-    runTailorCV(pendingTailorAppId, text, file.name);
+    runTailorCV(pendingTailorAppId, text, file.name, pendingTailorContext);
   });
 
   // Wraps a promise with a hard timeout, so "waiting forever with no idea
@@ -1083,23 +1119,23 @@
   let lastTailorAttempt = null;
 
   // Shared by both failure paths below — shows an error message plus a
-  // "Try again" button that retries with the exact same reference CV.
+  // "Try again" button that retries with the exact same reference CV and context.
   function showTailorError(message) {
     document.getElementById("tailor-modal-body").innerHTML = `
       <p style="color:#B14432;">${message}</p>
       <button type="button" class="tailor-modal-regen" id="tailor-retry-btn" style="width:auto;">Try again</button>`;
     document.getElementById("tailor-retry-btn").addEventListener("click", () => {
-      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvText, lastTailorAttempt.filename);
+      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvText, lastTailorAttempt.filename, lastTailorAttempt.extraContext);
     });
   }
 
   // One attempt at calling the Edge Function. Returns { ok, data, timedOut }
   // rather than throwing, so the caller can decide what to do next.
-  async function attemptTailorCall(appId, cvText) {
+  async function attemptTailorCall(appId, cvText, extraContext) {
     console.log(`[tailor-cv] Invoking function for application ${appId} at ${new Date().toISOString()}`);
     try {
       const { data, error } = await withTimeout(
-        sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText } }),
+        sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText, extraContext } }),
         55000
       );
       console.log(`[tailor-cv] Response received at ${new Date().toISOString()}`, { data, error });
@@ -1157,11 +1193,12 @@
     return ageSeconds < 120 ? data : null;
   }
 
-  // Calls the Edge Function with the chosen reference CV, shows the modal
-  // with a loading state, then fills it in once the result (which the
-  // function has already saved to the database) comes back.
-  async function runTailorCV(appId, cvText, filename) {
-    lastTailorAttempt = { appId, cvText, filename };
+  // Calls the Edge Function with the chosen reference CV (and any optional
+  // extra context), shows the modal with a loading state, then fills it in
+  // once the result (which the function has already saved to the database)
+  // comes back.
+  async function runTailorCV(appId, cvText, filename, extraContext) {
+    lastTailorAttempt = { appId, cvText, filename, extraContext };
 
     const app = allApps.find(a => String(a.id) === String(appId));
     document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
@@ -1171,7 +1208,7 @@
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
-    const result = await attemptTailorCall(appId, cvText);
+    const result = await attemptTailorCall(appId, cvText, extraContext);
 
     if (!result.ok) {
       // Before showing any error or retrying (which costs money again),
@@ -1214,7 +1251,7 @@
     if (e.target.id === "tailor-modal-backdrop") closeTailorModal();
   });
   document.getElementById("tailor-modal-regen").addEventListener("click", function () {
-    requestReferenceCV(this.dataset.appId, null);
+    showContextStep(this.dataset.appId);
   });
 </script>
 
