@@ -689,8 +689,11 @@
         ${app.cv_url ? `<button type="button" class="action-link" data-view-doc="${app.cv_url}">View CV</button>` : ""}
         ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${app.cover_letter_url}">View cover letter</button>` : ""}
         ${app.cv_tailoring_result
-          ? `<button type="button" class="action-link" style="color:#8C6A28" data-show-tailor="${app.id}">View tailored CV advice</button>`
-          : (app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}">Tailor CV ✨</button>` : "")}
+          ? `<button type="button" class="action-link" style="color:#8C6A28" data-show-tailor="${app.id}" data-tailor-kind="cv">View tailored CV advice</button>`
+          : (app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}" data-tailor-kind="cv">Tailor CV ✨</button>` : "")}
+        ${app.cover_letter_tailoring_result
+          ? `<button type="button" class="action-link" style="color:#8C6A28" data-show-tailor="${app.id}" data-tailor-kind="coverLetter">View tailored cover letter advice</button>`
+          : (app.description ? `<button type="button" class="action-link" style="color:#8C6A28" data-tailor-cv="${app.id}" data-tailor-kind="coverLetter">Tailor cover letter ✨</button>` : "")}
         <button class="action-link" data-edit="${app.id}">Edit</button>
         ${!app.closed
           ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
@@ -931,11 +934,11 @@
       return;
     }
 
-    // Generating (or regenerating) — first ask for a reference CV to tailor
-    // from, since it might not be the CV already attached to this application
+    // Generating (or regenerating) — first ask for a reference document to
+    // tailor from, since it might not be the one already attached to this application
     const tailorBtn = e.target.closest("[data-tailor-cv]");
     if (tailorBtn) {
-      requestReferenceCV(tailorBtn.dataset.tailorCv, tailorBtn);
+      showContextStep(tailorBtn.dataset.tailorCv, tailorBtn.dataset.tailorKind);
       return;
     }
 
@@ -943,7 +946,7 @@
     const showBtn = e.target.closest("[data-show-tailor]");
     if (showBtn) {
       const app = allApps.find(a => String(a.id) === showBtn.dataset.showTailor);
-      if (app) openTailorModal(app);
+      if (app) openTailorModal(app, showBtn.dataset.tailorKind);
       return;
     }
   });
@@ -990,12 +993,36 @@
       " at " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   }
 
-  function openTailorModal(app) {
-    document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
+  // Everything that differs between tailoring a CV vs a cover letter lives
+  // here — one place to keep the two features from drifting apart, rather
+  // than duplicating the whole flow twice.
+  const TAILOR_CONFIG = {
+    cv: {
+      title: "Tailored CV advice",
+      docLabel: "your CV",
+      functionName: "tailor-cv",
+      bodyField: "cvText",
+      resultColumn: "cv_tailoring_result",
+      timestampColumn: "cv_tailoring_generated_at",
+    },
+    coverLetter: {
+      title: "Tailored cover letter advice",
+      docLabel: "your cover letter",
+      functionName: "tailor-cover-letter",
+      bodyField: "coverLetterText",
+      resultColumn: "cover_letter_tailoring_result",
+      timestampColumn: "cover_letter_tailoring_generated_at",
+    },
+  };
+
+  function openTailorModal(app, kind) {
+    const cfg = TAILOR_CONFIG[kind];
+    document.getElementById("tailor-modal-title").textContent = cfg.title;
     document.getElementById("tailor-modal-sub").textContent = `${app.company} — ${app.role}`;
-    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(app.cv_tailoring_result || "");
-    document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(app.cv_tailoring_generated_at);
+    document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(app[cfg.resultColumn] || "");
+    document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(app[cfg.timestampColumn]);
     document.getElementById("tailor-modal-regen").dataset.appId = app.id;
+    document.getElementById("tailor-modal-regen").dataset.tailorKind = kind;
     document.getElementById("tailor-modal-backdrop").classList.add("open");
   }
 
@@ -1032,46 +1059,45 @@
     return fullText.trim();
   }
 
-  // Opens the file picker to choose a reference CV — could be the CV
-  // already attached to this application, or (just as often, per how this
-  // actually gets used) a CV from a similar recent application being
+  // Opens the file picker to choose a reference document — could be the
+  // one already attached to this application, or (just as often, per how
+  // this actually gets used) one from a similar recent application being
   // adapted for this new one. Either way, the picked file is used purely
-  // to generate advice and is never saved as this application's CV.
+  // to generate advice and is never saved as this application's document.
   const refCvPicker = document.getElementById("tailor-ref-cv-picker");
   let pendingTailorAppId = null;
+  let pendingTailorKind = null;
   let pendingTailorContext = "";
-  let lastUsedContext = ""; // pre-fills the box on Regenerate for convenience
-
-  function requestReferenceCV(appId, triggerBtn) {
-    showContextStep(appId);
-  }
+  const lastUsedContext = { cv: "", coverLetter: "" }; // pre-fills the box on Regenerate for convenience, kept separate per kind
 
   // A brief optional step before the file picker: lets you add anything
-  // relevant that isn't captured in the CV or job description — something
-  // you mentioned in conversation with a recruiter, a specific reason
-  // you're drawn to this role, anything you'd naturally tell a person
-  // helping you tailor a CV in conversation but that the AI otherwise has
-  // no way of knowing.
-  function showContextStep(appId) {
+  // relevant that isn't captured in the document or job description —
+  // something you mentioned in conversation with a recruiter, a specific
+  // reason you're drawn to this role, anything you'd naturally tell a
+  // person helping you tailor this in conversation but that the AI
+  // otherwise has no way of knowing.
+  function showContextStep(appId, kind) {
+    const cfg = TAILOR_CONFIG[kind];
     const app = allApps.find(a => String(a.id) === String(appId));
-    document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
+    document.getElementById("tailor-modal-title").textContent = cfg.title;
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-body").innerHTML = `
-      <p style="color:#5B6472; margin-bottom:10px;">Anything extra worth knowing for this one? Optional — a conversation with a recruiter, a specific reason this role stands out to you, anything not already in your CV or the job description.</p>
+      <p style="color:#5B6472; margin-bottom:10px;">Anything extra worth knowing for this one? Optional — a conversation with a recruiter, a specific reason this role stands out to you, anything not already in ${cfg.docLabel} or the job description.</p>
       <textarea id="tailor-context-input" placeholder="e.g. Spoke with an analyst at their insight day who mentioned the team is expanding into private credit..." style="width:100%; min-height:80px; background:#F6F6F3; border:1px solid #D8DADD; border-radius:6px; padding:9px; font-size:13px; font-family:inherit; box-sizing:border-box; margin-bottom:10px;"></textarea>
       <div style="display:flex; gap:10px;">
         <button type="button" class="tailor-modal-regen" id="tailor-context-continue" style="width:auto;">Continue</button>
         <button type="button" class="action-link" id="tailor-context-skip">Skip</button>
       </div>
     `;
-    document.getElementById("tailor-context-input").value = lastUsedContext;
+    document.getElementById("tailor-context-input").value = lastUsedContext[kind];
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
     const proceed = () => {
       pendingTailorAppId = appId;
+      pendingTailorKind = kind;
       pendingTailorContext = document.getElementById("tailor-context-input").value.trim();
-      lastUsedContext = pendingTailorContext;
+      lastUsedContext[kind] = pendingTailorContext;
       refCvPicker.value = ""; // clear any previous selection so picking the same file again still fires "change"
       refCvPicker.click();
     };
@@ -1100,7 +1126,7 @@
       return;
     }
 
-    runTailorCV(pendingTailorAppId, text, file.name, pendingTailorContext);
+    runTailorCV(pendingTailorAppId, text, file.name, pendingTailorContext, pendingTailorKind);
   });
 
   // Wraps a promise with a hard timeout, so "waiting forever with no idea
@@ -1114,31 +1140,34 @@
     ]);
   }
 
-  // Keeps the last-used reference CV in memory so "Try again" after a
+  // Keeps the last-used reference document in memory so "Try again" after a
   // failure or timeout doesn't force picking the file all over again.
   let lastTailorAttempt = null;
 
   // Shared by both failure paths below — shows an error message plus a
-  // "Try again" button that retries with the exact same reference CV and context.
+  // "Try again" button that retries with the exact same reference document and context.
   function showTailorError(message) {
     document.getElementById("tailor-modal-body").innerHTML = `
       <p style="color:#B14432;">${message}</p>
       <button type="button" class="tailor-modal-regen" id="tailor-retry-btn" style="width:auto;">Try again</button>`;
     document.getElementById("tailor-retry-btn").addEventListener("click", () => {
-      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvText, lastTailorAttempt.filename, lastTailorAttempt.extraContext);
+      runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvText, lastTailorAttempt.filename, lastTailorAttempt.extraContext, lastTailorAttempt.kind);
     });
   }
 
   // One attempt at calling the Edge Function. Returns { ok, data, timedOut }
   // rather than throwing, so the caller can decide what to do next.
-  async function attemptTailorCall(appId, cvText, extraContext) {
-    console.log(`[tailor-cv] Invoking function for application ${appId} at ${new Date().toISOString()}`);
+  async function attemptTailorCall(appId, cvText, extraContext, kind) {
+    const cfg = TAILOR_CONFIG[kind];
+    console.log(`[tailor] Invoking ${cfg.functionName} for application ${appId} at ${new Date().toISOString()}`);
     try {
+      const body = { applicationId: appId, extraContext };
+      body[cfg.bodyField] = cvText;
       const { data, error } = await withTimeout(
-        sb.functions.invoke("tailor-cv", { body: { applicationId: appId, cvText, extraContext } }),
+        sb.functions.invoke(cfg.functionName, { body }),
         55000
       );
-      console.log(`[tailor-cv] Response received at ${new Date().toISOString()}`, { data, error });
+      console.log(`[tailor] Response received at ${new Date().toISOString()}`, { data, error });
 
       if (data?.error) {
         return { ok: false, timedOut: false, message: typeof data.error === "string" ? data.error : JSON.stringify(data.error) };
@@ -1152,8 +1181,8 @@
         let message = error.message;
         if (error.context && typeof error.context.json === "function") {
           try {
-            const body = await error.context.json();
-            if (body?.error) message = typeof body.error === "string" ? body.error : JSON.stringify(body.error);
+            const body2 = await error.context.json();
+            if (body2?.error) message = typeof body2.error === "string" ? body2.error : JSON.stringify(body2.error);
           } catch (parseErr) {
             // context wasn't valid JSON — fall back to the generic message
           }
@@ -1163,7 +1192,7 @@
 
       return { ok: true, data };
     } catch (timeoutErr) {
-      console.error(`[tailor-cv] Exception in attemptTailorCall at ${new Date().toISOString()}:`, timeoutErr);
+      console.error(`[tailor] Exception in attemptTailorCall at ${new Date().toISOString()}:`, timeoutErr);
       return { ok: false, timedOut: true, message: "timed out" };
     }
   }
@@ -1171,56 +1200,56 @@
   // Checks whether the result actually landed in the database despite the
   // client giving up on it — the server has its own 45s window and can
   // legitimately still be working (or have just finished) even after our
-  // 55s client-side patience runs out. This is specifically what happened
-  // once already: the function succeeded and saved correctly, but the
-  // client had already shown a timeout with nothing to show for it.
-  // Checking here — instead of blindly firing a second paid API call —
-  // avoids both the wasted cost and the confusing "it worked but you never
-  // saw it" outcome.
-  async function checkForLateResult(appId) {
+  // 55s client-side patience runs out. Checking here — instead of blindly
+  // firing a second paid API call — avoids both the wasted cost and the
+  // confusing "it worked but you never saw it" outcome.
+  async function checkForLateResult(appId, kind) {
+    const cfg = TAILOR_CONFIG[kind];
     const { data, error } = await sb
       .from("applications")
-      .select("cv_tailoring_result, cv_tailoring_generated_at")
+      .select(`${cfg.resultColumn}, ${cfg.timestampColumn}`)
       .eq("id", appId)
       .single();
 
-    if (error || !data?.cv_tailoring_result || !data.cv_tailoring_generated_at) return null;
+    if (error || !data?.[cfg.resultColumn] || !data[cfg.timestampColumn]) return null;
 
     // Only count it as "from this attempt" if it was generated very recently —
     // an old saved result from a previous session shouldn't be mistaken for
     // this one just finishing late.
-    const ageSeconds = (Date.now() - new Date(data.cv_tailoring_generated_at).getTime()) / 1000;
+    const ageSeconds = (Date.now() - new Date(data[cfg.timestampColumn]).getTime()) / 1000;
     return ageSeconds < 120 ? data : null;
   }
 
-  // Calls the Edge Function with the chosen reference CV (and any optional
-  // extra context), shows the modal with a loading state, then fills it in
-  // once the result (which the function has already saved to the database)
-  // comes back.
-  async function runTailorCV(appId, cvText, filename, extraContext) {
-    lastTailorAttempt = { appId, cvText, filename, extraContext };
+  // Calls the Edge Function with the chosen reference document (and any
+  // optional extra context), shows the modal with a loading state, then
+  // fills it in once the result (which the function has already saved to
+  // the database) comes back.
+  async function runTailorCV(appId, cvText, filename, extraContext, kind) {
+    const cfg = TAILOR_CONFIG[kind];
+    lastTailorAttempt = { appId, cvText, filename, extraContext, kind };
 
     const app = allApps.find(a => String(a.id) === String(appId));
-    document.getElementById("tailor-modal-title").textContent = "Tailored CV advice";
+    document.getElementById("tailor-modal-title").textContent = cfg.title;
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
     document.getElementById("tailor-modal-body").innerHTML =
-      `<p style="color:#5B6472;">Reading ${filename || "your CV"} and comparing it against the job description — this can take up to a minute.</p>`;
+      `<p style="color:#5B6472;">Reading ${filename || cfg.docLabel} and comparing it against the job description — this can take up to a minute.</p>`;
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
-    const result = await attemptTailorCall(appId, cvText, extraContext);
+    const result = await attemptTailorCall(appId, cvText, extraContext, kind);
 
     if (!result.ok) {
       // Before showing any error or retrying (which costs money again),
       // check whether it actually succeeded on the server anyway.
       document.getElementById("tailor-modal-body").innerHTML =
         `<p style="color:#5B6472;">That took longer than expected — checking whether it finished anyway before trying again...</p>`;
-      const late = await checkForLateResult(appId);
+      const late = await checkForLateResult(appId, kind);
 
       if (late) {
-        document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(late.cv_tailoring_result);
-        document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(late.cv_tailoring_generated_at);
+        document.getElementById("tailor-modal-body").innerHTML = renderMarkdown(late[cfg.resultColumn]);
+        document.getElementById("tailor-modal-timestamp").textContent = formatTailorTimestamp(late[cfg.timestampColumn]);
         document.getElementById("tailor-modal-regen").dataset.appId = appId;
+        document.getElementById("tailor-modal-regen").dataset.tailorKind = kind;
         loadApps();
         return;
       }
@@ -1234,7 +1263,7 @@
       return;
     }
 
-    console.log("[tailor-cv] Full data object about to be rendered:", result.data);
+    console.log("[tailor] Full data object about to be rendered:", result.data);
 
     const saveWarning = result.data.saveFailed
       ? '<p style="color:#B14432; font-size:12px; margin-bottom:12px;">⚠ This generated correctly but didn\'t save — it won\'t be here if you leave and come back. Worth screenshotting or copying it now.</p>'
@@ -1242,8 +1271,9 @@
     document.getElementById("tailor-modal-body").innerHTML = saveWarning + renderMarkdown(result.data.result);
     document.getElementById("tailor-modal-timestamp").textContent = result.data.saveFailed ? "Not saved" : formatTailorTimestamp(new Date().toISOString());
     document.getElementById("tailor-modal-regen").dataset.appId = appId;
+    document.getElementById("tailor-modal-regen").dataset.tailorKind = kind;
 
-    loadApps(); // refresh so the row button switches to "View tailored CV advice"
+    loadApps(); // refresh so the row button switches to "View tailored..." for whichever kind this was
   }
 
   document.getElementById("tailor-modal-close").addEventListener("click", closeTailorModal);
@@ -1251,7 +1281,7 @@
     if (e.target.id === "tailor-modal-backdrop") closeTailorModal();
   });
   document.getElementById("tailor-modal-regen").addEventListener("click", function () {
-    showContextStep(this.dataset.appId);
+    showContextStep(this.dataset.appId, this.dataset.tailorKind);
   });
 </script>
 
