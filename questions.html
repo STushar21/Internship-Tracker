@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Questions — STK</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #F5F4EF;
+    color: #16233F;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw);
+    margin: 40px auto;
+    padding: 0 16px 80px;
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #5B6472; font-size: 13px; margin-bottom: 24px; }
+  .top-nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 0 auto 28px;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #8C6A28;
+    padding: 8px 14px 8px 12px;
+    margin-right: 4px;
+    border-right: 1px solid #D8DADD;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+  }
+  .top-nav a.nav-link {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5B6472;
+    text-decoration: none;
+  }
+  .top-nav a.nav-link.active {
+    background: #B08D57;
+    color: #16233F;
+  }
+  .top-nav a.nav-link.soon {
+    color: #8A8F99;
+  }
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret {
+    background: none;
+    border: none;
+    color: #8A8F99;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 8px 10px 8px 2px;
+    margin-right: -6px;
+  }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 120%;
+    left: 0;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #16233F;
+    text-decoration: none;
+  }
+  .nav-dropdown-menu a:hover { background: #F6F6F3; }
+  .nav-dropdown-menu a.active { color: #8C6A28; font-weight: 600; }
+
+  /* --- login gate --- */
+  #login-gate {
+    max-width: 360px;
+    margin: 60px auto;
+  }
+  #login-gate h2 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  #login-gate .sub { text-align: center; margin-bottom: 20px; }
+  .logout-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+  #logout-btn {
+    background: none;
+    border: 1px solid #D8DADD;
+    color: #5B6472;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  /* --- form --- */
+  form {
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  label.field-label {
+    font-size: 11px;
+    color: #5B6472;
+    margin-bottom: 3px;
+    display: block;
+  }
+  input, select, textarea {
+    background: #F6F6F3;
+    border: 1px solid #D8DADD;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #16233F;
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  button {
+    background: #B08D57;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-weight: 600;
+    color: #16233F;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .ghost-btn {
+    background: none;
+    border: 1px solid #D8DADD;
+    color: #5B6472;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 6px;
+    width: auto;
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #5B6472;
+  }
+  .file-row button { width: auto; padding: 7px 12px; font-size: 12.5px; }
+
+  /* --- filter --- */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .filters select { width: auto; font-size: 12.5px; padding: 6px 10px; }
+  .status-text { font-size: 12px; color: #5B6472; margin-left: auto; }
+
+  /* --- question cards --- */
+  .q-card {
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .q-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .q-app-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #8C6A28;
+    background: #F6EFDE;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .q-date { font-size: 11px; color: #8A8F99; white-space: nowrap; }
+  .q-question {
+    font-weight: 600;
+    font-size: 14.5px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .q-section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8A8F99;
+    margin: 12px 0 5px;
+  }
+  .q-model-answer {
+    font-size: 13px;
+    color: #333B4D;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    background: #F9F8F4;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border-left: 3px solid #B08D57;
+  }
+  .q-final-answer {
+    width: 100%;
+    min-height: 70px;
+    font-size: 13px;
+  }
+  .q-actions {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .q-actions button, .q-actions a {
+    background: none;
+    border: none;
+    color: #5B6472;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+    width: auto;
+  }
+  .save-hint { font-size: 11px; color: #8A8F99; }
+  .empty {
+    padding: 48px 20px; text-align: center;
+    border: 1px dashed #D8DADD; border-radius: 10px;
+    color: #5B6472; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link active">Questions</a>
+  <a href="practice.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html" class="active">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <h2>Locked</h2>
+  <div class="sub">This page holds personal data. <a href="index.html" style="color:#8C6A28;">Sign in from the home page</a>, then come back.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Questions</h1>
+<div class="sub">Application questions and their model answers — a running log across every application</div>
+
+<form id="add-form">
+  <div>
+    <label class="field-label">Which application is this for?</label>
+    <select id="application_select" required>
+      <option value="">— Select an application —</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="field-label">The question</label>
+    <textarea id="question_text" placeholder="e.g. Why do you want to work at Goldman Sachs? / Tell us about a time you worked in a team." required></textarea>
+  </div>
+
+  <div>
+    <label class="field-label">Reference CV for context (optional, but helps a lot)</label>
+    <div class="file-row">
+      <button type="button" class="ghost-btn" id="pick-cv-btn">Choose a CV</button>
+      <span id="picked-cv-name">No file chosen</span>
+    </div>
+  </div>
+
+  <div>
+    <label class="field-label">Anything extra worth knowing? (optional)</label>
+    <textarea id="extra_context" placeholder="e.g. Spoke with an analyst at their insight day about..."></textarea>
+  </div>
+
+  <button type="submit" id="generate-btn">Generate answer</button>
+</form>
+
+<div class="filters">
+  <select id="app-filter">
+    <option value="">All applications</option>
+  </select>
+  <span class="status-text" id="status-text">Loading...</span>
+</div>
+
+<div id="list"></div>
+
+<input type="file" id="cv-file-picker" accept="application/pdf,.pdf" style="display:none;">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  if (typeof pdfjsLib !== "undefined") {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  } else {
+    console.error("PDF.js failed to load — attaching a reference CV won't work until this is fixed.");
+  }
+
+  async function extractTextFromPDF(file) {
+    if (typeof pdfjsLib === "undefined") {
+      throw new Error("PDF.js didn't load — try refreshing the page");
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      fullText += textContent.items.map(item => item.str).join(" ") + "\n\n";
+    }
+    return fullText.trim();
+  }
+
+  let allApplications = [];
+  let allQuestions = [];
+  let pickedCvText = null;
+
+  const form = document.getElementById("add-form");
+  const generateBtn = document.getElementById("generate-btn");
+  const statusText = document.getElementById("status-text");
+  const appFilter = document.getElementById("app-filter");
+  const appSelect = document.getElementById("application_select");
+  const list = document.getElementById("list");
+
+  document.getElementById("pick-cv-btn").addEventListener("click", () => {
+    document.getElementById("cv-file-picker").click();
+  });
+
+  document.getElementById("cv-file-picker").addEventListener("change", async function () {
+    const file = this.files[0];
+    if (!file) return;
+    document.getElementById("picked-cv-name").textContent = "Reading...";
+    try {
+      pickedCvText = await extractTextFromPDF(file);
+      document.getElementById("picked-cv-name").textContent = file.name;
+    } catch (err) {
+      alert("Couldn't read that PDF — try a different file.");
+      console.error(err);
+      pickedCvText = null;
+      document.getElementById("picked-cv-name").textContent = "No file chosen";
+    }
+  });
+
+  async function loadApplications() {
+    const { data, error } = await sb
+      .from("applications")
+      .select("id, company, role")
+      .order("company", { ascending: true });
+    if (error) { console.error(error); return; }
+    allApplications = data;
+
+    const options = data.map(a => `<option value="${a.id}">${a.company} — ${a.role}</option>`).join("");
+    appSelect.innerHTML = '<option value="">— Select an application —</option>' + options;
+    appFilter.innerHTML = '<option value="">All applications</option>' + options;
+  }
+
+  function appLabel(applicationId) {
+    const app = allApplications.find(a => String(a.id) === String(applicationId));
+    return app ? `${app.company} — ${app.role}` : "Unknown application";
+  }
+
+  async function loadQuestions() {
+    statusText.textContent = "Loading...";
+    const { data, error } = await sb
+      .from("application_questions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      statusText.textContent = "Error — check console (F12)";
+      console.error(error);
+      return;
+    }
+
+    allQuestions = data;
+    statusText.textContent = data.length + " question" + (data.length === 1 ? "" : "s") + " saved";
+    renderList();
+  }
+
+  function renderList() {
+    let filtered = allQuestions;
+    if (appFilter.value) filtered = filtered.filter(q => String(q.application_id) === appFilter.value);
+
+    list.innerHTML = "";
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty">No questions logged yet — add one above.</div>';
+      return;
+    }
+
+    filtered.forEach(q => list.appendChild(buildCard(q)));
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function buildCard(q) {
+    const card = document.createElement("div");
+    card.className = "q-card";
+    card.innerHTML = `
+      <div class="q-card-head">
+        <span class="q-app-tag">${appLabel(q.application_id)}</span>
+        <span class="q-date">${formatDate(q.created_at)}</span>
+      </div>
+      <div class="q-question">${q.question_text}</div>
+      <div class="q-section-label">Model answer</div>
+      <div class="q-model-answer">${q.model_answer || "—"}</div>
+      <div class="q-section-label">Your final answer (optional — paste what you actually submitted)</div>
+      <textarea class="q-final-answer" data-question-id="${q.id}" placeholder="Paste your final wording here once you've submitted it, for your own records">${q.final_answer || ""}</textarea>
+      <div class="q-actions">
+        <button type="button" data-save-final="${q.id}">Save final answer</button>
+        <button type="button" data-delete-question="${q.id}" style="color:#8A3A2E;">Delete</button>
+        <span class="save-hint" id="save-hint-${q.id}"></span>
+      </div>
+    `;
+    return card;
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const applicationId = appSelect.value;
+    const questionText = document.getElementById("question_text").value;
+    const extraContext = document.getElementById("extra_context").value;
+
+    if (!applicationId) { alert("Pick which application this question is for."); return; }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = "Generating...";
+
+    const { data, error } = await sb.functions.invoke("answer-question", {
+      body: { applicationId, questionText, cvText: pickedCvText, extraContext },
+    });
+
+    generateBtn.disabled = false;
+    generateBtn.textContent = "Generate answer";
+
+    if (error || data?.error) {
+      alert("Couldn't generate an answer — " + (data?.error || error.message || "check console (F12)"));
+      console.error(error || data?.error);
+      return;
+    }
+
+    form.reset();
+    document.getElementById("picked-cv-name").textContent = "No file chosen";
+    pickedCvText = null;
+
+    loadQuestions();
+  });
+
+  list.addEventListener("click", async function (e) {
+    const saveBtn = e.target.closest("[data-save-final]");
+    if (saveBtn) {
+      const id = saveBtn.dataset.saveFinal;
+      const textarea = list.querySelector(`textarea[data-question-id="${id}"]`);
+      const { error } = await sb
+        .from("application_questions")
+        .update({ final_answer: textarea.value })
+        .eq("id", id);
+      const hint = document.getElementById(`save-hint-${id}`);
+      hint.textContent = error ? "Couldn't save" : "Saved";
+      setTimeout(() => { hint.textContent = ""; }, 2000);
+      if (error) console.error(error);
+      return;
+    }
+
+    const deleteBtn = e.target.closest("[data-delete-question]");
+    if (deleteBtn) {
+      if (!confirm("Delete this question and its answer?")) return;
+      const { error } = await sb.from("application_questions").delete().eq("id", deleteBtn.dataset.deleteQuestion);
+      if (error) { console.error(error); return; }
+      loadQuestions();
+    }
+  });
+
+  appFilter.addEventListener("change", renderList);
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) {
+      loadApplications().then(loadQuestions);
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+</script>
+</body>
+</html>
