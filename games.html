@@ -1,1 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Games — Internship Tracker</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #F5F4EF;
+    color: #16233F;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw);
+    margin: 40px auto;
+    padding: 0 16px;
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; font-family: 'Source Serif 4', Georgia, serif; }
+  .sub { color: #5B6472; font-size: 13px; margin-bottom: 24px; }
 
+  /* --- nav (identical pattern to other pages) --- */
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px; width: fit-content;
+    background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #8C6A28; padding: 8px 14px 8px 12px; margin-right: 4px;
+    border-right: 1px solid #D8DADD; text-decoration: none; letter-spacing: 0.03em;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #5B6472; text-decoration: none; }
+  .top-nav a.nav-link.active { background: #B08D57; color: #16233F; }
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu { display: none; position: absolute; top: 120%; left: 0; background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 8px; box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200; }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #16233F; text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: #F6F6F3; }
+  .nav-dropdown-menu a.active { color: #8C6A28; font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid #D8DADD; color: #5B6472; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+
+  /* --- login gate (identical pattern) --- */
+  #login-gate { max-width: 360px; margin: 60px auto; }
+  #login-gate h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; margin-bottom: 4px; text-align: center; }
+  #login-gate .sub { text-align: center; margin-bottom: 20px; }
+
+  /* --- game grid --- */
+  .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .game-card {
+    background: #FFFFFF; border: 1px solid #E8E9EA; border-radius: 12px;
+    padding: 16px; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .game-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(15,23,42,0.08); }
+  .game-card.locked { cursor: default; opacity: 0.55; }
+  .game-card.locked:hover { transform: none; box-shadow: none; }
+  .game-card .g-name { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; }
+  .game-card .g-desc { font-size: 12px; color: #5B6472; line-height: 1.4; margin-bottom: 8px; }
+  .game-card .g-tag { font-size: 10.5px; color: #8C6A28; background: #F6EFDE; padding: 2px 8px; border-radius: 20px; display: inline-block; }
+  .game-card .g-best { font-size: 11px; color: #8A8F99; margin-top: 8px; }
+
+  /* --- streak strip --- */
+  .streak-strip {
+    display: flex; align-items: center; gap: 14px;
+    background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 20px; font-size: 13px;
+  }
+  .streak-strip .flame { font-size: 18px; }
+  .streak-strip b { color: #8C6A28; }
+
+  /* --- play screen --- */
+  #play-screen { display: none; }
+  .play-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .play-back { background: none; border: 1px solid #D8DADD; color: #5B6472; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  .hud { display: flex; gap: 24px; margin-bottom: 22px; }
+  .hud-item { flex: 1; background: #FFFFFF; border: 1px solid #E8E9EA; border-radius: 10px; padding: 14px 18px; text-align: center; }
+  .hud-item .label { font-size: 10.5px; color: #8A8F99; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .hud-item .value { font-family: 'Source Serif 4', Georgia, serif; font-size: 26px; font-weight: 700; transition: transform 0.15s ease; }
+  .hud-item .value.pulse { transform: scale(1.18); color: #1F7A4C; }
+  .timer-bar-track { width: 100%; height: 6px; background: #E8E9EA; border-radius: 6px; overflow: hidden; margin-bottom: 28px; }
+  .timer-bar-fill { height: 100%; background: #B08D57; width: 100%; transition: width 1s linear, background 0.2s ease; }
+  .timer-bar-fill.low { background: #B14432; }
+
+  .question-stage {
+    background: #FFFFFF; border: 1px solid #E8E9EA; border-radius: 14px;
+    padding: 44px 24px; text-align: center; margin-bottom: 18px;
+    transition: background 0.15s ease;
+  }
+  .question-stage.flash-correct { background: #E4F3EA; }
+  .question-stage.flash-wrong { background: #FBEEE6; }
+  .q-text { font-family: 'Source Serif 4', Georgia, serif; font-size: 26px; font-weight: 600; margin-bottom: 22px; }
+  .answer-row { display: flex; gap: 10px; justify-content: center; }
+  #answer-input {
+    background: #F6F6F3; border: 1px solid #D8DADD; border-radius: 8px;
+    padding: 12px 16px; font-size: 18px; font-family: inherit; width: 160px; text-align: center;
+  }
+  #answer-input:focus { outline: none; border-color: #B08D57; }
+  .answer-row button {
+    background: #B08D57; border: none; border-radius: 8px; padding: 12px 20px;
+    font-weight: 600; cursor: pointer; font-size: 14px;
+  }
+
+  /* --- end screen --- */
+  #end-screen { display: none; text-align: center; padding: 40px 20px; }
+  #end-screen .final-score { font-family: 'Source Serif 4', Georgia, serif; font-size: 48px; font-weight: 700; margin: 6px 0; }
+  #end-screen .best-line { font-size: 13px; color: #5B6472; margin-bottom: 24px; }
+  #end-screen .best-line.new-best { color: #1F7A4C; font-weight: 600; }
+  #end-screen button { background: #B08D57; border: none; border-radius: 8px; padding: 12px 22px; font-weight: 600; cursor: pointer; font-size: 14px; margin: 0 6px; }
+  #end-screen button.secondary { background: #EFEEE9; }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="practice.html" class="nav-link">OA Prep</a>
+  <a href="games.html" class="nav-link active">Games</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <h2>Locked</h2>
+  <div class="sub">Games hold your scores. <a href="index.html" style="color:#8C6A28;">Sign in from the home page</a>, then come back.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<div id="menu-screen">
+  <h1>Games</h1>
+  <div class="sub">Pick a couple — 2 to 5 minutes a day is the point, not a long session.</div>
+
+  <div class="streak-strip">
+    <span class="flame">🔥</span>
+    <span>Current streak: <b id="streak-count">0</b> day<span id="streak-plural">s</span></span>
+  </div>
+
+  <div class="game-grid">
+    <div class="game-card" data-game="mental_math_blitz">
+      <div class="g-name">Mental Math Blitz</div>
+      <div class="g-desc">60 seconds of percentages, margins, and quick multiplication. Never the same question twice.</div>
+      <span class="g-tag">Reflex · 60s</span>
+      <div class="g-best" id="best-mental_math_blitz">Best: —</div>
+    </div>
+
+    <div class="game-card locked"><div class="g-name">Multiple Match</div><div class="g-desc">High or low, before the clock runs out.</div><span class="g-tag">Coming soon</span></div>
+    <div class="game-card locked"><div class="g-name">Spot the Red Flag</div><div class="g-desc">Something's off in these numbers — find it fast.</div><span class="g-tag">Coming soon</span></div>
+    <div class="game-card locked"><div class="g-name">Statement Sprint</div><div class="g-desc">Sort each line before the next one lands.</div><span class="g-tag">Coming soon</span></div>
+    <div class="game-card locked"><div class="g-name">Deal Chain</div><div class="g-desc">Trace the deal process without crossing your own path.</div><span class="g-tag">Coming soon</span></div>
+    <div class="game-card locked"><div class="g-name">Comp Grid</div><div class="g-desc">Place companies so every row and column checks out.</div><span class="g-tag">Coming soon</span></div>
+    <div class="game-card locked"><div class="g-name">Ratio Ladder</div><div class="g-desc">One input at a time, climb to the target ratio.</div><span class="g-tag">Coming soon</span></div>
+    <div class="game-card locked"><div class="g-name">Sector Pinpoint</div><div class="g-desc">Guess the company from as few clues as possible.</div><span class="g-tag">Coming soon</span></div>
+  </div>
+</div>
+
+<div id="play-screen">
+  <div class="play-head">
+    <button class="play-back" id="back-btn" type="button">&larr; Back to games</button>
+  </div>
+
+  <div class="hud">
+    <div class="hud-item"><div class="label">Time</div><div class="value" id="hud-time">60</div></div>
+    <div class="hud-item"><div class="label">Score</div><div class="value" id="hud-score">0</div></div>
+    <div class="hud-item"><div class="label">Best</div><div class="value" id="hud-best" style="font-size:20px;">—</div></div>
+  </div>
+
+  <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-bar"></div></div>
+
+  <div class="question-stage" id="question-stage">
+    <div class="q-text" id="q-text">Ready?</div>
+    <div class="answer-row">
+      <input type="text" id="answer-input" inputmode="decimal" placeholder="Answer" autocomplete="off">
+      <button type="button" id="submit-answer">Enter</button>
+    </div>
+  </div>
+</div>
+
+<div id="end-screen">
+  <div class="sub">Mental Math Blitz</div>
+  <div class="final-score" id="final-score">0</div>
+  <div class="best-line" id="best-line">Best: 0</div>
+  <button type="button" id="play-again-btn">Play again</button>
+  <button type="button" class="secondary" id="done-btn">Back to games</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // --- Auth gate (identical pattern to tracker.html) ---
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) {
+      loadStreakAndBests();
+    }
+  });
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) { if (m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+  });
+
+  // =====================================================================
+  // Score persistence — tries Supabase's game_scores table first (once it
+  // exists), and always keeps a localStorage mirror so "Best" still shows
+  // instantly and works even before the table is created / if a save fails.
+  // =====================================================================
+  const LOCAL_BEST_KEY = "gs_best_mental_math_blitz";
+  const LOCAL_DATES_KEY = "gs_played_dates"; // JSON array of "YYYY-MM-DD" strings, for the streak
+
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function recordLocalPlayDate() {
+    const dates = JSON.parse(localStorage.getItem(LOCAL_DATES_KEY) || "[]");
+    const t = todayStr();
+    if (!dates.includes(t)) dates.push(t);
+    localStorage.setItem(LOCAL_DATES_KEY, JSON.stringify(dates));
+  }
+
+  function computeStreak(dateStrings) {
+    const set = new Set(dateStrings);
+    let streak = 0;
+    let cursor = new Date();
+    // Today counts if played; otherwise the streak is measured up to yesterday
+    // so a day not yet played (but not missed) doesn't zero it out mid-day.
+    if (!set.has(todayStr())) cursor.setDate(cursor.getDate() - 1);
+    while (set.has(cursor.toISOString().slice(0, 10))) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+  }
+
+  async function loadStreakAndBests() {
+    // Try Supabase first; table may not exist yet, so fail quietly to localStorage.
+    let dates = JSON.parse(localStorage.getItem(LOCAL_DATES_KEY) || "[]");
+    let bestFromDb = null;
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userId) {
+        const { data, error } = await sb
+          .from("game_scores")
+          .select("game, score, played_date")
+          .eq("user_id", userId);
+        if (!error && data) {
+          dates = [...new Set(data.map(r => r.played_date))];
+          const mmbScores = data.filter(r => r.game === "mental_math_blitz").map(r => r.score);
+          if (mmbScores.length) bestFromDb = Math.max(...mmbScores);
+        }
+      }
+    } catch (e) {
+      console.warn("game_scores table not available yet — using localStorage only.", e);
+    }
+
+    const streak = computeStreak(dates);
+    document.getElementById("streak-count").textContent = streak;
+    document.getElementById("streak-plural").textContent = streak === 1 ? "" : "s";
+
+    const localBest = parseInt(localStorage.getItem(LOCAL_BEST_KEY) || "0", 10);
+    const best = Math.max(localBest, bestFromDb || 0);
+    document.getElementById("best-mental_math_blitz").textContent = best > 0 ? `Best: ${best}` : "Best: —";
+  }
+
+  async function saveScore(game, score) {
+    recordLocalPlayDate();
+    if (game === "mental_math_blitz") {
+      const localBest = parseInt(localStorage.getItem(LOCAL_BEST_KEY) || "0", 10);
+      if (score > localBest) localStorage.setItem(LOCAL_BEST_KEY, String(score));
+    }
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return;
+      const { error } = await sb.from("game_scores").insert([{
+        user_id: userId, game, score, played_date: todayStr()
+      }]);
+      if (error) console.warn("Couldn't save score to Supabase (table may not exist yet):", error.message);
+    } catch (e) {
+      console.warn("Couldn't save score to Supabase:", e);
+    }
+  }
+
+  // =====================================================================
+  // Mental Math Blitz — question generator
+  // Every question is generated fresh from templates + random values, so
+  // nothing is ever pulled from a fixed bank. Consecutive duplicate
+  // question text is rejected and re-rolled.
+  // =====================================================================
+  const NICE_PERCENTAGES = [5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90];
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+
+  function genPercentage() {
+    const p = pick(NICE_PERCENTAGES);
+    // Choose a base so p% of it lands on a whole number: base must be a
+    // multiple of 100/gcd(p,100).
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+    const step = 100 / gcd(p, 100);
+    const base = step * randInt(2, Math.floor(400 / step));
+    const answer = Math.round((base * p) / 100);
+    return { text: `${p}% of ${base}?`, answer };
+  }
+
+  function genMultiplication() {
+    const easy = Math.random() < 0.5;
+    const a = easy ? randInt(6, 19) : randInt(12, 29);
+    const b = easy ? randInt(6, 19) : randInt(6, 19);
+    return { text: `${a} × ${b}?`, answer: a * b };
+  }
+
+  function genMargin() {
+    const revenue = randInt(2, 40) * 10; // e.g. 20, 30, ..., 400 ($m)
+    const margin = pick([10,12,15,18,20,22,25,28,30,32,35,40]);
+    const answer = Math.round((revenue * margin) / 100);
+    return { text: `Revenue $${revenue}m, margin ${margin}% → profit ($m)?`, answer };
+  }
+
+  function genGrowth() {
+    const base = randInt(4, 40) * 10; // $m
+    const growth = pick([5,10,15,20,25,30,-5,-10,-15]);
+    const answer = Math.round(base * (1 + growth / 100));
+    return { text: `$${base}m growing ${growth > 0 ? "+" : ""}${growth}% → new value ($m)?`, answer };
+  }
+
+  const GENERATORS = [genPercentage, genMultiplication, genMargin, genGrowth];
+  let lastQuestionText = "";
+
+  function generateQuestion() {
+    let q;
+    let attempts = 0;
+    do {
+      q = pick(GENERATORS)();
+      attempts++;
+    } while (q.text === lastQuestionText && attempts < 8);
+    lastQuestionText = q.text;
+    return q;
+  }
+
+  // =====================================================================
+  // Game loop
+  // =====================================================================
+  const TOTAL_TIME = 60;
+  let timeLeft = TOTAL_TIME;
+  let score = 0;
+  let currentAnswer = null;
+  let timerInterval = null;
+  let running = false;
+
+  const qText = document.getElementById("q-text");
+  const answerInput = document.getElementById("answer-input");
+  const questionStage = document.getElementById("question-stage");
+  const hudTime = document.getElementById("hud-time");
+  const hudScore = document.getElementById("hud-score");
+  const hudBest = document.getElementById("hud-best");
+  const timerBar = document.getElementById("timer-bar");
+
+  document.querySelector('[data-game="mental_math_blitz"]').addEventListener("click", startMentalMathBlitz);
+  document.getElementById("back-btn").addEventListener("click", () => showScreen("menu"));
+  document.getElementById("done-btn").addEventListener("click", () => showScreen("menu"));
+  document.getElementById("play-again-btn").addEventListener("click", startMentalMathBlitz);
+
+  function showScreen(name) {
+    document.getElementById("menu-screen").style.display = name === "menu" ? "block" : "none";
+    document.getElementById("play-screen").style.display = name === "play" ? "block" : "none";
+    document.getElementById("end-screen").style.display = name === "end" ? "block" : "none";
+    if (name === "menu") loadStreakAndBests();
+  }
+
+  function startMentalMathBlitz() {
+    score = 0;
+    timeLeft = TOTAL_TIME;
+    running = true;
+    hudScore.textContent = "0";
+    hudTime.textContent = String(TOTAL_TIME);
+    timerBar.style.width = "100%";
+    timerBar.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(LOCAL_BEST_KEY) || "0", 10);
+    hudBest.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play");
+    nextQuestion();
+    answerInput.value = "";
+    answerInput.focus();
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeLeft -= 1;
+      updateTimerUI();
+      if (timeLeft <= 0) endGame();
+    }, 1000);
+  }
+
+  function updateTimerUI() {
+    hudTime.textContent = String(Math.max(0, timeLeft));
+    const pct = Math.max(0, (timeLeft / TOTAL_TIME) * 100);
+    timerBar.style.width = pct + "%";
+    timerBar.classList.toggle("low", timeLeft <= 10);
+  }
+
+  function nextQuestion() {
+    const q = generateQuestion();
+    currentAnswer = q.answer;
+    qText.textContent = q.text;
+    answerInput.value = "";
+    answerInput.focus();
+  }
+
+  function pulse(el) {
+    el.classList.add("pulse");
+    setTimeout(() => el.classList.remove("pulse"), 220);
+  }
+
+  function flashStage(kind) {
+    questionStage.classList.add(kind);
+    setTimeout(() => questionStage.classList.remove(kind), 260);
+  }
+
+  function submitAnswer() {
+    if (!running) return;
+    const raw = answerInput.value.trim();
+    if (raw === "") return;
+    const val = parseFloat(raw);
+    if (Number.isNaN(val)) return;
+
+    if (Math.round(val) === currentAnswer) {
+      score += 1;
+      hudScore.textContent = String(score);
+      pulse(hudScore);
+      flashStage("flash-correct");
+      nextQuestion();
+    } else {
+      timeLeft = Math.max(0, timeLeft - 3);
+      updateTimerUI();
+      flashStage("flash-wrong");
+      if (timeLeft <= 0) {
+        endGame();
+      } else {
+        nextQuestion();
+      }
+    }
+  }
+
+  document.getElementById("submit-answer").addEventListener("click", submitAnswer);
+  answerInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitAnswer();
+  });
+
+  async function endGame() {
+    running = false;
+    clearInterval(timerInterval);
+    const localBestBefore = parseInt(localStorage.getItem(LOCAL_BEST_KEY) || "0", 10);
+    const isNewBest = score > localBestBefore;
+
+    document.getElementById("final-score").textContent = String(score);
+    document.getElementById("best-line").textContent = isNewBest ? "New personal best!" : `Best: ${Math.max(score, localBestBefore)}`;
+    document.getElementById("best-line").classList.toggle("new-best", isNewBest);
+    showScreen("end");
+
+    await saveScore("mental_math_blitz", score);
+  }
+</script>
+</body>
+</html>
