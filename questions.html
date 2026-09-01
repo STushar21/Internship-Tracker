@@ -199,7 +199,7 @@
     background: #FFFFFF;
     border: 1px solid #D8DADD;
     border-radius: 10px;
-    padding: 16px 18px;
+    padding: 14px 18px;
     margin-bottom: 10px;
   }
   .q-card-head {
@@ -207,7 +207,14 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
-    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .q-card-head-left { flex: 1; min-width: 0; }
+  .q-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
   }
   .q-app-tag {
     font-size: 10.5px;
@@ -219,12 +226,26 @@
     white-space: nowrap;
   }
   .q-date { font-size: 11px; color: #8A8F99; white-space: nowrap; }
+  .q-chevron {
+    color: #8A8F99;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: transform 150ms ease;
+    padding-top: 2px;
+  }
+  .q-card.open .q-chevron { transform: rotate(180deg); }
   .q-question {
     font-weight: 600;
     font-size: 14.5px;
-    margin-bottom: 10px;
     line-height: 1.4;
   }
+  .q-card-body {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #ECEDEE;
+  }
+  .q-card.open .q-card-body { display: block; }
   .q-section-label {
     font-size: 10.5px;
     font-weight: 700;
@@ -233,6 +254,7 @@
     color: #8A8F99;
     margin: 12px 0 5px;
   }
+  .q-section-label:first-child { margin-top: 0; }
   .q-model-answer {
     font-size: 13px;
     color: #333B4D;
@@ -247,6 +269,9 @@
     width: 100%;
     min-height: 70px;
     font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    overflow: hidden;
   }
   .q-actions {
     display: flex;
@@ -456,25 +481,55 @@
     return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   }
 
+  // Grows a textarea to fit its content instead of staying a fixed small
+  // box — called on input, and once up front for any pre-filled text.
+  function autoGrow(textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  }
+
   function buildCard(q) {
     const card = document.createElement("div");
     card.className = "q-card";
     card.innerHTML = `
       <div class="q-card-head">
-        <span class="q-app-tag">${appLabel(q.application_id)}</span>
-        <span class="q-date">${formatDate(q.created_at)}</span>
+        <div class="q-card-head-left">
+          <div class="q-card-meta">
+            <span class="q-app-tag">${appLabel(q.application_id)}</span>
+            <span class="q-date">${formatDate(q.created_at)}</span>
+          </div>
+          <div class="q-question">${q.question_text}</div>
+        </div>
+        <span class="q-chevron">&#9662;</span>
       </div>
-      <div class="q-question">${q.question_text}</div>
-      <div class="q-section-label">Model answer</div>
-      <div class="q-model-answer">${q.model_answer || "—"}</div>
-      <div class="q-section-label">Your final answer (optional — paste what you actually submitted)</div>
-      <textarea class="q-final-answer" data-question-id="${q.id}" placeholder="Paste your final wording here once you've submitted it, for your own records">${q.final_answer || ""}</textarea>
-      <div class="q-actions">
-        <button type="button" data-save-final="${q.id}">Save final answer</button>
-        <button type="button" data-delete-question="${q.id}" style="color:#8A3A2E;">Delete</button>
-        <span class="save-hint" id="save-hint-${q.id}"></span>
+      <div class="q-card-body">
+        <div class="q-section-label">Model answer</div>
+        <div class="q-model-answer">${q.model_answer || "—"}</div>
+        <div class="q-section-label">Your final answer (optional — paste what you actually submitted)</div>
+        <textarea class="q-final-answer" data-question-id="${q.id}" placeholder="Paste your final wording here once you've submitted it, for your own records">${q.final_answer || ""}</textarea>
+        <div class="q-actions">
+          <button type="button" data-save-final="${q.id}">Save final answer</button>
+          <button type="button" data-delete-question="${q.id}" style="color:#8A3A2E;">Delete</button>
+          <span class="save-hint" id="save-hint-${q.id}"></span>
+        </div>
       </div>
     `;
+
+    card.querySelector(".q-card-head").addEventListener("click", () => {
+      const wasOpen = card.classList.contains("open");
+      card.classList.toggle("open");
+      // Grow the textarea the first time this card opens — it has no real
+      // height to measure while it's display:none, so this has to happen
+      // right as it becomes visible, not at card-build time.
+      if (!wasOpen) {
+        const textarea = card.querySelector(".q-final-answer");
+        autoGrow(textarea);
+      }
+    });
+
+    const textarea = card.querySelector(".q-final-answer");
+    textarea.addEventListener("input", () => autoGrow(textarea));
+
     return card;
   }
 
