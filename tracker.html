@@ -370,6 +370,56 @@
     border-radius: 6px;
     cursor: pointer;
   }
+
+  /* --- mobile (phone-width) overrides --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+
+    /* The nav bar has ~7 items — too many to fit a phone's width without
+       shrinking text to the point of being unreadable. Scrolling
+       horizontally keeps every item tappable at a normal size, same idea
+       as a native app's tab bar overflowing sideways. */
+    .top-nav {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand { flex-shrink: 0; }
+    .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+
+    /* Side-by-side field pairs (Firm/Role, Sector/Programme, dates, files)
+       become unreadably narrow on a phone — stack them instead. */
+    .field-row { flex-direction: column; gap: 10px; }
+
+    /* Bigger tap targets — thumbs need more room than a mouse cursor does. */
+    .action-link { padding: 6px 2px; font-size: 13px; }
+    .row-actions { gap: 14px; row-gap: 10px; }
+    button[type="submit"], #cancel-edit-btn { padding: 13px; font-size: 14.5px; }
+    input, select, textarea { font-size: 16px; } /* 16px stops iOS Safari auto-zooming in on focus */
+
+    /* Company/role and the deadline tag were fighting for space on one
+       line — letting them wrap keeps everything readable rather than
+       truncating or overlapping. */
+    .row-top { flex-wrap: wrap; gap: 6px; }
+    .deadline { text-align: left; }
+
+    /* The modal was sized for a desktop window — use nearly the full
+       screen on a phone instead of a small centered box. */
+    .tailor-modal-backdrop { padding: 10px; }
+    .tailor-modal { max-height: 92vh; }
+    .tailor-modal-body { font-size: 13px; padding: 16px 18px; }
+    .tailor-modal-head { padding: 16px 18px 12px; }
+    .tailor-modal-foot { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+
+    /* Filters were cramped in one row — wrap them and let the status text
+       drop to its own line rather than compress everything. */
+    .filters { flex-wrap: wrap; }
+    .status-text, .status { width: 100%; margin-left: 0; order: 10; }
+
+    .stage-label { font-size: 10px; }
+  }
 </style>
 </head>
 <body>
