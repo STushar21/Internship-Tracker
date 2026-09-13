@@ -338,6 +338,51 @@
     font-size: 12px;
     color: #8A8F99;
   }
+
+  /* --- mobile (phone-width) overrides --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+
+    /* Same idea as Tracker: too many nav items to fit a phone's width
+       without shrinking text unreadably, so let it scroll sideways instead. */
+    .top-nav {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand { flex-shrink: 0; }
+    .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+
+    /* The sign-in widget was fixed to the top-right corner, which put it
+       on a collision course with the nav bar on a narrow screen — the nav
+       (later in the page) would visually paint over it. Moving it into
+       the normal page flow, centered above the nav, removes any chance of
+       overlap rather than trying to out-stack it with z-index. */
+    .auth-widget {
+      position: static;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    #auth-signed-out {
+      position: relative;
+      justify-content: center;
+    }
+    #auth-signed-in {
+      justify-content: center;
+    }
+    #auth-form-panel {
+      right: auto;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .card-grid { grid-template-columns: 1fr; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 24px; }
+  }
 </style>
 </head>
 <body>
