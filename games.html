@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600;1,8..60,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reps — Daily Practice</title>
+<style>
+  :root {
+    --bg: #F7F3EA;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #21283B;
+    --ink-soft: #5B6472;
+    --ink-faint: #948E7A;
+    --gold: #A8843F;
+    --gold-dim: #8C6A28;
+    --gold-soft: rgba(168,132,63,0.10);
+    --green: #2F6B4F;
+    --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B;
+    --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A;
+    --steel-soft: rgba(79,107,138,0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(980px, 94vw); margin: 32px auto 60px; padding: 0 16px;
+  }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 26px; margin: 0 0 4px; }
+  h1 em { font-style: italic; font-weight: 600; color: var(--gold-dim); }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--gold-dim);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-dim); display: inline-block; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 22px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; margin: 0 0 26px; width: fit-content;
+    box-shadow: 0 2px 14px rgba(33,40,59,0.05);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13px;
+    color: var(--gold); padding: 8px 14px; text-decoration: none;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 15px; border-radius: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); text-decoration: none; letter-spacing: 0.02em; white-space: nowrap; }
+  .top-nav a.nav-link.active { background: var(--gold-soft); color: var(--gold); border-bottom: 2px solid var(--gold); }
+  .top-nav a.nav-link.soon { color: var(--ink-faint); }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(33,40,59,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  .streak-strip {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--gold);
+    border-radius: 6px; padding: 14px 18px; margin-bottom: 22px;
+    box-shadow: 0 1px 8px rgba(33,40,59,0.04);
+  }
+  .streak-strip .streak-label { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+  .streak-strip .streak-num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 20px; color: var(--gold); }
+
+  .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin-bottom: 28px; }
+  .game-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 16px; cursor: pointer; transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+    box-shadow: 0 1px 8px rgba(33,40,59,0.04);
+  }
+  .game-card:hover { border-color: var(--gold-dim); background: var(--surface-alt); box-shadow: 0 4px 16px rgba(33,40,59,0.08); }
+  .game-card.locked { cursor: default; opacity: 0.45; }
+  .game-card.locked:hover { border-color: var(--border); background: var(--surface); }
+  .game-card .g-index { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--gold-dim); margin-bottom: 10px; letter-spacing: 0.05em; }
+  .game-card.locked .g-index { color: var(--ink-faint); }
+  .game-card .g-name { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 14.5px; margin-bottom: 5px; }
+  .game-card .g-desc { font-size: 11.5px; color: var(--ink-soft); line-height: 1.45; margin-bottom: 10px; }
+  .game-card .g-tag { font-size: 10px; font-weight: 600; color: var(--gold); background: var(--gold-soft); padding: 3px 9px; border-radius: 3px; display: inline-block; letter-spacing: 0.04em; text-transform: uppercase; }
+  .game-card.locked .g-tag { color: var(--ink-faint); background: transparent; border: 1px solid var(--border); }
+  .game-card .g-best { font-size: 10.5px; color: var(--ink-faint); margin-top: 9px; font-family: 'IBM Plex Mono', monospace; }
+
+  .play-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .play-back { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  .intro-grid { display: grid; grid-template-columns: 240px 1fr 240px; gap: 18px; align-items: stretch; }
+  @media (max-width: 820px) {
+    .intro-grid { grid-template-columns: 1fr; }
+  }
+  .intro-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px 20px; box-shadow: 0 1px 8px rgba(33,40,59,0.04);
+    transition: filter 0.4s ease, opacity 0.4s ease;
+  }
+  .intro-panel.blurred { filter: blur(5px); opacity: 0.45; pointer-events: none; }
+  .intro-panel h3 {
+    font-family: 'Source Serif 4', Georgia, serif; font-size: 12.5px; color: var(--gold-dim);
+    text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; font-weight: 700;
+  }
+  .intro-panel ul { margin: 0 0 18px; padding-left: 16px; font-size: 12px; color: var(--ink-soft); line-height: 1.65; }
+  .intro-panel ul:last-child { margin-bottom: 0; }
+  .intro-panel .why-text { font-size: 12px; color: var(--ink-soft); line-height: 1.65; font-style: italic; }
+  .intro-center {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 40px 24px; text-align: center; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; min-height: 300px;
+    box-shadow: 0 1px 10px rgba(33,40,59,0.04);
+  }
+  .intro-tag {
+    font-size: 10.5px; font-weight: 700; color: var(--gold); background: var(--gold-soft);
+    padding: 3px 10px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 14px;
+  }
+  .intro-center h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; margin-bottom: 28px; }
+  #intro-start-btn {
+    background: var(--gold); color: var(--bg); border: none; border-radius: 999px;
+    padding: 14px 34px; font-weight: 700; cursor: pointer; font-size: 14px; letter-spacing: 0.03em;
+  }
+  .intro-countdown { display: none; font-family: 'IBM Plex Mono', monospace; font-size: 64px; font-weight: 700; color: var(--gold); }
+
+  .hud-row { display: flex; align-items: center; gap: 30px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .timer-ring { position: relative; width: 108px; height: 108px; }
+  .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .timer-ring circle { fill: none; stroke-width: 4; }
+  .ring-bg { stroke: var(--border); }
+  .ring-fill { stroke: var(--gold); stroke-linecap: butt; transition: stroke-dashoffset 1s linear, stroke 0.2s ease; }
+  .ring-fill.low { stroke: var(--red); }
+  .ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 26px; color: var(--ink); }
+
+  .stat-chip { text-align: center; }
+  .stat-chip .label { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 5px; }
+  .stat-chip .value { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 700; transition: transform 0.16s ease; color: var(--ink); }
+  .stat-chip .value.pulse { transform: scale(1.15); color: var(--green); }
+  .stat-chip .value.best { color: var(--ink-soft); font-size: 20px; }
+  .stat-chip .value.combo { color: var(--gold); }
+
+  .qtimer-track { width: 100%; height: 4px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+  .qtimer-fill { height: 100%; background: var(--gold); width: 100%; }
+  .qtimer-fill.low { background: var(--red); }
+
+  .question-stage {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 46px 24px; text-align: center; margin-bottom: 18px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    box-shadow: 0 1px 10px rgba(33,40,59,0.04);
+  }
+  .question-stage.compact { padding: 26px 24px; }
+  .question-stage.flash-correct { background: var(--green-soft); border-color: var(--green); }
+  .question-stage.flash-wrong { background: var(--red-soft); border-color: var(--red); }
+  .q-text { font-family: 'Source Serif 4', Georgia, serif; font-size: 24px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
+  .q-subtext { font-size: 12px; color: var(--ink-faint); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .answer-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  #answer-input {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+    padding: 12px 16px; font-size: 17px; font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+    width: 160px; text-align: center; color: var(--ink);
+  }
+  #answer-input:focus { outline: none; border-color: var(--gold-dim); }
+  .answer-row button {
+    background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 12px 20px;
+    font-weight: 700; cursor: pointer; font-size: 13.5px; letter-spacing: 0.03em;
+  }
+  .hl-btn {
+    background: transparent; border: 1px solid var(--gold-dim); color: var(--gold);
+    padding: 15px 34px; border-radius: 999px; font-weight: 700; letter-spacing: 0.1em;
+    cursor: pointer; font-size: 14px;
+  }
+  .hl-btn:hover { background: var(--gold-soft); }
+  .hl-btn.tri { padding: 13px 20px; font-size: 12px; letter-spacing: 0.05em; }
+  .hl-btn.correct-flag { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+  .hl-btn.wrong-flag { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+  .stmt-list { text-align: left; max-width: 380px; margin: 0 auto; }
+  .stmt-row {
+    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: 5px;
+    margin-bottom: 7px; cursor: pointer; background: var(--bg);
+    transition: border-color 0.12s ease, background 0.12s ease;
+    font-family: inherit; font-size: inherit; text-align: inherit;
+  }
+  .stmt-row:hover { border-color: var(--gold-dim); }
+  .stmt-row:focus-visible { outline: 2px solid var(--gold-dim); outline-offset: 2px; }
+  .stmt-row.correct-flag { border-color: var(--green); background: var(--green-soft); }
+  .stmt-row.wrong-flag { border-color: var(--red); background: var(--red-soft); }
+  .stmt-label { font-size: 13px; color: var(--ink-soft); }
+  .stmt-value { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: var(--ink); }
+
+  .dc-grid-wrap { position: relative; max-width: 480px; margin: 0 auto; }
+  .dc-lines-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+  .dc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; position: relative; z-index: 1; }
+  .dc-cell {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 8px; min-height: 60px; display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: 11px; line-height: 1.3; color: var(--ink-soft); cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+    font-family: inherit;
+  }
+  .dc-cell:hover { border-color: var(--gold-dim); }
+  .dc-cell:focus-visible { outline: 2px solid var(--gold-dim); outline-offset: 2px; }
+  .dc-cell.dc-done { border-color: var(--green); background: var(--green-soft); color: var(--ink); font-weight: 600; }
+  .dc-cell.dc-wrong { border-color: var(--red); background: var(--red-soft); }
+  .dc-line { stroke: var(--gold); stroke-width: 2.5; }
+
+  .dw-scenario { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 14px 18px; margin-bottom: 18px; font-size: 12.5px; color: var(--ink-soft); text-align: left; line-height: 1.8; }
+  .dw-scenario b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; }
+  #dw-answer-input {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+    padding: 12px 16px; font-size: 17px; font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+    width: 160px; text-align: center; color: var(--ink);
+  }
+  #dw-answer-input:focus { outline: none; border-color: var(--gold-dim); }
+  .dw-msg { font-size: 11.5px; color: var(--ink-soft); margin-top: 14px; min-height: 14px; line-height: 1.6; }
+
+  .rl-target { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+  .rl-current { font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: var(--ink-soft); margin-bottom: 22px; }
+  .rl-inputs { display: flex; flex-direction: column; gap: 10px; max-width: 340px; margin: 0 auto 16px; }
+  .rl-input-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px;
+  }
+  .rl-input-label { font-size: 12px; color: var(--ink-soft); text-align: left; }
+  .rl-input-value { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: var(--ink); min-width: 56px; text-align: center; }
+  .rl-btn-group { display: flex; gap: 6px; }
+  .rl-step-btn {
+    background: transparent; border: 1px solid var(--gold-dim); color: var(--gold);
+    width: 30px; height: 30px; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 15px; line-height: 1;
+  }
+  .rl-step-btn:hover { background: var(--gold-soft); }
+  .rl-step-btn:disabled { opacity: 0.3; cursor: default; }
+  .rl-moves { font-size: 11px; color: var(--ink-faint); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+
+  .sp-clue-list { text-align: left; max-width: 400px; margin: 0 auto 16px; list-style: none; padding: 0; }
+  .sp-clue-list li {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+    padding: 10px 14px; margin-bottom: 6px; font-size: 12.5px; color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .sp-guess-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 420px; margin: 0 auto 14px; }
+  .sp-guess-btn {
+    background: transparent; border: 1px solid var(--gold-dim); color: var(--gold);
+    padding: 11px 10px; border-radius: 999px; font-weight: 700; letter-spacing: 0.02em;
+    cursor: pointer; font-size: 11.5px;
+  }
+  .sp-guess-btn:hover { background: var(--gold-soft); }
+  .sp-guess-btn.correct-flag { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+  .sp-guess-btn.wrong-flag { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+  .sp-reveal-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--ink-soft);
+    padding: 10px 20px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .sp-reveal-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .sp-reveal-btn:disabled { opacity: 0.3; cursor: default; }
+
+  #end-screen { display: none; text-align: center; padding: 44px 20px; }
+  #end-screen .sub { text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+  #end-screen .final-score { font-family: 'IBM Plex Mono', monospace; font-size: 52px; font-weight: 700; margin: 10px 0; color: var(--gold); }
+  #end-screen .best-line { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 26px; font-family: 'IBM Plex Mono', monospace; }
+  #end-screen .best-line.new-best { color: var(--green); }
+  #end-screen button { border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 6px; letter-spacing: 0.02em; }
+  #end-screen button.primary { background: var(--gold); color: var(--bg); }
+  #end-screen button.secondary { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
+
+  /* --- mobile --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .hud-row { gap: 18px; }
+    .timer-ring { width: 84px; height: 84px; }
+    .ring-label { font-size: 20px; }
+    .q-text { font-size: 19px; }
+    .answer-row, .balloon-btns { flex-wrap: wrap; }
+    #answer-input, #dw-answer-input { font-size: 16px; }
+    .intro-center { padding: 28px 18px; min-height: 220px; }
+    .game-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="games.html" class="nav-link active">Games</a>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to track your scores and streak.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<div id="menu-screen">
+  <div class="kicker">Practice</div>
+  <h1>Daily <em>Reps</em></h1>
+  <div class="sub">Pick a couple — 2 to 5 minutes a day is the point, not a long session.</div>
+
+  <div class="streak-strip">
+    <div class="streak-label">Current streak</div>
+    <div class="streak-num"><span id="streak-count">0</span> day<span id="streak-plural">s</span></div>
+  </div>
+
+  <div class="game-grid">
+    <div class="game-card" data-game="mental_math_blitz">
+      <div class="g-index">01 / 08</div>
+      <div class="g-name">Mental Math Blitz</div>
+      <div class="g-desc">60 seconds of percentages, margins, and quick multiplication. Never the same question twice.</div>
+      <span class="g-tag">Reflex · 60s</span>
+      <div class="g-best" id="best-mental_math_blitz">Best: —</div>
+    </div>
+
+    <div class="game-card" data-game="multiple_match">
+      <div class="g-index">02 / 08</div>
+      <div class="g-name">Multiple Match</div>
+      <div class="g-desc">Call High or Low on a trading multiple before the clock runs out. Chain calls for a combo multiplier.</div>
+      <span class="g-tag">Reflex · Combo</span>
+      <div class="g-best" id="best-multiple_match">Best: —</div>
+    </div>
+
+    <div class="game-card" data-game="spot_the_red_flag">
+      <div class="g-index">03 / 08</div>
+      <div class="g-name">Spot the Red Flag</div>
+      <div class="g-desc">One line in this statement is off. Find it before the timer runs out.</div>
+      <span class="g-tag">Reflex · 6s rounds</span>
+      <div class="g-best" id="best-spot_the_red_flag">Best: —</div>
+    </div>
+
+    <div class="game-card" data-game="statement_sprint">
+      <div class="g-index">04 / 08</div>
+      <div class="g-name">Statement Sprint</div>
+      <div class="g-desc">Sort each line item into Income Statement, Balance Sheet, or Cash Flow. Gets faster the longer your streak holds.</div>
+      <span class="g-tag">Reflex · Ramping</span>
+      <div class="g-best" id="best-statement_sprint">Best: —</div>
+    </div>
+
+    <div class="game-card" data-game="deal_chain">
+      <div class="g-index">05 / 08</div>
+      <div class="g-name">Deal Chain</div>
+      <div class="g-desc">Click the process steps in the right order. Decoys from other deals are mixed in to throw you off.</div>
+      <span class="g-tag">Puzzle · Sequence</span>
+      <div class="g-best" id="best-deal_chain">Best: —</div>
+    </div>
+    <div class="game-card" data-game="distribution_waterfall">
+      <div class="g-index">06 / 08</div>
+      <div class="g-name">Distribution Waterfall</div>
+      <div class="g-desc">Work through a fund's payout tier by tier: return of capital, preferred return, then the carry split.</div>
+      <span class="g-tag">Puzzle · PE Math</span>
+      <div class="g-best" id="best-distribution_waterfall">Best: —</div>
+    </div>
+    <div class="game-card" data-game="ratio_ladder">
+      <div class="g-index">07 / 08</div>
+      <div class="g-name">Ratio Ladder</div>
+      <div class="g-desc">Nudge margin, turnover, or leverage one step at a time to hit the target ROE exactly.</div>
+      <span class="g-tag">Puzzle · Limited Moves</span>
+      <div class="g-best" id="best-ratio_ladder">Best: —</div>
+    </div>
+    <div class="game-card" data-game="sector_pinpoint">
+      <div class="g-index">08 / 08</div>
+      <div class="g-name">Sector Pinpoint</div>
+      <div class="g-desc">Clues reveal one at a time. Guess the sector early for more points — or play it safe.</div>
+      <span class="g-tag">Puzzle · Push Your Luck</span>
+      <div class="g-best" id="best-sector_pinpoint">Best: —</div>
+    </div>
+  </div>
+</div>
+
+<div id="intro-screen" style="display:none;">
+  <div class="play-head"><button class="play-back" id="intro-back-btn" type="button">&larr; Back to games</button></div>
+  <div class="intro-grid">
+    <div class="intro-panel" id="intro-panel-left">
+      <h3>How to play</h3>
+      <ul id="intro-howto"></ul>
+      <h3>Scoring</h3>
+      <ul id="intro-scoring"></ul>
+    </div>
+    <div class="intro-center">
+      <div class="intro-tag" id="intro-tag"></div>
+      <h2 id="intro-title"></h2>
+      <button type="button" id="intro-start-btn">Start Game</button>
+      <div class="intro-countdown" id="intro-countdown">3</div>
+    </div>
+    <div class="intro-panel" id="intro-panel-right">
+      <h3>Tips for a high score</h3>
+      <ul id="intro-tips"></ul>
+      <h3>Why it matters</h3>
+      <div class="why-text" id="intro-why"></div>
+    </div>
+  </div>
+</div>
+
+<div id="play-screen" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Score</div><div class="value" id="hud-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="hud-time">60</div>
+    </div>
+    <div class="stat-chip"><div class="label">Best</div><div class="value best" id="hud-best">—</div></div>
+  </div>
+  <div class="question-stage" id="question-stage">
+    <div class="q-text" id="q-text">Ready?</div>
+    <div class="answer-row">
+      <input type="text" id="answer-input" inputmode="decimal" placeholder="Answer" autocomplete="off">
+      <button type="button" id="submit-answer">Enter</button>
+    </div>
+  </div>
+</div>
+
+<div id="play-screen-mm" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-mm" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Score</div><div class="value" id="mm-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="mm-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="mm-time">45</div>
+    </div>
+    <div class="stat-chip"><div class="label">Combo</div><div class="value combo" id="mm-combo">×1</div></div>
+  </div>
+  <div class="qtimer-track"><div class="qtimer-fill" id="mm-qtimer"></div></div>
+  <div class="question-stage" id="mm-question-stage">
+    <div class="q-text" id="mm-q-text">Ready?</div>
+    <div class="q-subtext" id="mm-q-sub">vs. typical sector range</div>
+    <div class="answer-row">
+      <button type="button" class="hl-btn" data-choice="low">LOW</button>
+      <button type="button" class="hl-btn" data-choice="high">HIGH</button>
+    </div>
+  </div>
+</div>
+
+<div id="play-screen-srf" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-srf" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Score</div><div class="value" id="srf-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="srf-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="srf-time">60</div>
+    </div>
+    <div class="stat-chip"><div class="label">Best</div><div class="value best" id="srf-best">—</div></div>
+  </div>
+  <div class="qtimer-track"><div class="qtimer-fill" id="srf-qtimer"></div></div>
+  <div class="question-stage compact" id="srf-question-stage">
+    <div class="q-text">Which line is off?</div>
+    <div class="q-subtext" id="srf-q-sub">Income Statement</div>
+    <div class="stmt-list" id="srf-stmt-list"></div>
+  </div>
+</div>
+
+<div id="play-screen-ss" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-ss" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Score</div><div class="value" id="ss-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="ss-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="ss-time">45</div>
+    </div>
+    <div class="stat-chip"><div class="label">Streak</div><div class="value combo" id="ss-streak">0</div></div>
+  </div>
+  <div class="qtimer-track"><div class="qtimer-fill" id="ss-qtimer"></div></div>
+  <div class="question-stage" id="ss-question-stage">
+    <div class="q-text" id="ss-q-text">Ready?</div>
+    <div class="q-subtext">which statement is this on?</div>
+    <div class="answer-row">
+      <button type="button" class="hl-btn tri" data-choice="IS">Income Statement</button>
+      <button type="button" class="hl-btn tri" data-choice="BS">Balance Sheet</button>
+      <button type="button" class="hl-btn tri" data-choice="CF">Cash Flow</button>
+    </div>
+  </div>
+</div>
+
+<div id="play-screen-dc" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-dc" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Chains</div><div class="value" id="dc-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="dc-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="dc-time">60</div>
+    </div>
+    <div class="stat-chip"><div class="label">Best</div><div class="value best" id="dc-best">—</div></div>
+  </div>
+  <div class="question-stage compact" id="dc-question-stage">
+    <div class="q-text">Trace the process, in order</div>
+    <div class="q-subtext" id="dc-process-name">M&amp;A Deal Process</div>
+    <div class="dc-grid-wrap">
+      <svg class="dc-lines-overlay" id="dc-lines"></svg>
+      <div class="dc-grid" id="dc-grid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="play-screen-dw" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-dw" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Score</div><div class="value" id="dw-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="dw-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="dw-time">90</div>
+    </div>
+    <div class="stat-chip"><div class="label">Best</div><div class="value best" id="dw-best">—</div></div>
+  </div>
+  <div class="question-stage compact" id="dw-question-stage">
+    <div class="dw-scenario" id="dw-scenario"></div>
+    <div class="q-text" id="dw-q-text" style="font-size:19px;"></div>
+    <div class="answer-row">
+      <input type="text" id="dw-answer-input" inputmode="decimal" placeholder="$m" autocomplete="off">
+      <button type="button" id="dw-submit-btn">Submit</button>
+    </div>
+    <div class="dw-msg" id="dw-msg"></div>
+  </div>
+</div>
+
+<div id="play-screen-rl" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-rl" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Solved</div><div class="value" id="rl-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="rl-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="rl-time">75</div>
+    </div>
+    <div class="stat-chip"><div class="label">Best</div><div class="value best" id="rl-best">—</div></div>
+  </div>
+  <div class="question-stage compact" id="rl-question-stage">
+    <div class="rl-target">Target ROE: <span id="rl-target-val">—</span>%</div>
+    <div class="rl-current">Current ROE: <span id="rl-current-val">—</span>%</div>
+    <div class="rl-inputs" id="rl-inputs"></div>
+    <div class="rl-moves">Moves left: <span id="rl-moves-left">0</span></div>
+  </div>
+</div>
+
+<div id="play-screen-sp" style="display:none;">
+  <div class="play-head"><button class="play-back" id="back-btn-sp" type="button">&larr; Back to games</button></div>
+  <div class="hud-row">
+    <div class="stat-chip"><div class="label">Score</div><div class="value" id="sp-score">0</div></div>
+    <div class="timer-ring">
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"></circle><circle class="ring-fill" id="sp-ring-fill" cx="60" cy="60" r="52"></circle></svg>
+      <div class="ring-label" id="sp-time">75</div>
+    </div>
+    <div class="stat-chip"><div class="label">Best</div><div class="value best" id="sp-best">—</div></div>
+  </div>
+  <div class="qtimer-track"><div class="qtimer-fill" id="sp-qtimer"></div></div>
+  <div class="question-stage compact" id="sp-question-stage">
+    <div class="q-text">Guess the sector</div>
+    <div class="q-subtext" id="sp-clue-count">Clue 1 of 4 · worth 4 pts</div>
+    <ul class="sp-clue-list" id="sp-clue-list"></ul>
+    <div class="sp-guess-grid" id="sp-guess-grid"></div>
+    <button type="button" class="sp-reveal-btn" id="sp-reveal-btn">Reveal next clue →</button>
+  </div>
+</div>
+
+<div id="end-screen">
+  <div class="sub" id="end-screen-title">Mental Math Blitz</div>
+  <div class="final-score" id="final-score">0</div>
+  <div class="best-line" id="best-line">Best: 0</div>
+  <button type="button" class="primary" id="play-again-btn">Play again</button>
+  <button type="button" class="secondary" id="done-btn">Back to games</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) loadStreakAndBests();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  const LOCAL_BEST_PREFIX = "gs_best_";
+  const LOCAL_DATES_KEY = "gs_played_dates";
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function localBestKey(game) { return LOCAL_BEST_PREFIX + game; }
+
+  function recordLocalPlayDate() {
+    const dates = JSON.parse(localStorage.getItem(LOCAL_DATES_KEY) || "[]");
+    const t = todayStr();
+    if (!dates.includes(t)) dates.push(t);
+    localStorage.setItem(LOCAL_DATES_KEY, JSON.stringify(dates));
+  }
+
+  function computeStreak(dateStrings) {
+    const set = new Set(dateStrings);
+    let streak = 0;
+    let cursor = new Date();
+    if (!set.has(todayStr())) cursor.setDate(cursor.getDate() - 1);
+    while (set.has(cursor.toISOString().slice(0, 10))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    return streak;
+  }
+
+  const GAME_LIST = ["mental_math_blitz", "multiple_match", "spot_the_red_flag", "statement_sprint", "deal_chain", "distribution_waterfall", "ratio_ladder", "sector_pinpoint"];
+
+  async function loadStreakAndBests() {
+    let dates = JSON.parse(localStorage.getItem(LOCAL_DATES_KEY) || "[]");
+    let dbBests = {};
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userId) {
+        const { data, error } = await sb.from("game_scores").select("game, score, played_date").eq("user_id", userId);
+        if (!error && data) {
+          dates = [...new Set(data.map(r => r.played_date))];
+          GAME_LIST.forEach(g => {
+            const scores = data.filter(r => r.game === g).map(r => r.score);
+            if (scores.length) dbBests[g] = Math.max(...scores);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("game_scores table not available yet — using localStorage only.", e);
+    }
+
+    const streak = computeStreak(dates);
+    document.getElementById("streak-count").textContent = streak;
+    document.getElementById("streak-plural").textContent = streak === 1 ? "" : "s";
+
+    GAME_LIST.forEach(g => {
+      const localBest = parseInt(localStorage.getItem(localBestKey(g)) || "0", 10);
+      const best = Math.max(localBest, dbBests[g] || 0);
+      const el = document.getElementById("best-" + g);
+      if (el) el.textContent = best > 0 ? `Best: ${best}` : "Best: —";
+    });
+  }
+
+  async function saveScore(game, score) {
+    recordLocalPlayDate();
+    const localBest = parseInt(localStorage.getItem(localBestKey(game)) || "0", 10);
+    if (score > localBest) localStorage.setItem(localBestKey(game), String(score));
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return;
+      const { error } = await sb.from("game_scores").insert([{ user_id: userId, game, score, played_date: todayStr() }]);
+      if (error) console.warn("Couldn't save score to Supabase (table may not exist yet):", error.message);
+    } catch (e) {
+      console.warn("Couldn't save score to Supabase:", e);
+    }
+  }
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+
+  function showScreen(id) {
+    ["menu-screen", "intro-screen", "play-screen", "play-screen-mm", "play-screen-srf", "play-screen-ss", "play-screen-dc", "play-screen-dw", "play-screen-rl", "play-screen-sp", "end-screen"].forEach(s => {
+      document.getElementById(s).style.display = s === id ? "block" : "none";
+    });
+    if (id === "menu-screen") loadStreakAndBests();
+  }
+
+  document.getElementById("done-btn").addEventListener("click", () => showScreen("menu-screen"));
+  function pulse(el) { el.classList.add("pulse"); setTimeout(() => el.classList.remove("pulse"), 220); }
+  function flashStage(el, kind) { el.classList.add(kind); setTimeout(() => el.classList.remove(kind), 400); }
+
+  let currentGame = null;
+
+  const GAME_INFO = {
+    mental_math_blitz: {
+      tag: "Reflex · 60s",
+      title: "Mental Math Blitz",
+      howto: [
+        "A calculation appears — percentages, margins, multiplication, or growth.",
+        "Type the answer and press Enter or hit the button.",
+        "Correct answers advance instantly to the next question.",
+      ],
+      scoring: [
+        "+1 point per correct answer.",
+        "Wrong answers cost 3 seconds off the clock.",
+        "Session ends when the 60-second timer hits zero.",
+      ],
+      tips: [
+        "Round numbers early rather than calculating exactly.",
+        "Estimate the first digit fast — speed matters more than precision here.",
+        "Don't freeze on one question; a quick guess costs less than hesitation.",
+      ],
+      why: "Mental math speed is tested directly in interviews and used constantly on the job to sanity-check numbers live in front of senior bankers.",
+    },
+    multiple_match: {
+      tag: "Reflex · Combo",
+      title: "Multiple Match",
+      howto: [
+        "A sector and a trading multiple appear (e.g. \"SaaS — EV/EBITDA 31x\").",
+        "Call HIGH or LOW versus that sector's typical range.",
+        "You have about 3.5 seconds per call.",
+      ],
+      scoring: [
+        "Correct calls chain into a combo multiplier, up to ×4.",
+        "A wrong call resets your combo and costs 2 seconds.",
+        "Session ends when the 45-second timer hits zero.",
+      ],
+      tips: [
+        "Learn the rough sector bands — software and luxury run rich, grocery and auto run cheap.",
+        "Don't chase a guess you're unsure of just to protect a combo.",
+        "Values always sit clearly outside the normal range — trust your first instinct.",
+      ],
+      why: "Quick valuation intuition is exactly what's tested when an interviewer asks whether a multiple looks rich or cheap.",
+    },
+    spot_the_red_flag: {
+      tag: "Reflex · 6s rounds",
+      title: "Spot the Red Flag",
+      howto: [
+        "A short Income Statement or Balance Sheet appears.",
+        "One line is wrong — a broken subtotal, an impossible negative, or a percentage that doesn't match the numbers above it.",
+        "Click the line you think is off within 6 seconds.",
+      ],
+      scoring: [
+        "+1 point per correct find.",
+        "A wrong pick or timeout reveals the real answer and costs 3 seconds.",
+        "Session ends when the 60-second timer hits zero.",
+      ],
+      tips: [
+        "Check subtotals first — do the lines above actually add up?",
+        "Then scan for negative signs on lines that should always be positive.",
+        "If a percentage line is present, quickly recompute it in your head — it won't match if it's the anomaly.",
+      ],
+      why: "Sanity-checking statements for errors is a core junior banking skill, used constantly when reviewing models and company filings.",
+    },
+    statement_sprint: {
+      tag: "Reflex · Ramping",
+      title: "Statement Sprint",
+      howto: [
+        "A line item appears (e.g. \"Retained Earnings\").",
+        "Sort it into Income Statement, Balance Sheet, or Cash Flow before time runs out.",
+        "Correct answers speed up the next round; a miss resets the pace.",
+      ],
+      scoring: [
+        "+1 point per correct sort.",
+        "A wrong answer or timeout resets your streak and costs 3 seconds.",
+        "Session ends when the 45-second timer hits zero.",
+      ],
+      tips: [
+        "Anchor on a few unmistakable items per statement (Revenue = IS, Total Assets = BS, CapEx = CF).",
+        "Reason from those anchors rather than memorizing all 34 items individually.",
+        "Ease off slightly right after a streak resets rather than rushing back to top speed.",
+      ],
+      why: "Instantly knowing which statement a line belongs to is foundational to accounting and financial modeling.",
+    },
+    deal_chain: {
+      tag: "Puzzle · Sequence",
+      title: "Deal Chain",
+      howto: [
+        "8 cells appear — 6 real steps of a deal process plus 2 decoys from other processes.",
+        "Click the real steps in the correct order.",
+        "A completed chain immediately starts a new, different process.",
+      ],
+      scoring: [
+        "+1 point per completed chain.",
+        "A wrong or out-of-order click costs 4 seconds but doesn't reset your progress.",
+        "Session ends when the 60-second timer hits zero.",
+      ],
+      tips: [
+        "Identify the process type first (M&A, LBO, or IPO) from any one recognizable step.",
+        "Work chronologically once you've placed the first step.",
+        "A decoy is always a step from a different process — if it doesn't fit the story, skip it.",
+      ],
+      why: "Understanding deal process sequencing is asked directly in \"walk me through an M&A process\" style interview questions.",
+    },
+    distribution_waterfall: {
+      tag: "Puzzle · PE Math",
+      title: "Distribution Waterfall",
+      howto: [
+        "You're given a fund's invested capital, preferred return rate, carry split, and total exit proceeds.",
+        "Each round asks for just one tier's amount — Return of Capital, Preferred Return, or the LP/GP residual split.",
+        "Sometimes proceeds run out partway through, so a later tier can correctly be zero.",
+      ],
+      scoring: [
+        "+1 point per correct tier.",
+        "A wrong answer costs 4 seconds — the full breakdown is shown either way so you can check your working.",
+        "Session ends when the 90-second timer hits zero.",
+      ],
+      tips: [
+        "Work top-down in your head even though you're only asked for one number: Return of Capital, then Preferred Return, only then the residual split.",
+        "If proceeds don't cover Return of Capital, everything after it is zero — check that first.",
+        "The LP and GP residual shares always add up to exactly what's left after the first two tiers.",
+      ],
+      why: "This is a real distribution waterfall — one of the most commonly asked PE technical questions (\"walk me through how proceeds get distributed\"), and the tier logic here is exactly how it works in practice, not a puzzle abstraction.",
+    },
+    ratio_ladder: {
+      tag: "Puzzle · Limited Moves",
+      title: "Ratio Ladder",
+      howto: [
+        "You're shown a starting ROE and a target ROE.",
+        "Nudge Margin, Turnover, or Leverage one step at a time with the +/- buttons.",
+        "Reach the exact target within your move budget.",
+      ],
+      scoring: [
+        "+1 point per ladder solved.",
+        "Running out of moves resets the round and costs 5 seconds.",
+        "Session ends when the 75-second timer hits zero.",
+      ],
+      tips: [
+        "Work out roughly how much bigger or smaller the target is before moving anything.",
+        "Leverage and Turnover move ROE multiplicatively — small nudges can swing it more than expected.",
+        "Don't spam one input; alternate based on which lever gets you closest fastest.",
+      ],
+      why: "This is literally the DuPont ROE decomposition — one of the most common technical frameworks tested in IB/PE interviews.",
+    },
+    sector_pinpoint: {
+      tag: "Puzzle · Push Your Luck",
+      title: "Sector Pinpoint",
+      howto: [
+        "A mystery company's sector is revealed one clue at a time — growth, margin, geography, then a headline.",
+        "Guess the sector anytime from the option list, or reveal another clue first.",
+        "Each clue you wait for lowers the points on offer.",
+      ],
+      scoring: [
+        "Guessing after clue 1 scores 4 points, dropping to 3, 2, then 1 by the last clue.",
+        "A wrong guess ends the round immediately and costs 3 seconds.",
+        "Session ends when the 75-second timer hits zero.",
+      ],
+      tips: [
+        "Growth rate and margin together usually narrow it to 2–3 sectors fast.",
+        "Use geography or the headline clue to break a tie rather than waiting for full certainty.",
+        "Guessing early is worth the risk once you've built pattern recognition — don't always play it safe.",
+      ],
+      why: "Quickly pattern-matching a business from a handful of characteristics is exactly what case-study and market-sizing questions test.",
+    },
+  };
+
+  const START_FUNCTIONS = {
+    mental_math_blitz: () => startMMB(),
+    multiple_match: () => startMM(),
+    spot_the_red_flag: () => startSRF(),
+    statement_sprint: () => startSS(),
+    deal_chain: () => startDC(),
+    distribution_waterfall: () => startDW(),
+    ratio_ladder: () => startRL(),
+    sector_pinpoint: () => startSP(),
+  };
+
+  let introCountdownTimeout = null;
+  const introPanels = document.querySelectorAll(".intro-panel");
+  const introStartBtn = document.getElementById("intro-start-btn");
+  const introCountdownEl = document.getElementById("intro-countdown");
+
+  function showIntro(key) {
+    clearTimeout(introCountdownTimeout);
+    const info = GAME_INFO[key];
+    document.getElementById("intro-tag").textContent = info.tag;
+    document.getElementById("intro-title").textContent = info.title;
+    document.getElementById("intro-howto").innerHTML = info.howto.map(t => `<li>${t}</li>`).join("");
+    document.getElementById("intro-scoring").innerHTML = info.scoring.map(t => `<li>${t}</li>`).join("");
+    document.getElementById("intro-tips").innerHTML = info.tips.map(t => `<li>${t}</li>`).join("");
+    document.getElementById("intro-why").textContent = info.why;
+
+    introStartBtn.style.display = "inline-block";
+    introCountdownEl.style.display = "none";
+    introPanels.forEach(p => p.classList.remove("blurred"));
+    introStartBtn.onclick = () => startIntroCountdown(key);
+
+    showScreen("intro-screen");
+  }
+
+  function startIntroCountdown(key) {
+    introStartBtn.style.display = "none";
+    introPanels.forEach(p => p.classList.add("blurred"));
+    introCountdownEl.style.display = "block";
+
+    let n = 3;
+    introCountdownEl.textContent = String(n);
+    clearTimeout(introCountdownTimeout);
+
+    function tick() {
+      n -= 1;
+      if (n > 0) {
+        introCountdownEl.textContent = String(n);
+        introCountdownTimeout = setTimeout(tick, 700);
+      } else {
+        introCountdownEl.textContent = "GO";
+        introCountdownTimeout = setTimeout(() => START_FUNCTIONS[key](), 500);
+      }
+    }
+    introCountdownTimeout = setTimeout(tick, 700);
+  }
+
+  document.getElementById("intro-back-btn").addEventListener("click", () => {
+    clearTimeout(introCountdownTimeout);
+    showScreen("menu-screen");
+  });
+  document.getElementById("play-again-btn").addEventListener("click", () => {
+    if (currentGame === "mental_math_blitz") startMMB();
+    else if (currentGame === "multiple_match") startMM();
+    else if (currentGame === "spot_the_red_flag") startSRF();
+    else if (currentGame === "statement_sprint") startSS();
+    else if (currentGame === "deal_chain") startDC();
+    else if (currentGame === "distribution_waterfall") startDW();
+    else if (currentGame === "ratio_ladder") startRL();
+    else startSP();
+  });
+
+  const NICE_PERCENTAGES = [5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90];
+  function genPercentage() {
+    const p = pick(NICE_PERCENTAGES);
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+    const step = 100 / gcd(p, 100);
+    const base = step * randInt(2, Math.floor(400 / step));
+    const answer = Math.round((base * p) / 100);
+    return { text: `${p}% of ${base}?`, answer };
+  }
+  function genMultiplication() {
+    const easy = Math.random() < 0.5;
+    const a = easy ? randInt(6, 19) : randInt(12, 29);
+    const b = easy ? randInt(6, 19) : randInt(6, 19);
+    return { text: `${a} × ${b}?`, answer: a * b };
+  }
+  function genMargin() {
+    const revenue = randInt(2, 40) * 10;
+    const margin = pick([10,12,15,18,20,22,25,28,30,32,35,40]);
+    const answer = Math.round((revenue * margin) / 100);
+    return { text: `Revenue $${revenue}m, margin ${margin}% → profit ($m)?`, answer };
+  }
+  function genGrowth() {
+    const base = randInt(4, 40) * 10;
+    const growth = pick([5,10,15,20,25,30,-5,-10,-15]);
+    const answer = Math.round(base * (1 + growth / 100));
+    return { text: `$${base}m growing ${growth > 0 ? "+" : ""}${growth}% → new value ($m)?`, answer };
+  }
+  const MMB_GENERATORS = [genPercentage, genMultiplication, genMargin, genGrowth];
+  let mmbLastText = "";
+  function generateMMBQuestion() {
+    let q, attempts = 0;
+    do { q = pick(MMB_GENERATORS)(); attempts++; } while (q.text === mmbLastText && attempts < 8);
+    mmbLastText = q.text;
+    return q;
+  }
+
+  const MMB_TOTAL_TIME = 60;
+  const RING_CIRC = 2 * Math.PI * 52;
+  let mmbTimeLeft = MMB_TOTAL_TIME, mmbDeadline = 0, mmbScore = 0, mmbAnswer = null, mmbInterval = null, mmbRunning = false;
+
+  const qText = document.getElementById("q-text");
+  const answerInput = document.getElementById("answer-input");
+  const questionStage = document.getElementById("question-stage");
+  const hudTime = document.getElementById("hud-time");
+  const hudScore = document.getElementById("hud-score");
+  const hudBest = document.getElementById("hud-best");
+  const ringFill = document.getElementById("ring-fill");
+  ringFill.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="mental_math_blitz"]').addEventListener("click", () => showIntro("mental_math_blitz"));
+  document.getElementById("back-btn").addEventListener("click", () => showScreen("menu-screen"));
+
+  function startMMB() {
+    currentGame = "mental_math_blitz";
+    mmbScore = 0; mmbTimeLeft = MMB_TOTAL_TIME; mmbDeadline = Date.now() + MMB_TOTAL_TIME * 1000; mmbRunning = true;
+    hudScore.textContent = "0";
+    hudTime.textContent = String(MMB_TOTAL_TIME);
+    ringFill.style.strokeDashoffset = "0";
+    ringFill.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(localBestKey("mental_math_blitz")) || "0", 10);
+    hudBest.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play-screen");
+    mmbNext();
+    answerInput.value = ""; answerInput.focus();
+
+    clearInterval(mmbInterval);
+    mmbInterval = setInterval(() => {
+      mmbTimeLeft = Math.max(0, Math.round((mmbDeadline - Date.now()) / 1000));
+      mmbUpdateTimer();
+      if (mmbTimeLeft <= 0) mmbEnd();
+    }, 1000);
+  }
+
+  function mmbUpdateTimer() {
+    const t = Math.max(0, mmbTimeLeft);
+    hudTime.textContent = String(t);
+    ringFill.style.strokeDashoffset = String(RING_CIRC * (1 - t / MMB_TOTAL_TIME));
+    ringFill.classList.toggle("low", t <= 10);
+  }
+
+  function mmbNext() {
+    const q = generateMMBQuestion();
+    mmbAnswer = q.answer;
+    qText.textContent = q.text;
+    answerInput.value = ""; answerInput.focus();
+  }
+
+  function mmbSubmit() {
+    if (!mmbRunning) return;
+    const raw = answerInput.value.trim();
+    if (raw === "") return;
+    const val = parseFloat(raw);
+    if (Number.isNaN(val)) return;
+
+    if (Math.round(val) === mmbAnswer) {
+      mmbScore += 1;
+      hudScore.textContent = String(mmbScore);
+      pulse(hudScore);
+      flashStage(questionStage, "flash-correct");
+      mmbNext();
+    } else {
+      mmbDeadline -= 3000;
+      mmbTimeLeft = Math.max(0, Math.round((mmbDeadline - Date.now()) / 1000));
+      mmbUpdateTimer();
+      flashStage(questionStage, "flash-wrong");
+      if (mmbTimeLeft <= 0) mmbEnd(); else mmbNext();
+    }
+  }
+  document.getElementById("submit-answer").addEventListener("click", mmbSubmit);
+  answerInput.addEventListener("keydown", (e) => { if (e.key === "Enter") mmbSubmit(); });
+
+  async function mmbEnd() {
+    mmbRunning = false;
+    clearInterval(mmbInterval);
+    finishGame("mental_math_blitz", mmbScore, "Mental Math Blitz");
+  }
+
+  const SECTOR_MULTIPLES = [
+    { name: "SaaS / Software", metric: "EV/EBITDA", low: 18, high: 28 },
+    { name: "Grocery Retail", metric: "EV/EBITDA", low: 5, high: 8 },
+    { name: "Consumer Retail", metric: "EV/EBITDA", low: 6, high: 10 },
+    { name: "Industrials", metric: "EV/EBITDA", low: 7, high: 11 },
+    { name: "Healthcare / Pharma", metric: "EV/EBITDA", low: 12, high: 18 },
+    { name: "Energy (Oil & Gas)", metric: "EV/EBITDA", low: 4, high: 7 },
+    { name: "Telecom", metric: "EV/EBITDA", low: 6, high: 9 },
+    { name: "Media", metric: "EV/EBITDA", low: 8, high: 12 },
+    { name: "Real Estate (REIT)", metric: "EV/EBITDA", low: 12, high: 16 },
+    { name: "Automotive", metric: "EV/EBITDA", low: 5, high: 8 },
+    { name: "Luxury Goods", metric: "EV/EBITDA", low: 14, high: 20 },
+    { name: "Semiconductors", metric: "EV/EBITDA", low: 12, high: 18 },
+  ];
+
+  let mmLastKey = "";
+  function generateMMQuestion() {
+    let sector, value, correct, key;
+    let attempts = 0;
+    do {
+      sector = pick(SECTOR_MULTIPLES);
+      const goHigh = Math.random() < 0.5;
+      value = goHigh ? sector.high + randInt(2, 8) : Math.max(1, sector.low - randInt(2, 5));
+      value = value + (Math.random() < 0.5 ? 0 : 0.5);
+      correct = goHigh ? "high" : "low";
+      key = sector.name + value;
+      attempts++;
+    } while (key === mmLastKey && attempts < 8);
+    mmLastKey = key;
+    return { sectorName: sector.name, metric: sector.metric, value, correct };
+  }
+
+  const MM_TOTAL_TIME = 45;
+  const MM_Q_TIME_MS = 3500;
+  let mmTimeLeft = MM_TOTAL_TIME, mmDeadline = 0, mmScore = 0, mmCombo = 0, mmMultiplier = 1;
+  let mmSessionInterval = null, mmQTimeout = null, mmRunning = false, mmCurrent = null;
+
+  const mmScoreEl = document.getElementById("mm-score");
+  const mmTimeEl = document.getElementById("mm-time");
+  const mmComboEl = document.getElementById("mm-combo");
+  const mmRing = document.getElementById("mm-ring-fill");
+  const mmQTimerBar = document.getElementById("mm-qtimer");
+  const mmQText = document.getElementById("mm-q-text");
+  const mmQSub = document.getElementById("mm-q-sub");
+  const mmStage = document.getElementById("mm-question-stage");
+  mmRing.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="multiple_match"]').addEventListener("click", () => showIntro("multiple_match"));
+  document.getElementById("back-btn-mm").addEventListener("click", () => { clearTimeout(mmQTimeout); clearInterval(mmSessionInterval); showScreen("menu-screen"); });
+
+  function startMM() {
+    currentGame = "multiple_match";
+    mmScore = 0; mmCombo = 0; mmMultiplier = 1; mmTimeLeft = MM_TOTAL_TIME; mmDeadline = Date.now() + MM_TOTAL_TIME * 1000; mmRunning = true;
+    mmScoreEl.textContent = "0";
+    mmComboEl.textContent = "×1";
+    mmTimeEl.textContent = String(MM_TOTAL_TIME);
+    mmRing.style.strokeDashoffset = "0";
+    mmRing.classList.remove("low");
+    showScreen("play-screen-mm");
+    mmNextQuestion();
+
+    clearInterval(mmSessionInterval);
+    mmSessionInterval = setInterval(() => {
+      mmTimeLeft = Math.max(0, Math.round((mmDeadline - Date.now()) / 1000));
+      mmUpdateSessionTimer();
+      if (mmTimeLeft <= 0) mmEnd();
+    }, 1000);
+  }
+
+  function mmUpdateSessionTimer() {
+    const t = Math.max(0, mmTimeLeft);
+    mmTimeEl.textContent = String(t);
+    mmRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / MM_TOTAL_TIME));
+    mmRing.classList.toggle("low", t <= 8);
+  }
+
+  function mmUpdateMultiplier() {
+    if (mmCombo >= 9) mmMultiplier = 4;
+    else if (mmCombo >= 6) mmMultiplier = 3;
+    else if (mmCombo >= 3) mmMultiplier = 2;
+    else mmMultiplier = 1;
+    mmComboEl.textContent = "×" + mmMultiplier;
+  }
+
+  function mmNextQuestion() {
+    if (!mmRunning) return;
+    mmCurrent = generateMMQuestion();
+    mmQText.textContent = `${mmCurrent.sectorName} — ${mmCurrent.metric} ${mmCurrent.value}x`;
+    mmQSub.textContent = "vs. typical sector range";
+
+    mmQTimerBar.style.transition = "none";
+    mmQTimerBar.style.width = "100%";
+    mmQTimerBar.classList.remove("low");
+    void mmQTimerBar.offsetWidth;
+    mmQTimerBar.style.transition = `width ${MM_Q_TIME_MS}ms linear`;
+    mmQTimerBar.style.width = "0%";
+    setTimeout(() => mmQTimerBar.classList.add("low"), MM_Q_TIME_MS * 0.6);
+
+    clearTimeout(mmQTimeout);
+    mmQTimeout = setTimeout(() => mmAnswer(null), MM_Q_TIME_MS);
+  }
+
+  function mmAnswer(choice) {
+    if (!mmRunning || !mmCurrent) return;
+    clearTimeout(mmQTimeout);
+    const correct = choice === mmCurrent.correct;
+
+    if (correct) {
+      mmCombo += 1;
+      mmUpdateMultiplier();
+      mmScore += mmMultiplier;
+      mmScoreEl.textContent = String(mmScore);
+      pulse(mmScoreEl);
+      flashStage(mmStage, "flash-correct");
+    } else {
+      mmCombo = 0;
+      mmUpdateMultiplier();
+      mmDeadline -= 2000;
+      mmTimeLeft = Math.max(0, Math.round((mmDeadline - Date.now()) / 1000));
+      mmUpdateSessionTimer();
+      flashStage(mmStage, "flash-wrong");
+    }
+
+    if (mmTimeLeft <= 0) { mmEnd(); return; }
+    mmNextQuestion();
+  }
+
+  document.querySelectorAll("#play-screen-mm .hl-btn").forEach(btn => {
+    btn.addEventListener("click", () => mmAnswer(btn.dataset.choice));
+  });
+
+  async function mmEnd() {
+    mmRunning = false;
+    clearInterval(mmSessionInterval);
+    clearTimeout(mmQTimeout);
+    finishGame("multiple_match", mmScore, "Multiple Match");
+  }
+
+  function fmtMoney(v) {
+    const sign = v < 0 ? "-" : "";
+    return `${sign}$${Math.abs(v)}m`;
+  }
+
+  function generateStatement() {
+    const type = pick(["income", "balance"]);
+    let lines, subtotalCandidates, signFlipCandidates, percentCandidates;
+
+    if (type === "income") {
+      const revenue = randInt(5, 50) * 10;
+      const cogs = Math.round(revenue * (randInt(40, 70) / 100));
+      const grossProfit = revenue - cogs;
+      const opex = Math.round(grossProfit * (randInt(30, 60) / 100));
+      const operatingProfit = grossProfit - opex;
+      const grossMarginPct = Math.round((grossProfit / revenue) * 1000) / 10;
+      lines = [
+        { label: "Revenue", value: revenue },
+        { label: "COGS", value: cogs },
+        { label: "Gross Profit", value: grossProfit },
+        { label: "Operating Expenses", value: opex },
+        { label: "Operating Profit", value: operatingProfit },
+        { label: "Gross Margin %", value: grossMarginPct, isPercent: true },
+      ];
+      subtotalCandidates = [2, 4];
+      signFlipCandidates = [1, 3];
+      percentCandidates = [5];
+    } else {
+      const assets = randInt(20, 200) * 10;
+      const liabilities = Math.round(assets * (randInt(30, 60) / 100));
+      const equity = assets - liabilities;
+      const leverageRatioPct = Math.round((liabilities / assets) * 1000) / 10;
+      lines = [
+        { label: "Total Assets", value: assets },
+        { label: "Total Liabilities", value: liabilities },
+        { label: "Total Equity", value: equity },
+        { label: "Liabilities % of Assets", value: leverageRatioPct, isPercent: true },
+      ];
+      subtotalCandidates = [1, 2];
+      signFlipCandidates = [1];
+      percentCandidates = [3];
+    }
+
+    const anomalyType = pick(["subtotal_break", "sign_flip", "percent_mismatch"]);
+    const candidates = anomalyType === "subtotal_break" ? subtotalCandidates
+      : anomalyType === "sign_flip" ? signFlipCandidates
+      : percentCandidates;
+    const anomalyIndex = pick(candidates);
+
+    if (anomalyType === "subtotal_break") {
+      const trueVal = lines[anomalyIndex].value;
+      const offsetPct = randInt(15, 40) / 100;
+      const direction = Math.random() < 0.5 ? 1 : -1;
+      let newVal = Math.round(trueVal * (1 + direction * offsetPct));
+      if (Math.abs(newVal - trueVal) < 5) newVal = trueVal + direction * 8;
+      lines[anomalyIndex].value = newVal;
+    } else if (anomalyType === "sign_flip") {
+      lines[anomalyIndex].value = -Math.abs(lines[anomalyIndex].value);
+    } else {
+      const trueVal = lines[anomalyIndex].value;
+      const direction = Math.random() < 0.5 ? 1 : -1;
+      let newVal = Math.round((trueVal + direction * randInt(8, 20)) * 10) / 10;
+      if (newVal < 0) newVal = Math.round((trueVal + randInt(8, 20)) * 10) / 10;
+      lines[anomalyIndex].value = newVal;
+    }
+
+    return { type: type === "income" ? "Income Statement" : "Balance Sheet", lines, anomalyIndex };
+  }
+
+  const SRF_TOTAL_TIME = 60;
+  const SRF_ROUND_TIME_MS = 6000;
+  let srfTimeLeft = SRF_TOTAL_TIME, srfDeadline = 0, srfScore = 0, srfCurrent = null, srfInterval = null, srfRoundTimeout = null, srfRunning = false, srfLocked = false;
+
+  const srfScoreEl = document.getElementById("srf-score");
+  const srfTimeEl = document.getElementById("srf-time");
+  const srfBestEl = document.getElementById("srf-best");
+  const srfRing = document.getElementById("srf-ring-fill");
+  const srfQTimerBar = document.getElementById("srf-qtimer");
+  const srfQSub = document.getElementById("srf-q-sub");
+  const srfList = document.getElementById("srf-stmt-list");
+  const srfStage = document.getElementById("srf-question-stage");
+  srfRing.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="spot_the_red_flag"]').addEventListener("click", () => showIntro("spot_the_red_flag"));
+  document.getElementById("back-btn-srf").addEventListener("click", () => { clearTimeout(srfRoundTimeout); clearInterval(srfInterval); showScreen("menu-screen"); });
+
+  function startSRF() {
+    currentGame = "spot_the_red_flag";
+    srfScore = 0; srfTimeLeft = SRF_TOTAL_TIME; srfDeadline = Date.now() + SRF_TOTAL_TIME * 1000; srfRunning = true; srfLocked = false;
+    srfScoreEl.textContent = "0";
+    srfTimeEl.textContent = String(SRF_TOTAL_TIME);
+    srfRing.style.strokeDashoffset = "0";
+    srfRing.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(localBestKey("spot_the_red_flag")) || "0", 10);
+    srfBestEl.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play-screen-srf");
+    srfNextRound();
+
+    clearInterval(srfInterval);
+    srfInterval = setInterval(() => {
+      srfTimeLeft = Math.max(0, Math.round((srfDeadline - Date.now()) / 1000));
+      srfUpdateSessionTimer();
+      if (srfTimeLeft <= 0) srfEnd();
+    }, 1000);
+  }
+
+  function srfUpdateSessionTimer() {
+    const t = Math.max(0, srfTimeLeft);
+    srfTimeEl.textContent = String(t);
+    srfRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / SRF_TOTAL_TIME));
+    srfRing.classList.toggle("low", t <= 10);
+  }
+
+  function srfNextRound() {
+    if (!srfRunning) return;
+    srfLocked = false;
+    srfCurrent = generateStatement();
+    srfQSub.textContent = srfCurrent.type;
+
+    srfList.innerHTML = "";
+    srfCurrent.lines.forEach((line, i) => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "stmt-row";
+      row.innerHTML = `<span class="stmt-label">${line.label}</span><span class="stmt-value">${line.isPercent ? line.value + "%" : fmtMoney(line.value)}</span>`;
+      row.addEventListener("click", () => srfAnswer(i));
+      srfList.appendChild(row);
+    });
+
+    srfQTimerBar.style.transition = "none";
+    srfQTimerBar.style.width = "100%";
+    srfQTimerBar.classList.remove("low");
+    void srfQTimerBar.offsetWidth;
+    srfQTimerBar.style.transition = `width ${SRF_ROUND_TIME_MS}ms linear`;
+    srfQTimerBar.style.width = "0%";
+    setTimeout(() => srfQTimerBar.classList.add("low"), SRF_ROUND_TIME_MS * 0.6);
+
+    clearTimeout(srfRoundTimeout);
+    srfRoundTimeout = setTimeout(() => srfAnswer(null), SRF_ROUND_TIME_MS);
+  }
+
+  function srfAnswer(chosenIndex) {
+    if (!srfRunning || srfLocked) return;
+    srfLocked = true;
+    clearTimeout(srfRoundTimeout);
+    const rows = srfList.querySelectorAll(".stmt-row");
+    const correct = chosenIndex === srfCurrent.anomalyIndex;
+
+    if (chosenIndex !== null && rows[chosenIndex]) {
+      rows[chosenIndex].classList.add(correct ? "correct-flag" : "wrong-flag");
+    }
+    if (!correct && rows[srfCurrent.anomalyIndex]) {
+      rows[srfCurrent.anomalyIndex].classList.add("correct-flag");
+    }
+
+    if (correct) {
+      srfScore += 1;
+      srfScoreEl.textContent = String(srfScore);
+      pulse(srfScoreEl);
+      flashStage(srfStage, "flash-correct");
+    } else {
+      srfDeadline -= 3000;
+      srfTimeLeft = Math.max(0, Math.round((srfDeadline - Date.now()) / 1000));
+      srfUpdateSessionTimer();
+      flashStage(srfStage, "flash-wrong");
+    }
+
+    setTimeout(() => {
+      if (srfTimeLeft <= 0) { srfEnd(); return; }
+      srfNextRound();
+    }, 700);
+  }
+
+  async function srfEnd() {
+    srfRunning = false;
+    clearInterval(srfInterval);
+    clearTimeout(srfRoundTimeout);
+    finishGame("spot_the_red_flag", srfScore, "Spot the Red Flag");
+  }
+
+  const SPRINT_ITEMS = [
+    { label: "Revenue", cat: "IS" }, { label: "Cost of Goods Sold", cat: "IS" },
+    { label: "Gross Profit", cat: "IS" }, { label: "SG&A Expense", cat: "IS" },
+    { label: "Operating Income", cat: "IS" }, { label: "Interest Expense", cat: "IS" },
+    { label: "Income Tax Expense", cat: "IS" }, { label: "Net Income", cat: "IS" },
+    { label: "EBITDA", cat: "IS" }, { label: "R&D Expense", cat: "IS" },
+    { label: "Cash and Equivalents", cat: "BS" }, { label: "Accounts Receivable", cat: "BS" },
+    { label: "Inventory", cat: "BS" }, { label: "Prepaid Expenses", cat: "BS" },
+    { label: "Property, Plant & Equipment", cat: "BS" }, { label: "Goodwill", cat: "BS" },
+    { label: "Total Assets", cat: "BS" }, { label: "Accounts Payable", cat: "BS" },
+    { label: "Short-Term Debt", cat: "BS" }, { label: "Long-Term Debt", cat: "BS" },
+    { label: "Total Liabilities", cat: "BS" }, { label: "Common Stock", cat: "BS" },
+    { label: "Retained Earnings", cat: "BS" }, { label: "Total Shareholders' Equity", cat: "BS" },
+    { label: "Cash from Operating Activities", cat: "CF" }, { label: "Capital Expenditures", cat: "CF" },
+    { label: "Cash from Investing Activities", cat: "CF" }, { label: "Proceeds from Debt Issuance", cat: "CF" },
+    { label: "Dividends Paid", cat: "CF" }, { label: "Cash from Financing Activities", cat: "CF" },
+    { label: "Net Change in Cash", cat: "CF" }, { label: "Change in Working Capital", cat: "CF" },
+    { label: "Stock-Based Comp Add-back", cat: "CF" }, { label: "Free Cash Flow", cat: "CF" },
+  ];
+
+  let ssLastLabel = "";
+  function generateSprintItem() {
+    let item, attempts = 0;
+    do { item = pick(SPRINT_ITEMS); attempts++; } while (item.label === ssLastLabel && attempts < 8);
+    ssLastLabel = item.label;
+    return item;
+  }
+
+  const SS_TOTAL_TIME = 45;
+  const SS_ITEM_START_MS = 3200;
+  const SS_ITEM_MIN_MS = 1200;
+  const SS_ITEM_STEP_MS = 130;
+  let ssTimeLeft = SS_TOTAL_TIME, ssDeadline = 0, ssScore = 0, ssStreak = 0, ssCurrent = null;
+  let ssSessionInterval = null, ssItemTimeout = null, ssRunning = false, ssLocked = false;
+
+  const ssScoreEl = document.getElementById("ss-score");
+  const ssTimeEl = document.getElementById("ss-time");
+  const ssStreakEl = document.getElementById("ss-streak");
+  const ssRing = document.getElementById("ss-ring-fill");
+  const ssQTimerBar = document.getElementById("ss-qtimer");
+  const ssQText = document.getElementById("ss-q-text");
+  const ssStage = document.getElementById("ss-question-stage");
+  ssRing.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="statement_sprint"]').addEventListener("click", () => showIntro("statement_sprint"));
+  document.getElementById("back-btn-ss").addEventListener("click", () => { clearTimeout(ssItemTimeout); clearInterval(ssSessionInterval); showScreen("menu-screen"); });
+
+  function startSS() {
+    currentGame = "statement_sprint";
+    ssScore = 0; ssStreak = 0; ssTimeLeft = SS_TOTAL_TIME; ssDeadline = Date.now() + SS_TOTAL_TIME * 1000; ssRunning = true; ssLocked = false;
+    ssScoreEl.textContent = "0";
+    ssStreakEl.textContent = "0";
+    ssTimeEl.textContent = String(SS_TOTAL_TIME);
+    ssRing.style.strokeDashoffset = "0";
+    ssRing.classList.remove("low");
+    showScreen("play-screen-ss");
+    ssNextItem();
+
+    clearInterval(ssSessionInterval);
+    ssSessionInterval = setInterval(() => {
+      ssTimeLeft = Math.max(0, Math.round((ssDeadline - Date.now()) / 1000));
+      ssUpdateSessionTimer();
+      if (ssTimeLeft <= 0) ssEnd();
+    }, 1000);
+  }
+
+  function ssUpdateSessionTimer() {
+    const t = Math.max(0, ssTimeLeft);
+    ssTimeEl.textContent = String(t);
+    ssRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / SS_TOTAL_TIME));
+    ssRing.classList.toggle("low", t <= 8);
+  }
+
+  function ssCurrentItemTimeMs() {
+    return Math.max(SS_ITEM_MIN_MS, SS_ITEM_START_MS - ssStreak * SS_ITEM_STEP_MS);
+  }
+
+  function ssNextItem() {
+    if (!ssRunning) return;
+    ssLocked = false;
+    document.querySelectorAll("#play-screen-ss .hl-btn").forEach(b => b.classList.remove("correct-flag", "wrong-flag"));
+    ssCurrent = generateSprintItem();
+    ssQText.textContent = ssCurrent.label;
+
+    const dur = ssCurrentItemTimeMs();
+    ssQTimerBar.style.transition = "none";
+    ssQTimerBar.style.width = "100%";
+    ssQTimerBar.classList.remove("low");
+    void ssQTimerBar.offsetWidth;
+    ssQTimerBar.style.transition = `width ${dur}ms linear`;
+    ssQTimerBar.style.width = "0%";
+    setTimeout(() => ssQTimerBar.classList.add("low"), dur * 0.6);
+
+    clearTimeout(ssItemTimeout);
+    ssItemTimeout = setTimeout(() => ssAnswer(null), dur);
+  }
+
+  function ssAnswer(choice) {
+    if (!ssRunning || !ssCurrent || ssLocked) return;
+    ssLocked = true;
+    clearTimeout(ssItemTimeout);
+    const correct = choice === ssCurrent.cat;
+    const btns = document.querySelectorAll("#play-screen-ss .hl-btn");
+
+    btns.forEach(b => {
+      if (b.dataset.choice === ssCurrent.cat) b.classList.add("correct-flag");
+      else if (b.dataset.choice === choice) b.classList.add("wrong-flag");
+    });
+
+    if (correct) {
+      ssStreak += 1;
+      ssScore += 1;
+      ssScoreEl.textContent = String(ssScore);
+      ssStreakEl.textContent = String(ssStreak);
+      pulse(ssScoreEl);
+      flashStage(ssStage, "flash-correct");
+    } else {
+      ssStreak = 0;
+      ssStreakEl.textContent = "0";
+      ssDeadline -= 3000;
+      ssTimeLeft = Math.max(0, Math.round((ssDeadline - Date.now()) / 1000));
+      ssUpdateSessionTimer();
+      flashStage(ssStage, "flash-wrong");
+    }
+
+    setTimeout(() => {
+      if (ssTimeLeft <= 0) { ssEnd(); return; }
+      ssNextItem();
+    }, 450);
+  }
+
+  document.querySelectorAll("#play-screen-ss .hl-btn").forEach(btn => {
+    btn.addEventListener("click", () => ssAnswer(btn.dataset.choice));
+  });
+
+  async function ssEnd() {
+    ssRunning = false;
+    clearInterval(ssSessionInterval);
+    clearTimeout(ssItemTimeout);
+    finishGame("statement_sprint", ssScore, "Statement Sprint");
+  }
+
+  const PROCESSES = [
+    { name: "M&A Deal Process", steps: ["Origination", "NDA Signed", "Management Meetings", "Due Diligence", "Signing", "Closing"] },
+    { name: "LBO Process", steps: ["Target Identification", "Preliminary Valuation", "LOI Submitted", "Due Diligence", "Debt Financing Arranged", "Closing"] },
+    { name: "IPO Process", steps: ["Select Underwriters", "Draft S-1", "Roadshow", "Pricing", "Allocation", "First Day of Trading"] },
+  ];
+
+  function shuffleArr(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = randInt(0, i);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function generateDealChainRound() {
+    const process = pick(PROCESSES);
+    const decoyPool = PROCESSES
+      .filter(p => p.name !== process.name)
+      .flatMap(p => p.steps)
+      .filter(label => !process.steps.includes(label));
+    const decoys = shuffleArr(decoyPool).slice(0, 2);
+
+    const items = process.steps.map((label, i) => ({ label, correctIndex: i }))
+      .concat(decoys.map(label => ({ label, correctIndex: -1 })));
+
+    return { processName: process.name, items: shuffleArr(items), total: process.steps.length };
+  }
+
+  const DC_TOTAL_TIME = 60;
+  let dcTimeLeft = DC_TOTAL_TIME, dcDeadline = 0, dcScore = 0, dcRound = null, dcNextExpected = 0, dcInterval = null, dcRunning = false, dcLocked = false;
+  let dcDoneCells = [];
+
+  const dcScoreEl = document.getElementById("dc-score");
+  const dcTimeEl = document.getElementById("dc-time");
+  const dcBestEl = document.getElementById("dc-best");
+  const dcRing = document.getElementById("dc-ring-fill");
+  const dcProcessName = document.getElementById("dc-process-name");
+  const dcGrid = document.getElementById("dc-grid");
+  const dcLines = document.getElementById("dc-lines");
+  const dcWrap = document.querySelector(".dc-grid-wrap");
+  const dcStage = document.getElementById("dc-question-stage");
+  dcRing.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="deal_chain"]').addEventListener("click", () => showIntro("deal_chain"));
+  document.getElementById("back-btn-dc").addEventListener("click", () => { clearInterval(dcInterval); showScreen("menu-screen"); });
+
+  function startDC() {
+    currentGame = "deal_chain";
+    dcScore = 0; dcTimeLeft = DC_TOTAL_TIME; dcDeadline = Date.now() + DC_TOTAL_TIME * 1000; dcRunning = true;
+    dcScoreEl.textContent = "0";
+    dcTimeEl.textContent = String(DC_TOTAL_TIME);
+    dcRing.style.strokeDashoffset = "0";
+    dcRing.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(localBestKey("deal_chain")) || "0", 10);
+    dcBestEl.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play-screen-dc");
+    dcNextRound();
+
+    clearInterval(dcInterval);
+    dcInterval = setInterval(() => {
+      dcTimeLeft = Math.max(0, Math.round((dcDeadline - Date.now()) / 1000));
+      dcUpdateTimer();
+      if (dcTimeLeft <= 0) dcEnd();
+    }, 1000);
+  }
+
+  function dcUpdateTimer() {
+    const t = Math.max(0, dcTimeLeft);
+    dcTimeEl.textContent = String(t);
+    dcRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / DC_TOTAL_TIME));
+    dcRing.classList.toggle("low", t <= 10);
+  }
+
+  function dcNextRound() {
+    if (!dcRunning) return;
+    dcLocked = false;
+    dcNextExpected = 0;
+    dcDoneCells = [];
+    dcRound = generateDealChainRound();
+    dcProcessName.textContent = dcRound.processName;
+
+    dcGrid.innerHTML = "";
+    dcLines.innerHTML = "";
+    dcRound.items.forEach(item => {
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "dc-cell";
+      cell.textContent = item.label;
+      cell.dataset.correctIndex = item.correctIndex;
+      cell.addEventListener("click", () => dcCellClick(cell, item.correctIndex));
+      dcGrid.appendChild(cell);
+    });
+  }
+
+  function dcCenter(el) {
+    const wrapRect = dcWrap.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - wrapRect.left, y: r.top + r.height / 2 - wrapRect.top };
+  }
+
+  function dcDrawLine(fromEl, toEl) {
+    const a = dcCenter(fromEl), b = dcCenter(toEl);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", a.x); line.setAttribute("y1", a.y);
+    line.setAttribute("x2", b.x); line.setAttribute("y2", b.y);
+    line.setAttribute("class", "dc-line");
+    dcLines.appendChild(line);
+  }
+
+  function dcCellClick(cell, correctIndex) {
+    if (!dcRunning || dcLocked || cell.classList.contains("dc-done")) return;
+
+    if (correctIndex === dcNextExpected) {
+      cell.classList.add("dc-done");
+      if (dcDoneCells.length > 0) dcDrawLine(dcDoneCells[dcDoneCells.length - 1], cell);
+      dcDoneCells.push(cell);
+      dcNextExpected += 1;
+
+      if (dcNextExpected === dcRound.total) {
+        dcScore += 1;
+        dcScoreEl.textContent = String(dcScore);
+        pulse(dcScoreEl);
+        flashStage(dcStage, "flash-correct");
+        dcLocked = true;
+        setTimeout(() => {
+          if (dcTimeLeft <= 0) { dcEnd(); return; }
+          dcNextRound();
+        }, 650);
+      }
+    } else {
+      cell.classList.add("dc-wrong");
+      setTimeout(() => cell.classList.remove("dc-wrong"), 350);
+      dcDeadline -= 4000;
+      dcTimeLeft = Math.max(0, Math.round((dcDeadline - Date.now()) / 1000));
+      dcUpdateTimer();
+      flashStage(dcStage, "flash-wrong");
+      if (dcTimeLeft <= 0) { dcLocked = true; dcEnd(); }
+    }
+  }
+
+  async function dcEnd() {
+    dcRunning = false;
+    clearInterval(dcInterval);
+    finishGame("deal_chain", dcScore, "Deal Chain");
+  }
+
+  function generateWaterfallRound() {
+    const investedCapital = randInt(5, 20) * 10;
+    const prefPct = pick([6, 7, 8, 9, 10]);
+    const prefAmount = Math.round(investedCapital * prefPct / 100);
+    const [lpCarryPct, gpCarryPct] = pick([[80,20],[75,25],[70,30]]);
+
+    const scenarioType = pick(["full","full","full","partial_pref","shortfall"]);
+    let proceeds;
+    if (scenarioType === "shortfall") {
+      proceeds = randInt(1, Math.max(1, investedCapital - 1));
+    } else if (scenarioType === "partial_pref") {
+      proceeds = investedCapital + randInt(1, Math.max(1, prefAmount - 1));
+    } else {
+      proceeds = investedCapital + prefAmount + randInt(10, 100) * 5;
+    }
+
+    const roc = Math.min(proceeds, investedCapital);
+    const afterROC = proceeds - roc;
+    const pref = Math.min(afterROC, prefAmount);
+    const afterPref = afterROC - pref;
+    const lpResidual = Math.round(afterPref * lpCarryPct / 100);
+    const gpResidual = afterPref - lpResidual;
+
+    return {
+      investedCapital, prefPct, prefAmount, lpCarryPct, gpCarryPct, proceeds,
+      correct: { roc, pref, lpResidual, gpResidual },
+    };
+  }
+
+  const DW_TOTAL_TIME = 90;
+  const DW_ASK_TYPES = [
+    { key: "roc", label: "Return of Capital", question: "How much does the LP receive as Return of Capital ($m)?" },
+    { key: "pref", label: "Preferred Return", question: "How much does the LP receive as Preferred Return ($m)?" },
+    { key: "lpResidual", label: "LP's residual share", question: "What is the LP's share of the residual, after Return of Capital and Preferred Return ($m)?" },
+    { key: "gpResidual", label: "GP's carry", question: "What is the GP's carry — its share of the residual ($m)?" },
+  ];
+  let dwTimeLeft = DW_TOTAL_TIME, dwDeadline = 0, dwScore = 0, dwRound = null, dwAsk = null, dwInterval = null, dwRunning = false, dwLocked = false;
+
+  const dwScoreEl = document.getElementById("dw-score");
+  const dwTimeEl = document.getElementById("dw-time");
+  const dwBestEl = document.getElementById("dw-best");
+  const dwRing = document.getElementById("dw-ring-fill");
+  const dwScenarioEl = document.getElementById("dw-scenario");
+  const dwQText = document.getElementById("dw-q-text");
+  const dwAnswerInput = document.getElementById("dw-answer-input");
+  const dwStage = document.getElementById("dw-question-stage");
+  const dwMsg = document.getElementById("dw-msg");
+  dwRing.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="distribution_waterfall"]').addEventListener("click", () => showIntro("distribution_waterfall"));
+  document.getElementById("back-btn-dw").addEventListener("click", () => { clearInterval(dwInterval); showScreen("menu-screen"); });
+
+  function startDW() {
+    currentGame = "distribution_waterfall";
+    dwScore = 0; dwTimeLeft = DW_TOTAL_TIME; dwDeadline = Date.now() + DW_TOTAL_TIME * 1000; dwRunning = true; dwLocked = false;
+    dwScoreEl.textContent = "0";
+    dwTimeEl.textContent = String(DW_TOTAL_TIME);
+    dwRing.style.strokeDashoffset = "0";
+    dwRing.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(localBestKey("distribution_waterfall")) || "0", 10);
+    dwBestEl.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play-screen-dw");
+    dwNextRound();
+
+    clearInterval(dwInterval);
+    dwInterval = setInterval(() => {
+      dwTimeLeft = Math.max(0, Math.round((dwDeadline - Date.now()) / 1000));
+      dwUpdateTimer();
+      if (dwTimeLeft <= 0) dwEnd();
+    }, 1000);
+  }
+
+  function dwUpdateTimer() {
+    const t = Math.max(0, dwTimeLeft);
+    dwTimeEl.textContent = String(t);
+    dwRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / DW_TOTAL_TIME));
+    dwRing.classList.toggle("low", t <= 12);
+  }
+
+  function dwNextRound() {
+    if (!dwRunning) return;
+    dwLocked = false;
+    dwRound = generateWaterfallRound();
+    dwAsk = pick(DW_ASK_TYPES);
+    dwMsg.textContent = "";
+    dwRenderScenario();
+    dwQText.textContent = dwAsk.question;
+    dwAnswerInput.value = "";
+    dwAnswerInput.disabled = false;
+    dwAnswerInput.focus();
+  }
+
+  function dwRenderScenario() {
+    const r = dwRound;
+    dwScenarioEl.innerHTML = `
+      Invested Capital: <b>$${r.investedCapital}m</b> &nbsp;|&nbsp;
+      Preferred Return: <b>${r.prefPct}%</b> (= $${r.prefAmount}m) &nbsp;|&nbsp;
+      Carry Split: <b>${r.lpCarryPct}/${r.gpCarryPct}</b> LP/GP<br>
+      Exit Proceeds: <b>$${r.proceeds}m</b>
+    `;
+  }
+
+  function dwSubmit() {
+    if (!dwRunning || dwLocked) return;
+    const raw = dwAnswerInput.value.trim();
+    if (raw === "") return;
+    dwLocked = true;
+    dwAnswerInput.disabled = true;
+
+    const val = parseFloat(raw);
+    const target = dwRound.correct[dwAsk.key];
+    const correct = !Number.isNaN(val) && Math.abs(val - target) < 0.5;
+    const c = dwRound.correct;
+    const breakdown = `Full breakdown: ROC $${c.roc}m → Preferred $${c.pref}m → LP residual $${c.lpResidual}m / GP carry $${c.gpResidual}m.`;
+
+    if (correct) {
+      dwScore += 1;
+      dwScoreEl.textContent = String(dwScore);
+      pulse(dwScoreEl);
+      flashStage(dwStage, "flash-correct");
+      dwMsg.textContent = `Correct. ${breakdown}`;
+    } else {
+      dwDeadline -= 4000;
+      dwTimeLeft = Math.max(0, Math.round((dwDeadline - Date.now()) / 1000));
+      dwUpdateTimer();
+      flashStage(dwStage, "flash-wrong");
+      dwMsg.textContent = `Not quite — ${dwAsk.label} is $${target}m. ${breakdown}`;
+    }
+
+    setTimeout(() => {
+      if (dwTimeLeft <= 0) { dwEnd(); return; }
+      dwNextRound();
+    }, correct ? 900 : 1600);
+  }
+
+  document.getElementById("dw-submit-btn").addEventListener("click", dwSubmit);
+  dwAnswerInput.addEventListener("keydown", (e) => { if (e.key === "Enter") dwSubmit(); });
+
+  async function dwEnd() {
+    dwRunning = false;
+    clearInterval(dwInterval);
+    finishGame("distribution_waterfall", dwScore, "Distribution Waterfall");
+  }
+
+  const RL_BOUNDS = {
+    margin: { min: 3, max: 30 },
+    tUnits: { min: 3, max: 30 },
+    lUnits: { min: 4, max: 16 },
+  };
+
+  function rlClamp(v, key) { return Math.max(RL_BOUNDS[key].min, Math.min(RL_BOUNDS[key].max, v)); }
+
+  function rlComputeROE(state) {
+    const turnover = state.tUnits / 10;
+    const leverage = state.lUnits * 0.25;
+    return Math.round(state.margin * turnover * leverage * 100) / 100;
+  }
+
+  function generateRatioLadderRound() {
+    let start, target, targetState, n;
+    let attempts = 0;
+    do {
+      start = {
+        margin: randInt(6, 20),
+        tUnits: randInt(8, 25),
+        lUnits: randInt(6, 14),
+      };
+      targetState = { ...start };
+      n = randInt(3, 5);
+      for (let i = 0; i < n; i++) {
+        const key = pick(["margin", "tUnits", "lUnits"]);
+        let dir = Math.random() < 0.5 ? 1 : -1;
+        if (targetState[key] + dir < RL_BOUNDS[key].min || targetState[key] + dir > RL_BOUNDS[key].max) dir = -dir;
+        targetState[key] = rlClamp(targetState[key] + dir, key);
+      }
+      target = rlComputeROE(targetState);
+      attempts++;
+    } while (target === rlComputeROE(start) && attempts < 12);
+
+    return { state: { ...start }, target, movesUsed: 0, moveBudget: n + 2 };
+  }
+
+  const RL_TOTAL_TIME = 75;
+  let rlTimeLeft = RL_TOTAL_TIME, rlDeadline = 0, rlScore = 0, rlRound = null, rlInterval = null, rlRunning = false, rlLocked = false;
+
+  const rlScoreEl = document.getElementById("rl-score");
+  const rlTimeEl = document.getElementById("rl-time");
+  const rlBestEl = document.getElementById("rl-best");
+  const rlRing = document.getElementById("rl-ring-fill");
+  const rlStage = document.getElementById("rl-question-stage");
+  const rlTargetVal = document.getElementById("rl-target-val");
+  const rlCurrentVal = document.getElementById("rl-current-val");
+  const rlInputsEl = document.getElementById("rl-inputs");
+  const rlMovesLeftEl = document.getElementById("rl-moves-left");
+  rlRing.style.strokeDasharray = String(RING_CIRC);
+
+  const RL_FIELDS = [
+    { key: "margin", label: "Net Margin", fmt: v => `${v}%` },
+    { key: "tUnits", label: "Asset Turnover", fmt: v => `${(v / 10).toFixed(1)}x` },
+    { key: "lUnits", label: "Leverage", fmt: v => `${(v * 0.25).toFixed(2)}x` },
+  ];
+
+  document.querySelector('[data-game="ratio_ladder"]').addEventListener("click", () => showIntro("ratio_ladder"));
+  document.getElementById("back-btn-rl").addEventListener("click", () => { clearInterval(rlInterval); showScreen("menu-screen"); });
+
+  function startRL() {
+    currentGame = "ratio_ladder";
+    rlScore = 0; rlTimeLeft = RL_TOTAL_TIME; rlDeadline = Date.now() + RL_TOTAL_TIME * 1000; rlRunning = true; rlLocked = false;
+    rlScoreEl.textContent = "0";
+    rlTimeEl.textContent = String(RL_TOTAL_TIME);
+    rlRing.style.strokeDashoffset = "0";
+    rlRing.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(localBestKey("ratio_ladder")) || "0", 10);
+    rlBestEl.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play-screen-rl");
+    rlNextRound();
+
+    clearInterval(rlInterval);
+    rlInterval = setInterval(() => {
+      rlTimeLeft = Math.max(0, Math.round((rlDeadline - Date.now()) / 1000));
+      rlUpdateTimer();
+      if (rlTimeLeft <= 0) rlEnd();
+    }, 1000);
+  }
+
+  function rlUpdateTimer() {
+    const t = Math.max(0, rlTimeLeft);
+    rlTimeEl.textContent = String(t);
+    rlRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / RL_TOTAL_TIME));
+    rlRing.classList.toggle("low", t <= 12);
+  }
+
+  function rlNextRound() {
+    if (!rlRunning) return;
+    rlLocked = false;
+    rlRound = generateRatioLadderRound();
+    rlTargetVal.textContent = rlRound.target.toFixed(2);
+    rlRenderInputs();
+  }
+
+  function rlRenderInputs() {
+    rlInputsEl.innerHTML = "";
+    RL_FIELDS.forEach(field => {
+      const row = document.createElement("div");
+      row.className = "rl-input-row";
+      row.innerHTML = `
+        <span class="rl-input-label">${field.label}</span>
+        <div class="rl-btn-group">
+          <button type="button" class="rl-step-btn" data-key="${field.key}" data-dir="-1">−</button>
+          <span class="rl-input-value">${field.fmt(rlRound.state[field.key])}</span>
+          <button type="button" class="rl-step-btn" data-key="${field.key}" data-dir="1">+</button>
+        </div>`;
+      rlInputsEl.appendChild(row);
+    });
+    rlInputsEl.querySelectorAll(".rl-step-btn").forEach(btn => {
+      btn.addEventListener("click", () => rlStep(btn.dataset.key, parseInt(btn.dataset.dir, 10)));
+    });
+    rlRefreshDisplay();
+  }
+
+  function rlRefreshDisplay() {
+    rlCurrentVal.textContent = rlComputeROE(rlRound.state).toFixed(2);
+    rlMovesLeftEl.textContent = String(rlRound.moveBudget - rlRound.movesUsed);
+    RL_FIELDS.forEach(field => {
+      const valEl = rlInputsEl.querySelector(`[data-key="${field.key}"]`).parentElement.querySelector(".rl-input-value");
+      valEl.textContent = field.fmt(rlRound.state[field.key]);
+    });
+  }
+
+  function rlStep(key, dir) {
+    if (!rlRunning || rlLocked) return;
+    const newVal = rlClamp(rlRound.state[key] + dir, key);
+    if (newVal === rlRound.state[key]) return;
+    rlRound.state[key] = newVal;
+    rlRound.movesUsed += 1;
+    rlRefreshDisplay();
+
+    const current = rlComputeROE(rlRound.state);
+    if (current === rlRound.target) {
+      rlLocked = true;
+      rlScore += 1;
+      rlScoreEl.textContent = String(rlScore);
+      pulse(rlScoreEl);
+      flashStage(rlStage, "flash-correct");
+      setTimeout(() => {
+        if (rlTimeLeft <= 0) { rlEnd(); return; }
+        rlNextRound();
+      }, 700);
+    } else if (rlRound.movesUsed >= rlRound.moveBudget) {
+      rlLocked = true;
+      rlDeadline -= 5000;
+      rlTimeLeft = Math.max(0, Math.round((rlDeadline - Date.now()) / 1000));
+      rlUpdateTimer();
+      flashStage(rlStage, "flash-wrong");
+      setTimeout(() => {
+        if (rlTimeLeft <= 0) { rlEnd(); return; }
+        rlNextRound();
+      }, 700);
+    }
+  }
+
+  async function rlEnd() {
+    rlRunning = false;
+    clearInterval(rlInterval);
+    finishGame("ratio_ladder", rlScore, "Ratio Ladder");
+  }
+
+  const SECTOR_PROFILES = [
+    { name: "SaaS / Software", growth: [15, 40], margin: [15, 35], geo: "Global, cloud-delivered", headline: "Recently emphasized net revenue retention above 110%" },
+    { name: "Grocery Retail", growth: [2, 5], margin: [3, 6], geo: "Dense network of physical stores, single country", headline: "Recently highlighted thin margins amid price competition" },
+    { name: "Consumer Retail", growth: [3, 8], margin: [8, 14], geo: "Multi-region store footprint plus e-commerce", headline: "Recently discussed inventory management ahead of the holidays" },
+    { name: "Industrials", growth: [3, 7], margin: [12, 18], geo: "Manufacturing footprint across multiple countries", headline: "Recently cited backlog growth in its order book" },
+    { name: "Healthcare / Pharma", growth: [5, 12], margin: [20, 30], geo: "Global sales, R&D concentrated in a few hubs", headline: "Recently discussed its late-stage clinical pipeline" },
+    { name: "Energy (Oil & Gas)", growth: [-5, 10], margin: [15, 25], geo: "Upstream operations concentrated in a few basins", headline: "Recently cited commodity price volatility as a swing factor" },
+    { name: "Telecom", growth: [1, 4], margin: [25, 35], geo: "National network infrastructure, single country", headline: "Recently discussed capital spending on network upgrades" },
+    { name: "Media", growth: [0, 6], margin: [10, 20], geo: "Content distributed across multiple regions", headline: "Recently cited a shift in advertising spend" },
+    { name: "Real Estate (REIT)", growth: [2, 6], margin: [40, 55], geo: "Property portfolio concentrated in a few markets", headline: "Recently discussed occupancy rates across its portfolio" },
+    { name: "Automotive", growth: [1, 5], margin: [5, 10], geo: "Manufacturing plants across multiple countries", headline: "Recently cited supply chain constraints on production" },
+    { name: "Luxury Goods", growth: [5, 15], margin: [20, 30], geo: "Flagship stores concentrated in major global cities", headline: "Recently highlighted strong demand in Asia" },
+    { name: "Semiconductors", growth: [5, 25], margin: [25, 40], geo: "Design global, manufacturing concentrated in a few countries", headline: "Recently discussed capacity expansion to meet demand" },
+  ];
+  const SP_POINTS_BY_STAGE = [4, 3, 2, 1];
+
+  function generateSectorPinpointRound() {
+    const correct = pick(SECTOR_PROFILES);
+    const growthVal = randInt(correct.growth[0], correct.growth[1]);
+    const marginVal = randInt(correct.margin[0], correct.margin[1]);
+    const clues = [
+      `Revenue growth: ${growthVal}% YoY`,
+      `EBITDA margin: ${marginVal}%`,
+      correct.geo,
+      correct.headline,
+    ];
+    const distractors = shuffleArr(SECTOR_PROFILES.filter(s => s.name !== correct.name)).slice(0, 5).map(s => s.name);
+    const options = shuffleArr([correct.name, ...distractors]);
+    return { correctName: correct.name, clues, revealed: 1, options };
+  }
+
+  const SP_TOTAL_TIME = 75;
+  const SP_STAGE_MS = 8000;
+  let spTimeLeft = SP_TOTAL_TIME, spDeadline = 0, spScore = 0, spRound = null, spInterval = null, spStageTimeout = null, spRunning = false, spLocked = false;
+
+  const spScoreEl = document.getElementById("sp-score");
+  const spTimeEl = document.getElementById("sp-time");
+  const spBestEl = document.getElementById("sp-best");
+  const spRing = document.getElementById("sp-ring-fill");
+  const spQTimerBar = document.getElementById("sp-qtimer");
+  const spClueCount = document.getElementById("sp-clue-count");
+  const spClueList = document.getElementById("sp-clue-list");
+  const spGuessGrid = document.getElementById("sp-guess-grid");
+  const spRevealBtn = document.getElementById("sp-reveal-btn");
+  const spStage = document.getElementById("sp-question-stage");
+  spRing.style.strokeDasharray = String(RING_CIRC);
+
+  document.querySelector('[data-game="sector_pinpoint"]').addEventListener("click", () => showIntro("sector_pinpoint"));
+  document.getElementById("back-btn-sp").addEventListener("click", () => { clearTimeout(spStageTimeout); clearInterval(spInterval); showScreen("menu-screen"); });
+  spRevealBtn.addEventListener("click", () => spReveal());
+
+  function startSP() {
+    currentGame = "sector_pinpoint";
+    spScore = 0; spTimeLeft = SP_TOTAL_TIME; spDeadline = Date.now() + SP_TOTAL_TIME * 1000; spRunning = true; spLocked = false;
+    spScoreEl.textContent = "0";
+    spTimeEl.textContent = String(SP_TOTAL_TIME);
+    spRing.style.strokeDashoffset = "0";
+    spRing.classList.remove("low");
+    const localBest = parseInt(localStorage.getItem(localBestKey("sector_pinpoint")) || "0", 10);
+    spBestEl.textContent = localBest > 0 ? String(localBest) : "—";
+    showScreen("play-screen-sp");
+    spNextRound();
+
+    clearInterval(spInterval);
+    spInterval = setInterval(() => {
+      spTimeLeft = Math.max(0, Math.round((spDeadline - Date.now()) / 1000));
+      spUpdateSessionTimer();
+      if (spTimeLeft <= 0) spEnd();
+    }, 1000);
+  }
+
+  function spUpdateSessionTimer() {
+    const t = Math.max(0, spTimeLeft);
+    spTimeEl.textContent = String(t);
+    spRing.style.strokeDashoffset = String(RING_CIRC * (1 - t / SP_TOTAL_TIME));
+    spRing.classList.toggle("low", t <= 12);
+  }
+
+  function spNextRound() {
+    if (!spRunning) return;
+    spLocked = false;
+    spRound = generateSectorPinpointRound();
+    spRenderRound();
+    spStartStageTimer();
+  }
+
+  function spRenderRound() {
+    spClueCount.textContent = `Clue ${spRound.revealed} of 4 · worth ${SP_POINTS_BY_STAGE[spRound.revealed - 1]} pts`;
+    spClueList.innerHTML = "";
+    for (let i = 0; i < spRound.revealed; i++) {
+      const li = document.createElement("li");
+      li.textContent = spRound.clues[i];
+      spClueList.appendChild(li);
+    }
+    spGuessGrid.innerHTML = "";
+    spRound.options.forEach(name => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sp-guess-btn";
+      btn.textContent = name;
+      btn.addEventListener("click", () => spGuess(name, btn));
+      spGuessGrid.appendChild(btn);
+    });
+    spRevealBtn.disabled = spRound.revealed >= 4;
+  }
+
+  function spStartStageTimer() {
+    spQTimerBar.style.transition = "none";
+    spQTimerBar.style.width = "100%";
+    spQTimerBar.classList.remove("low");
+    void spQTimerBar.offsetWidth;
+    spQTimerBar.style.transition = `width ${SP_STAGE_MS}ms linear`;
+    spQTimerBar.style.width = "0%";
+    setTimeout(() => spQTimerBar.classList.add("low"), SP_STAGE_MS * 0.6);
+
+    clearTimeout(spStageTimeout);
+    spStageTimeout = setTimeout(() => {
+      if (spRound.revealed < 4) spReveal();
+      else spResolveRound(false, null);
+    }, SP_STAGE_MS);
+  }
+
+  function spReveal() {
+    if (!spRunning || spLocked || spRound.revealed >= 4) return;
+    clearTimeout(spStageTimeout);
+    spRound.revealed += 1;
+    spRenderRound();
+    spStartStageTimer();
+  }
+
+  function spGuess(name, btnEl) {
+    if (!spRunning || spLocked) return;
+    spLocked = true;
+    clearTimeout(spStageTimeout);
+    const correct = name === spRound.correctName;
+    spResolveRound(correct, btnEl);
+  }
+
+  function spResolveRound(correct, btnEl) {
+    spLocked = true;
+    const buttons = spGuessGrid.querySelectorAll(".sp-guess-btn");
+    buttons.forEach(b => {
+      if (b.textContent === spRound.correctName) b.classList.add("correct-flag");
+      else if (b === btnEl) b.classList.add("wrong-flag");
+    });
+
+    if (correct) {
+      const pts = SP_POINTS_BY_STAGE[spRound.revealed - 1];
+      spScore += pts;
+      spScoreEl.textContent = String(spScore);
+      pulse(spScoreEl);
+      flashStage(spStage, "flash-correct");
+    } else {
+      spDeadline -= 3000;
+      spTimeLeft = Math.max(0, Math.round((spDeadline - Date.now()) / 1000));
+      spUpdateSessionTimer();
+      flashStage(spStage, "flash-wrong");
+    }
+
+    setTimeout(() => {
+      if (spTimeLeft <= 0) { spEnd(); return; }
+      spNextRound();
+    }, 900);
+  }
+
+  async function spEnd() {
+    spRunning = false;
+    clearInterval(spInterval);
+    clearTimeout(spStageTimeout);
+    finishGame("sector_pinpoint", spScore, "Sector Pinpoint");
+  }
+
+  async function finishGame(game, score, displayName) {
+    const localBestBefore = parseInt(localStorage.getItem(localBestKey(game)) || "0", 10);
+    const isNewBest = score > localBestBefore;
+
+    document.getElementById("end-screen-title").textContent = displayName;
+    document.getElementById("final-score").textContent = String(score);
+    document.getElementById("best-line").textContent = isNewBest ? "New personal best!" : `Best: ${Math.max(score, localBestBefore)}`;
+    document.getElementById("best-line").classList.toggle("new-best", isNewBest);
+    showScreen("end-screen");
+
+    await saveScore(game, score);
+  }
+</script>
+</body>
+</html>
