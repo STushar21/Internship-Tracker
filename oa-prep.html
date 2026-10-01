@@ -227,6 +227,11 @@
         </div>`;
     }).join("");
 
+    document.querySelectorAll(".cat-card.active").forEach(card => {
+      const cat = CATEGORIES.find(c => c.key === card.dataset.cat);
+      if (cat && cat.href) card.addEventListener("click", () => { window.location.href = cat.href; });
+    });
+
     // One query for all attempts, aggregated client-side per drill category —
     // reference categories (SJT, Gamified) aren't scored so they're skipped here.
     try {
@@ -255,11 +260,6 @@
     } catch (e) {
       console.warn("Couldn't load OA Prep stats:", e);
     }
-
-    document.querySelectorAll(".cat-card.active").forEach(card => {
-      const cat = CATEGORIES.find(c => c.key === card.dataset.cat);
-      if (cat && cat.href) card.addEventListener("click", () => { window.location.href = cat.href; });
-    });
   }
 </script>
 </body>
