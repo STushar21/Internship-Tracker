@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600;1,8..60,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reps — Numerical Reasoning</title>
+<style>
+  :root {
+    --bg: #F7F3EA; --surface: #FFFFFF; --surface-alt: #F1EBDC; --border: #E3DAC4;
+    --ink: #21283B; --ink-soft: #5B6472; --ink-faint: #948E7A;
+    --gold: #A8843F; --gold-dim: #8C6A28; --gold-soft: rgba(168,132,63,0.10);
+    --green: #2F6B4F; --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B; --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A; --steel-soft: rgba(79,107,138,0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(760px, 94vw); margin: 32px auto 60px; padding: 0 16px;
+  }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 24px; margin: 0 0 4px; }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--gold-dim);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-dim); display: inline-block; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 22px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; margin: 0 0 26px; width: fit-content;
+    box-shadow: 0 2px 14px rgba(33,40,59,0.05);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13px; color: var(--gold);
+    padding: 8px 14px; text-decoration: none; letter-spacing: 0.14em; text-transform: uppercase;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 15px; border-radius: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+  .top-nav a.nav-link.active { background: var(--gold-soft); color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(33,40,59,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+  .back-link { display: inline-block; margin-bottom: 14px; font-size: 12px; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--gold-dim); }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; margin-bottom: 6px; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  .drill-cta {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 22px 24px; margin-bottom: 22px; box-shadow: 0 1px 8px rgba(33,40,59,0.04);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .drill-cta .txt h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; margin: 0 0 4px; }
+  .drill-cta .txt p { font-size: 12px; color: var(--ink-soft); margin: 0; }
+  #start-drill-btn { background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 13px 26px; font-weight: 700; cursor: pointer; font-size: 13.5px; white-space: nowrap; }
+
+  .subskill-list { display: flex; flex-direction: column; gap: 8px; }
+  .subskill-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+    padding: 14px 18px; box-shadow: 0 1px 6px rgba(33,40,59,0.03);
+  }
+  .subskill-row.locked { opacity: 0.5; }
+  .subskill-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .subskill-name { font-size: 13.5px; font-weight: 600; }
+  .subskill-meta { font-size: 11px; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
+  .accuracy-track { height: 6px; background: var(--surface-alt); border-radius: 4px; overflow: hidden; }
+  .accuracy-fill { height: 100%; background: var(--gold); border-radius: 4px; }
+  .soon-tag { font-size: 10px; font-weight: 700; color: var(--ink-faint); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; }
+
+  /* --- drill screen --- */
+  #drill-screen, #summary-screen { display: none; }
+  .drill-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .drill-progress { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); }
+  .drill-timer { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; color: var(--gold); }
+  .drill-timer.low { color: var(--red); }
+  .drill-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 40px 26px; text-align: center; box-shadow: 0 1px 10px rgba(33,40,59,0.04);
+  }
+  .drill-subskill-tag { font-size: 10px; font-weight: 700; color: var(--gold); background: var(--gold-soft); padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 16px; display: inline-block; }
+  .drill-question { font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+  .drill-answer-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 6px; }
+  #drill-answer-input { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 12px 16px; font-size: 17px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; width: 160px; text-align: center; color: var(--ink); }
+  #drill-answer-input:focus { outline: none; border-color: var(--gold-dim); }
+  #drill-submit-btn { background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 12px 24px; font-weight: 700; cursor: pointer; font-size: 13.5px; }
+
+  .drill-feedback { margin-top: 22px; padding: 16px 18px; border-radius: 7px; text-align: left; }
+  .drill-feedback.correct { background: var(--green-soft); border: 1px solid var(--green); }
+  .drill-feedback.wrong { background: var(--red-soft); border: 1px solid var(--red); }
+  .drill-feedback .verdict { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .drill-feedback.correct .verdict { color: var(--green); }
+  .drill-feedback.wrong .verdict { color: var(--red); }
+  .drill-feedback .explanation { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; }
+  #drill-next-btn { background: var(--ink); color: var(--bg); border: none; border-radius: 999px; padding: 11px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin-top: 16px; }
+
+  .qd-title { font-size: 11.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; font-weight: 600; }
+  .qd-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; font-size: 12.5px; }
+  .qd-table th, .qd-table td { border: 1px solid var(--border); padding: 7px 12px; text-align: right; }
+  .qd-table th:first-child, .qd-table td:first-child { text-align: left; color: var(--ink-soft); }
+  .qd-table th { background: var(--surface-alt); font-weight: 700; }
+  .qd-table td { font-family: 'IBM Plex Mono', monospace; }
+  .qd-chart { margin-bottom: 22px; }
+  .qd-bar-row { display: flex; align-items: flex-end; gap: 14px; height: 140px; justify-content: center; padding: 0 8px; }
+  .qd-bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; width: 52px; }
+  .qd-bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .qd-bar { width: 100%; background: var(--gold); border-radius: 3px 3px 0 0; }
+  .qd-bar-label { font-size: 10.5px; color: var(--ink-faint); margin-top: 6px; }
+
+  .mcq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 420px; margin: 0 auto; }
+  .mcq-btn {
+    background: transparent; border: 1px solid var(--gold-dim); color: var(--ink);
+    padding: 13px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;
+  }
+  .mcq-btn:hover { background: var(--gold-soft); }
+  .mcq-btn.correct-flag { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+  .mcq-btn.wrong-flag { border-color: var(--red); background: var(--red-soft); color: var(--red); }
+  .mcq-btn:disabled { cursor: default; }
+
+  #summary-screen { text-align: center; padding: 20px 0; }
+  #summary-screen .score { font-family: 'IBM Plex Mono', monospace; font-size: 44px; font-weight: 700; color: var(--gold); margin: 10px 0; }
+  #summary-screen button { border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 6px; }
+  #summary-screen .primary { background: var(--gold); color: var(--bg); }
+  #summary-screen .secondary { background: transparent; border: 1px solid var(--border); color: var(--ink-soft); }
+
+  /* --- mobile --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .drill-card { padding: 26px 16px; }
+    .drill-question { font-size: 18px; }
+    .mcq-grid { grid-template-columns: 1fr; max-width: 100%; }
+    .qd-bar-row { gap: 8px; }
+    .qd-bar-col { width: 40px; }
+    .drill-cta { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="games.html" class="nav-link">Games</a>
+  <a href="oa-prep.html" class="nav-link active">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to practice.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<a href="oa-prep.html" class="back-link">&larr; OA Prep</a>
+
+<div id="landing-screen">
+  <div class="kicker">Numerical Reasoning</div>
+  <h1>Percentages, ratios, and quick calculation</h1>
+  <div class="sub">Daily Drill adaptively weights questions toward whichever sub-skill you're weakest in.</div>
+
+  <div class="drill-cta">
+    <div class="txt">
+      <h2>Daily Drill</h2>
+      <p>5 questions, ~75 seconds each, mixed across active sub-skills.</p>
+    </div>
+    <button type="button" id="start-drill-btn">Start Drill</button>
+  </div>
+
+  <div class="subskill-list" id="subskill-list"></div>
+</div>
+
+<div id="drill-screen">
+  <div class="drill-head">
+    <span class="drill-progress" id="drill-progress">Question 1 of 5</span>
+    <span class="drill-timer" id="drill-timer">75</span>
+  </div>
+  <div class="drill-card">
+    <span class="drill-subskill-tag" id="drill-subskill-tag"></span>
+    <div id="drill-qdata"></div>
+    <div class="drill-question" id="drill-question"></div>
+    <div class="drill-answer-row" id="drill-freetext-row">
+      <input type="text" id="drill-answer-input" inputmode="decimal" placeholder="Answer" autocomplete="off">
+      <button type="button" id="drill-submit-btn">Submit</button>
+    </div>
+    <div class="mcq-grid" id="drill-mcq-grid" style="display:none;"></div>
+    <div class="drill-feedback" id="drill-feedback" style="display:none;">
+      <div class="verdict" id="drill-verdict"></div>
+      <div class="explanation" id="drill-explanation"></div>
+      <button type="button" id="drill-next-btn">Next question →</button>
+    </div>
+  </div>
+</div>
+
+<div id="summary-screen">
+  <div class="kicker" style="justify-content:center;">Drill complete</div>
+  <h1>Session score</h1>
+  <div class="score" id="summary-score">0 / 5</div>
+  <div class="sub" id="summary-breakdown"></div>
+  <button type="button" class="primary" id="summary-again-btn">Do another drill</button>
+  <button type="button" class="secondary" id="summary-back-btn">Back to Numerical Reasoning</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) loadSubskillStats();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+
+  // =====================================================================
+  // Sub-skills — only the two procedurally-generatable ones are active.
+  // The other three need real hand-authored content (data tables, charts,
+  // multi-step word problems) and aren't built yet.
+  // =====================================================================
+  const SUBSKILLS = [
+    { key: "percentages_ratios", name: "Percentages & Ratios", active: true, source: "procedural" },
+    { key: "quick_calc", name: "Quick Multiplication / Division", active: true, source: "procedural" },
+    { key: "data_tables", name: "Data Table Interpretation", active: true, source: "procedural" },
+    { key: "chart_reading", name: "Chart / Graph Reading", active: true, source: "procedural" },
+    { key: "word_problems", name: "Multi-step Word Problems", active: true, source: "procedural" },
+  ];
+  const ACTIVE_KEYS = SUBSKILLS.filter(s => s.active).map(s => s.key);
+  const BANK_KEYS = SUBSKILLS.filter(s => s.source === "bank").map(s => s.key);
+
+  // --- Question generators (procedural, infinite variety) ---
+  function genPercentOf() {
+    const p = pick([5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90]);
+    function gcd(a,b){return b===0?a:gcd(b,a%b);}
+    const step = 100 / gcd(p, 100);
+    const base = step * randInt(2, Math.floor(400/step));
+    const answer = Math.round((base*p)/100);
+    return {
+      text: `What is ${p}% of ${base}?`,
+      answer,
+      explanation: `${p}% of ${base} = (${p}/100) × ${base} = ${answer}.`
+    };
+  }
+  function genPercentChange() {
+    const oldVal = randInt(4, 40) * 10;
+    const p = pick([5,10,15,20,25,30,40,50]);
+    const direction = Math.random() < 0.7 ? 1 : -1;
+    const newVal = Math.round(oldVal * (1 + direction*p/100));
+    const verb = direction > 0 ? "increases" : "decreases";
+    return {
+      text: `A value ${verb} from ${oldVal} to ${newVal}. What is the percentage ${direction>0?"increase":"decrease"}?`,
+      answer: p,
+      explanation: `% change = |${newVal} − ${oldVal}| / ${oldVal} × 100 = ${Math.abs(newVal-oldVal)} / ${oldVal} × 100 = ${p}%.`
+    };
+  }
+  function genRatioSplit() {
+    const ratios = [[1,2],[2,3],[3,4],[1,3],[3,5],[2,5],[1,4],[5,7]];
+    const [a,b] = pick(ratios);
+    const parts = randInt(3, 12);
+    const total = (a+b) * parts;
+    const answer = a * parts;
+    return {
+      text: `A total of ${total} is split in a ${a}:${b} ratio between A and B. How much does A receive?`,
+      answer,
+      explanation: `Total parts = ${a}+${b} = ${a+b}. Each part = ${total}/${a+b} = ${parts}. A's share = ${a} parts = ${a} × ${parts} = ${answer}.`
+    };
+  }
+  function genMultiply() {
+    const easy = Math.random() < 0.5;
+    const x = easy ? randInt(6,19) : randInt(12,29);
+    const y = easy ? randInt(6,19) : randInt(6,19);
+    const answer = x*y;
+    return { text: `${x} × ${y}?`, answer, explanation: `${x} × ${y} = ${answer}.` };
+  }
+  function genDivide() {
+    const d = randInt(4, 25);
+    const q = randInt(6, 40);
+    const n = d*q;
+    return { text: `${n} ÷ ${d}?`, answer: q, explanation: `${d} × ${q} = ${n}, so ${n} ÷ ${d} = ${q}.` };
+  }
+
+  function shuffleArrLocal(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = randInt(0, i); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function gcdLocal(a, b) { return b === 0 ? a : gcdLocal(b, a % b); }
+  function growthStep(pct) { return 100 / gcdLocal(Math.abs(pct), 100); }
+  function mcqNumOptions(correct, spread) {
+    const set = new Set([correct]);
+    let guard = 0;
+    const multipliers = [-3,-2,-1,1,2,3,4,-4];
+    while (set.size < 4 && guard < 60) {
+      const mult = multipliers[guard % multipliers.length];
+      const d = correct + mult * spread;
+      if (!set.has(d) && (correct <= 0 || d > 0)) set.add(d);
+      guard++;
+    }
+    return shuffleArrLocal([...set]);
+  }
+
+  // --- Data Table Interpretation (templated: random entities/values each time) ---
+  const TABLE_THEMES = [
+    { title: "Revenue by Region ($m)", entityLabel: "region", entityPlural: "regions", pool: ["Europe","Asia","Americas","MEA","APAC"], metricLabel: "revenue" },
+    { title: "Headcount by Department", entityLabel: "department", entityPlural: "departments", pool: ["IB","PE","Asset Management","Sales & Trading","Research"], metricLabel: "headcount" },
+    { title: "Deal Volume by Sector ($bn)", entityLabel: "sector", entityPlural: "sectors", pool: ["Tech","Healthcare","Energy","Industrials","Consumer"], metricLabel: "deal volume" },
+    { title: "Client AUM ($m)", entityLabel: "client", entityPlural: "clients", pool: ["Client A","Client B","Client C","Client D","Client E"], metricLabel: "AUM" },
+    { title: "Expense Breakdown ($m)", entityLabel: "category", entityPlural: "categories", pool: ["Salaries","Rent","Marketing","Technology","Travel"], metricLabel: "expense" },
+  ];
+
+  function buildTable(forceRows) {
+    const theme = pick(TABLE_THEMES);
+    const numRows = forceRows || randInt(3, 4);
+    const labels = shuffleArrLocal(theme.pool).slice(0, numRows);
+    const col1Label = pick(["2022", "2023", "Q1"]);
+    const col2Label = col1Label === "2022" ? "2023" : col1Label === "2023" ? "2024" : "Q2";
+    const declineIdx = Math.random() < 0.6 ? randInt(0, numRows - 1) : -1;
+
+    const growthPcts = [], col1Vals = [], col2Vals = [];
+    for (let i = 0; i < numRows; i++) {
+      const g = i === declineIdx ? -pick([5,10,15,20]) : pick([5,10,15,20,25,30,35,40]);
+      const step = growthStep(g);
+      const base = step * randInt(3, 15);
+      const newVal = Math.round(base * (1 + g/100));
+      growthPcts.push(g); col1Vals.push(base); col2Vals.push(newVal);
+    }
+    return { theme, labels, col1Label, col2Label, col1Vals, col2Vals, growthPcts };
+  }
+
+  function tableQData(t) {
+    const entityHeader = t.theme.entityLabel[0].toUpperCase() + t.theme.entityLabel.slice(1);
+    return { type: "table", title: t.theme.title, headers: [entityHeader, t.col1Label, t.col2Label],
+      rows: t.labels.map((l,i) => [l, String(t.col1Vals[i]), String(t.col2Vals[i])]) };
+  }
+
+  function genTableGrowthQ() {
+    const t = buildTable();
+    const idx = randInt(0, t.labels.length - 1);
+    const correct = t.growthPcts[idx];
+    const opts = mcqNumOptions(correct, 5).map(v => v + "%");
+    return {
+      text: `What was the % growth in ${t.labels[idx]} ${t.theme.metricLabel} from ${t.col1Label} to ${t.col2Label}?`,
+      questionData: tableQData(t), options: opts, answer: correct + "%",
+      explanation: `(${t.col2Vals[idx]} − ${t.col1Vals[idx]}) / ${t.col1Vals[idx]} × 100 = ${correct}%.`
+    };
+  }
+  function genTableHighestGrowthQ() {
+    let t = buildTable(4);
+    let guard = 0;
+    while (new Set(t.growthPcts).size !== t.growthPcts.length && guard < 10) { t = buildTable(4); guard++; }
+    const maxIdx = t.growthPcts.indexOf(Math.max(...t.growthPcts));
+    return {
+      text: `Which ${t.theme.entityLabel} had the highest % growth from ${t.col1Label} to ${t.col2Label}?`,
+      questionData: tableQData(t), options: shuffleArrLocal(t.labels), answer: t.labels[maxIdx],
+      explanation: t.labels.map((l,i) => `${l}: ${t.growthPcts[i]}%`).join(", ") + `. ${t.labels[maxIdx]} is highest.`
+    };
+  }
+  function genTableDeclineQ() {
+    let t = buildTable(3);
+    let guard = 0;
+    while (!t.growthPcts.some(g => g < 0) && guard < 10) { t = buildTable(3); guard++; }
+    const declineIdx = t.growthPcts.findIndex(g => g < 0);
+    const answer = declineIdx === -1 ? "None" : t.labels[declineIdx];
+    const options = shuffleArrLocal([...t.labels, "None"]);
+    return {
+      text: `Which ${t.theme.entityLabel} saw a decline in ${t.theme.metricLabel} from ${t.col1Label} to ${t.col2Label}?`,
+      questionData: tableQData(t), options, answer,
+      explanation: t.labels.map((l,i) => `${l}: ${t.growthPcts[i] >= 0 ? "+" : ""}${t.growthPcts[i]}%`).join(", ") +
+        (declineIdx === -1 ? ". None declined." : `. Only ${answer} declined.`)
+    };
+  }
+  function genTableTotalQ() {
+    const t = buildTable();
+    const total = t.col2Vals.reduce((a,b) => a+b, 0);
+    const opts = mcqNumOptions(total, Math.max(5, Math.round(total*0.08)));
+    return {
+      text: `What was the total ${t.theme.metricLabel} across all ${t.theme.entityPlural} in ${t.col2Label}?`,
+      questionData: tableQData(t), options: opts.map(String), answer: String(total),
+      explanation: `${t.col2Vals.join(" + ")} = ${total}.`
+    };
+  }
+  function genTableContributorQ() {
+    let t = buildTable(4);
+    let increases = t.col1Vals.map((v,i) => t.col2Vals[i]-v);
+    let guard = 0;
+    while (Math.max(...increases) <= 0 && guard < 10) { t = buildTable(4); increases = t.col1Vals.map((v,i) => t.col2Vals[i]-v); guard++; }
+    const maxIdx = increases.indexOf(Math.max(...increases));
+    return {
+      text: `Which ${t.theme.entityLabel} contributed the most to the total increase in ${t.theme.metricLabel} from ${t.col1Label} to ${t.col2Label}?`,
+      questionData: tableQData(t), options: shuffleArrLocal(t.labels), answer: t.labels[maxIdx],
+      explanation: t.labels.map((l,i) => `${l}: ${increases[i] >= 0 ? "+" : ""}${increases[i]}`).join(", ") + `. ${t.labels[maxIdx]} had the largest increase.`
+    };
+  }
+  const TABLE_GENERATORS = [genTableGrowthQ, genTableHighestGrowthQ, genTableDeclineQ, genTableTotalQ, genTableContributorQ];
+
+  // --- Chart / Graph Reading (templated bar charts) ---
+  const CHART_THEMES = [
+    { title: "Quarterly Revenue ($m)", cats: ["Q1","Q2","Q3","Q4"], entityLabel: "quarter", entityPlural: "quarters" },
+    { title: "Market Share by Company (%)", cats: ["A","B","C","D"], entityLabel: "company", entityPlural: "companies", isShare: true },
+    { title: "Headcount by Office", cats: ["London","NY","HK","Singapore"], entityLabel: "office", entityPlural: "offices" },
+    { title: "Monthly Deal Count", cats: ["Jan","Feb","Mar","Apr"], entityLabel: "month", entityPlural: "months" },
+  ];
+
+  function buildChart() {
+    const theme = pick(CHART_THEMES);
+    let values;
+    if (theme.isShare) {
+      const a = pick([20,25,30,35,40]);
+      const b = pick([15,20,25]);
+      const rem = 100 - a - b;
+      const c = Math.max(5, Math.round(rem/2));
+      const d = rem - c;
+      values = shuffleArrLocal([a,b,c,d]);
+    } else {
+      values = [];
+      let v = randInt(3,10) * (theme.title.includes("Revenue") ? 5 : 2);
+      for (let i = 0; i < 4; i++) { values.push(v); v = Math.max(2, v + pick([-3,-2,2,3,4]) * (theme.title.includes("Revenue") ? 5 : 1)); }
+    }
+    return { theme, values };
+  }
+  function chartQData(c) { return { type: "bar", title: c.theme.title, categories: c.theme.cats, values: c.values }; }
+
+  function genChartChangeQ() {
+    const c = buildChart();
+    const change = c.values[3] - c.values[0];
+    const opts = mcqNumOptions(change, Math.max(3, Math.round(Math.abs(change)*0.3)+2));
+    return {
+      text: `By how much did the value change from ${c.theme.cats[0]} to ${c.theme.cats[3]}?`,
+      questionData: chartQData(c), options: opts.map(String), answer: String(change),
+      explanation: `${c.values[3]} − ${c.values[0]} = ${change}.`
+    };
+  }
+  function genChartDeclineQ() {
+    let c = buildChart();
+    function findDecline(chart) { for (let i=1;i<4;i++) { if (chart.values[i] < chart.values[i-1]) return i; } return -1; }
+    let declineIdx = findDecline(c);
+    let guard = 0;
+    while (declineIdx === -1 && guard < 10) { c = buildChart(); declineIdx = findDecline(c); guard++; }
+    const answer = declineIdx === -1 ? "None" : c.theme.cats[declineIdx];
+    const options = shuffleArrLocal([...c.theme.cats.slice(1), "None"]);
+    return {
+      text: `In which ${c.theme.entityLabel} did the value decline compared to the prior one?`,
+      questionData: chartQData(c), options, answer,
+      explanation: `${c.theme.cats.map((cat,i) => `${cat}: ${c.values[i]}`).join(", ")}. ${declineIdx === -1 ? "No decline occurs." : `${c.theme.cats[declineIdx]} (${c.values[declineIdx]}) is lower than ${c.theme.cats[declineIdx-1]} (${c.values[declineIdx-1]}).`}`
+    };
+  }
+  function genChartCombinedQ() {
+    const c = buildChart();
+    const i1 = randInt(0,3); let i2 = randInt(0,3); while (i2 === i1) i2 = randInt(0,3);
+    const sum = c.values[i1] + c.values[i2];
+    const opts = mcqNumOptions(sum, Math.max(3, Math.round(sum*0.15)));
+    return {
+      text: `What is the combined value of ${c.theme.cats[i1]} and ${c.theme.cats[i2]}?`,
+      questionData: chartQData(c), options: opts.map(v => c.theme.isShare ? v+"%" : String(v)),
+      answer: c.theme.isShare ? sum+"%" : String(sum),
+      explanation: `${c.values[i1]} + ${c.values[i2]} = ${sum}${c.theme.isShare ? "%" : ""}.`
+    };
+  }
+  function genChartDiffQ() {
+    let c = buildChart();
+    function topDiff(chart) {
+      const sorted = chart.values.map((v,i) => ({v,i})).sort((a,b) => b.v-a.v);
+      return { top: sorted[0], second: sorted[1], diff: sorted[0].v - sorted[1].v };
+    }
+    let { top, second, diff } = topDiff(c);
+    let guard = 0;
+    while (diff === 0 && guard < 10) { c = buildChart(); ({ top, second, diff } = topDiff(c)); guard++; }
+    const opts = mcqNumOptions(diff, Math.max(2, Math.round(diff*0.4)+1));
+    return {
+      text: `How much larger is ${c.theme.cats[top.i]} than ${c.theme.cats[second.i]}?`,
+      questionData: chartQData(c), options: opts.map(String), answer: String(diff),
+      explanation: `${c.values[top.i]} − ${c.values[second.i]} = ${diff}.`
+    };
+  }
+  function genChartAvgQ() {
+    const c = buildChart();
+    const sum = c.values.reduce((a,b) => a+b, 0);
+    const avg = Math.round(sum/4);
+    const opts = mcqNumOptions(avg, Math.max(2, Math.round(avg*0.15)+1));
+    return {
+      text: `What was the average value across all ${c.theme.cats.length} ${c.theme.entityPlural} shown?`,
+      questionData: chartQData(c), options: opts.map(String), answer: String(avg),
+      explanation: `(${c.values.join("+")}) / 4 = ${sum} / 4 ≈ ${avg}.`
+    };
+  }
+  const CHART_GENERATORS = [genChartChangeQ, genChartDeclineQ, genChartCombinedQ, genChartDiffQ, genChartAvgQ];
+
+  // --- Multi-step Word Problems (templated, free-text numeric) ---
+  function genWP_RevenueGrowthDecline() {
+    const base = randInt(6,25) * 10;
+    const g1 = pick([10,15,20,25,30]), g2 = pick([5,10,15,20]);
+    const v1 = Math.round(base * (1 + g1/100));
+    const v2 = Math.round(v1 * (1 - g2/100));
+    return {
+      text: `A company's revenue grows ${g1}% in Year 1, then declines ${g2}% in Year 2. If it started at $${base}m, what is the revenue at the end of Year 2 ($m)?`,
+      answer: v2,
+      explanation: `Year 1: ${base} × ${1+g1/100} = ${v1}. Year 2: ${v1} × ${1-g2/100} = ${v2}.`
+    };
+  }
+  function genWP_PagesReview() {
+    const totalPages = randInt(4,10) * 6;
+    const firstHour = Math.round(totalPages * pick([0.25,0.3,0.375,0.4]));
+    const remaining = totalPages - firstHour;
+    const hoursLeft = pick([2,3]);
+    const rate = Math.round(remaining/hoursLeft);
+    return {
+      text: `An analyst has ${1+hoursLeft} hours to review a ${totalPages}-page CIM. After reviewing ${firstHour} pages in the first hour, how many pages per hour must they review over the remaining ${hoursLeft} hours to finish on time?`,
+      answer: rate,
+      explanation: `Remaining pages = ${totalPages} − ${firstHour} = ${remaining}. Over ${hoursLeft} hours, that's ${remaining} / ${hoursLeft} = ${rate} pages/hour.`
+    };
+  }
+  function genWP_DebtEquity() {
+    const total = randInt(10,40) * 10;
+    const equity = Math.round(total * pick([30,35,40,45])/100);
+    const debt = total - equity;
+    const ratio = Math.round((debt/equity)*100)/100;
+    return {
+      text: `A PE fund buys a company for $${total}m using $${equity}m of equity and the rest debt. What is the debt-to-equity ratio?`,
+      answer: ratio,
+      explanation: `Debt = ${total} − ${equity} = ${debt}. Debt/Equity = ${debt} / ${equity} = ${ratio}.`
+    };
+  }
+  function genWP_TimeReduction() {
+    const mins = pick([30,40,45,50,60]);
+    const pct = pick([10,20,25,30]);
+    const result = Math.round(mins * (1 - pct/100));
+    return {
+      text: `A team completes an OA in ${mins} minutes at normal speed. If they aim to finish ${pct}% faster, how many minutes should it take?`,
+      answer: result,
+      explanation: `${mins} × (1 − ${pct/100}) = ${result} minutes.`
+    };
+  }
+  function genWP_COGS() {
+    const revenue = randInt(10,50) * 10;
+    const margin = pick([30,35,40,45,50]);
+    const grossProfit = Math.round(revenue * margin/100);
+    const cogs = revenue - grossProfit;
+    return {
+      text: `A company has revenue of $${revenue}m and a gross margin of ${margin}%. What is its COGS ($m)?`,
+      answer: cogs,
+      explanation: `Gross profit = ${revenue} × ${margin/100} = ${grossProfit}. COGS = ${revenue} − ${grossProfit} = ${cogs}.`
+    };
+  }
+  function genWP_CompsShortfall() {
+    const rate = pick([2,3,4]), hours = pick([4,5,6]);
+    const capacity = rate * hours;
+    const need = capacity + randInt(2,8);
+    const shortfall = need - capacity;
+    return {
+      text: `An intern reviews ${rate} comps per hour, and has ${hours} hours before a deadline. If they need to review ${need} comps, how many comps short will they be by the deadline?`,
+      answer: shortfall,
+      explanation: `Capacity = ${rate} × ${hours} = ${capacity}. Shortfall = ${need} − ${capacity} = ${shortfall}.`
+    };
+  }
+  function genWP_EquityValue() {
+    const ev = randInt(20,80) * 10;
+    const netDebt = randInt(3,20) * 10;
+    return {
+      text: `A deal has an enterprise value of $${ev}m and net debt of $${netDebt}m. What is the equity value ($m)?`,
+      answer: ev - netDebt,
+      explanation: `Equity Value = ${ev} − ${netDebt} = ${ev-netDebt}.`
+    };
+  }
+  function genWP_MOIC() {
+    const investment = randInt(5,30) * 10;
+    const moic = pick([2,2.5,3,3.5,4]);
+    const total = Math.round(investment * moic);
+    return {
+      text: `A $${investment}m investment returns a ${moic}x MOIC. What is the total value returned to investors ($m)?`,
+      answer: total,
+      explanation: `Total value = ${investment} × ${moic} = ${total}.`
+    };
+  }
+  const WORDPROBLEM_GENERATORS = [genWP_RevenueGrowthDecline, genWP_PagesReview, genWP_DebtEquity, genWP_TimeReduction, genWP_COGS, genWP_CompsShortfall, genWP_EquityValue, genWP_MOIC];
+
+  const GENERATORS = {
+    percentages_ratios: [genPercentOf, genPercentChange, genRatioSplit],
+    quick_calc: [genMultiply, genDivide],
+    data_tables: TABLE_GENERATORS,
+    chart_reading: CHART_GENERATORS,
+    word_problems: WORDPROBLEM_GENERATORS,
+  };
+
+  function generateQuestion(subskillKey) {
+    const gen = pick(GENERATORS[subskillKey]);
+    return { options: null, questionData: null, questionId: null, ...gen(), subskillKey };
+  }
+
+  // --- Rendering question_data (tables and bar charts) ---
+  function renderQuestionData(qdata) {
+    const el = document.getElementById("drill-qdata");
+    if (!qdata) { el.innerHTML = ""; return; }
+
+    if (qdata.type === "table") {
+      const headerRow = qdata.headers.map(h => `<th>${h}</th>`).join("");
+      const bodyRows = qdata.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+      el.innerHTML = `<div class="qd-title">${qdata.title || ""}</div><table class="qd-table"><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+    } else if (qdata.type === "bar") {
+      const maxVal = Math.max(...qdata.values);
+      const bars = qdata.categories.map((cat, i) => {
+        const val = qdata.values[i];
+        const heightPct = Math.max(6, Math.round((val / maxVal) * 100));
+        return `<div class="qd-bar-col"><div class="qd-bar-val">${val}</div><div class="qd-bar" style="height:${heightPct}%;"></div><div class="qd-bar-label">${cat}</div></div>`;
+      }).join("");
+      el.innerHTML = `<div class="qd-title">${qdata.title || ""}</div><div class="qd-chart"><div class="qd-bar-row">${bars}</div></div>`;
+    } else {
+      el.innerHTML = "";
+    }
+  }
+
+  // =====================================================================
+  // Sub-skill stats (accuracy bars on the landing screen)
+  // =====================================================================
+  async function loadSubskillStats() {
+    const list = document.getElementById("subskill-list");
+    list.innerHTML = SUBSKILLS.map(s => `
+      <div class="subskill-row ${s.active ? "" : "locked"}">
+        <div class="subskill-top">
+          <span class="subskill-name">${s.name}</span>
+          <span class="subskill-meta" id="meta-${s.key}">${s.active ? "—" : ""}</span>
+          ${s.active ? "" : '<span class="soon-tag">Coming soon</span>'}
+        </div>
+        ${s.active ? `<div class="accuracy-track"><div class="accuracy-fill" id="fill-${s.key}" style="width:0%"></div></div>` : ""}
+      </div>
+    `).join("");
+
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return;
+      const { data, error } = await sb.from("oa_attempts").select("sub_skill, correct").eq("user_id", userId).eq("category", "numerical");
+      if (error) { console.warn(error.message); return; }
+
+      ACTIVE_KEYS.forEach(key => {
+        const rows = (data || []).filter(r => r.sub_skill === key);
+        const metaEl = document.getElementById("meta-" + key);
+        const fillEl = document.getElementById("fill-" + key);
+        if (rows.length === 0) { metaEl.textContent = "Not started"; return; }
+        const acc = Math.round((rows.filter(r => r.correct).length / rows.length) * 100);
+        metaEl.textContent = `${acc}% · ${rows.length} done`;
+        fillEl.style.width = acc + "%";
+      });
+    } catch (e) { console.warn(e); }
+  }
+
+  // =====================================================================
+  // Adaptive weighting — no-attempts sub-skills get top priority, then
+  // lower accuracy gets higher weight, with a floor so mastered sub-skills
+  // still occasionally show up.
+  // =====================================================================
+  async function pickWeightedSubskills(count) {
+    let weights = {};
+    ACTIVE_KEYS.forEach(k => weights[k] = 1);
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userId) {
+        const { data } = await sb.from("oa_attempts").select("sub_skill, correct").eq("user_id", userId).eq("category", "numerical");
+        ACTIVE_KEYS.forEach(key => {
+          const rows = (data || []).filter(r => r.sub_skill === key);
+          if (rows.length === 0) { weights[key] = 1.0; return; }
+          const acc = rows.filter(r => r.correct).length / rows.length;
+          weights[key] = Math.max(0.15, 1 - acc);
+        });
+      }
+    } catch (e) { console.warn(e); }
+
+    const totalWeight = Object.values(weights).reduce((a,b) => a+b, 0);
+    const picks = [];
+    for (let i = 0; i < count; i++) {
+      let r = Math.random() * totalWeight;
+      for (const key of ACTIVE_KEYS) {
+        r -= weights[key];
+        if (r <= 0) { picks.push(key); break; }
+      }
+      if (picks.length <= i) picks.push(ACTIVE_KEYS[ACTIVE_KEYS.length - 1]);
+    }
+    return picks;
+  }
+
+  // =====================================================================
+  // Drill flow
+  // =====================================================================
+  const DRILL_SIZE = 5;
+  const QUESTION_TIME = 75;
+  let drillQueue = [], drillIndex = 0, drillScore = 0, drillResults = [];
+  let currentQuestion = null, questionStartTime = 0, drillTimerInterval = null, drillTimeLeft = QUESTION_TIME, answered = false;
+
+  document.getElementById("start-drill-btn").addEventListener("click", startDrill);
+  document.getElementById("summary-again-btn").addEventListener("click", startDrill);
+  document.getElementById("summary-back-btn").addEventListener("click", () => showScreen("landing-screen"));
+
+  function showScreen(id) {
+    ["landing-screen", "drill-screen", "summary-screen"].forEach(s => {
+      document.getElementById(s).style.display = s === id ? "block" : "none";
+    });
+    if (id === "landing-screen") loadSubskillStats();
+  }
+
+  async function startDrill() {
+    drillQueue = await pickWeightedSubskills(DRILL_SIZE);
+    drillIndex = 0;
+    drillScore = 0;
+    drillResults = [];
+    showScreen("drill-screen");
+    showQuestion();
+  }
+
+  function showQuestion() {
+    answered = false;
+    document.getElementById("drill-progress").textContent = `Question ${drillIndex+1} of ${DRILL_SIZE}`;
+    currentQuestion = generateQuestion(drillQueue[drillIndex]);
+    const subName = SUBSKILLS.find(s => s.key === currentQuestion.subskillKey).name;
+    document.getElementById("drill-subskill-tag").textContent = subName;
+    document.getElementById("drill-question").textContent = currentQuestion.text;
+    renderQuestionData(currentQuestion.questionData);
+    document.getElementById("drill-feedback").style.display = "none";
+
+    const freetextRow = document.getElementById("drill-freetext-row");
+    const mcqGrid = document.getElementById("drill-mcq-grid");
+
+    if (currentQuestion.options && currentQuestion.options.length) {
+      freetextRow.style.display = "none";
+      mcqGrid.style.display = "grid";
+      mcqGrid.innerHTML = currentQuestion.options.map(opt =>
+        `<button type="button" class="mcq-btn" data-choice="${opt}">${opt}</button>`
+      ).join("");
+      mcqGrid.querySelectorAll(".mcq-btn").forEach(btn => {
+        btn.addEventListener("click", () => submitAnswer(false, btn.dataset.choice, btn));
+      });
+    } else {
+      mcqGrid.style.display = "none";
+      freetextRow.style.display = "flex";
+      document.getElementById("drill-answer-input").value = "";
+      document.getElementById("drill-answer-input").disabled = false;
+      document.getElementById("drill-submit-btn").disabled = false;
+      document.getElementById("drill-answer-input").focus();
+    }
+
+    questionStartTime = Date.now();
+    drillTimeLeft = QUESTION_TIME;
+    const deadline = Date.now() + QUESTION_TIME * 1000;
+    const timerEl = document.getElementById("drill-timer");
+    timerEl.textContent = String(QUESTION_TIME);
+    timerEl.classList.remove("low");
+
+    clearInterval(drillTimerInterval);
+    drillTimerInterval = setInterval(() => {
+      drillTimeLeft = Math.max(0, Math.round((deadline - Date.now())/1000));
+      timerEl.textContent = String(drillTimeLeft);
+      timerEl.classList.toggle("low", drillTimeLeft <= 15);
+      if (drillTimeLeft <= 0) { clearInterval(drillTimerInterval); submitAnswer(true); }
+    }, 250);
+  }
+
+  function isCorrectAnswer(given) {
+    if (currentQuestion.options) return given === currentQuestion.answer;
+    const val = parseFloat(given);
+    const target = parseFloat(currentQuestion.answer);
+    if (Number.isNaN(val) || Number.isNaN(target)) return false;
+    return Math.abs(val - target) < 0.01;
+  }
+
+  async function submitAnswer(timedOut, mcqChoice, mcqBtnEl) {
+    if (answered) return;
+    answered = true;
+    clearInterval(drillTimerInterval);
+
+    let given = null;
+    if (currentQuestion.options) {
+      document.querySelectorAll(".mcq-btn").forEach(b => b.disabled = true);
+      given = timedOut ? null : mcqChoice;
+      if (mcqBtnEl) mcqBtnEl.classList.add(isCorrectAnswer(given) ? "correct-flag" : "wrong-flag");
+      if (!isCorrectAnswer(given)) {
+        const correctBtn = [...document.querySelectorAll(".mcq-btn")].find(b => b.dataset.choice === currentQuestion.answer);
+        if (correctBtn) correctBtn.classList.add("correct-flag");
+      }
+    } else {
+      document.getElementById("drill-answer-input").disabled = true;
+      document.getElementById("drill-submit-btn").disabled = true;
+      given = document.getElementById("drill-answer-input").value.trim();
+    }
+
+    const correct = !timedOut && isCorrectAnswer(given);
+    const elapsed = Math.round((Date.now() - questionStartTime) / 1000);
+
+    if (correct) drillScore += 1;
+    drillResults.push({ subskillKey: currentQuestion.subskillKey, correct });
+
+    const fb = document.getElementById("drill-feedback");
+    fb.className = "drill-feedback " + (correct ? "correct" : "wrong");
+    fb.style.display = "block";
+    document.getElementById("drill-verdict").textContent = correct ? "Correct" : (timedOut ? "Time's up — correct answer:" : "Not quite — correct answer:");
+    document.getElementById("drill-explanation").textContent = correct
+      ? currentQuestion.explanation
+      : `${currentQuestion.answer}. ${currentQuestion.explanation}`;
+
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userId) {
+        await sb.from("oa_attempts").insert([{
+          user_id: userId, category: "numerical", sub_skill: currentQuestion.subskillKey,
+          question_id: currentQuestion.questionId, correct, time_taken_seconds: elapsed, mode: "drill"
+        }]);
+      }
+    } catch (e) { console.warn("Couldn't log attempt:", e); }
+  }
+
+  document.getElementById("drill-submit-btn").addEventListener("click", () => submitAnswer(false));
+  document.getElementById("drill-answer-input").addEventListener("keydown", (e) => { if (e.key === "Enter") submitAnswer(false); });
+
+  document.getElementById("drill-next-btn").addEventListener("click", () => {
+    drillIndex += 1;
+    if (drillIndex >= DRILL_SIZE) { showSummary(); return; }
+    showQuestion();
+  });
+
+  function showSummary() {
+    showScreen("summary-screen");
+    document.getElementById("summary-score").textContent = `${drillScore} / ${DRILL_SIZE}`;
+    const bySkill = {};
+    drillResults.forEach(r => {
+      bySkill[r.subskillKey] = bySkill[r.subskillKey] || { correct: 0, total: 0 };
+      bySkill[r.subskillKey].total += 1;
+      if (r.correct) bySkill[r.subskillKey].correct += 1;
+    });
+    const lines = Object.entries(bySkill).map(([key, v]) => {
+      const name = SUBSKILLS.find(s => s.key === key).name;
+      return `${name}: ${v.correct}/${v.total}`;
+    });
+    document.getElementById("summary-breakdown").textContent = lines.join(" · ");
+  }
+</script>
+</body>
+</html>
