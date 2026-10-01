@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600;1,8..60,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reps — OA Prep</title>
+<style>
+  :root {
+    --bg: #F7F3EA;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #21283B;
+    --ink-soft: #5B6472;
+    --ink-faint: #948E7A;
+    --gold: #A8843F;
+    --gold-dim: #8C6A28;
+    --gold-soft: rgba(168,132,63,0.10);
+    --green: #2F6B4F;
+    --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B;
+    --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A;
+    --steel-soft: rgba(79,107,138,0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(980px, 94vw); margin: 32px auto 60px; padding: 0 16px;
+  }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 26px; margin: 0 0 4px; }
+  h1 em { font-style: italic; font-weight: 600; color: var(--gold-dim); }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--gold-dim);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-dim); display: inline-block; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 22px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; margin: 0 0 26px; width: fit-content;
+    box-shadow: 0 2px 14px rgba(33,40,59,0.05);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13px;
+    color: var(--gold); padding: 8px 14px; text-decoration: none;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 15px; border-radius: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); text-decoration: none; letter-spacing: 0.02em; white-space: nowrap; }
+  .top-nav a.nav-link.active { background: var(--gold-soft); color: var(--gold); border-bottom: 2px solid var(--gold); }
+  .top-nav a.nav-link.soon { color: var(--ink-faint); }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(33,40,59,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .cat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 20px 22px; box-shadow: 0 1px 8px rgba(33,40,59,0.04);
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  }
+  .cat-card.active { cursor: pointer; }
+  .cat-card.active:hover { border-color: var(--gold-dim); box-shadow: 0 4px 16px rgba(33,40,59,0.08); }
+  .cat-card.locked { opacity: 0.55; }
+  .cat-name { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .cat-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.45; margin-bottom: 16px; }
+  .cat-tag {
+    font-size: 10px; font-weight: 700; color: var(--gold); background: var(--gold-soft);
+    padding: 3px 9px; border-radius: 20px; display: inline-block; letter-spacing: 0.04em;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .cat-tag.soon { color: var(--ink-faint); background: transparent; border: 1px solid var(--border); }
+  .cat-stats { display: flex; gap: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .cat-stat { flex: 1; }
+  .cat-stat .label { font-size: 9.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 3px; }
+  .cat-stat .value { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .cat-stat .value.dim { color: var(--ink-faint); font-size: 12px; font-weight: 600; }
+
+  /* --- mobile --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .cat-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="games.html" class="nav-link">Games</a>
+  <a href="oa-prep.html" class="nav-link active">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to view your OA Prep progress.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<div class="kicker">Practice</div>
+<h1>OA <em>Prep</em></h1>
+<div class="sub">Five categories, broken down by sub-skill — so you know exactly what's weak, not just an overall score.</div>
+
+<div class="cat-grid" id="cat-grid"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) loadCategories();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  // Only the shell is built so far — every category is a locked "coming
+  // soon" tile until its practice screen actually exists, so there are no
+  // dead links. Numerical Reasoning is next up to be built.
+  const CATEGORIES = [
+    { key: "numerical", name: "Numerical Reasoning", desc: "Percentages, ratios, data tables, chart reading, and multi-step word problems.", active: true, href: "oa-numerical.html", type: "drill" },
+    { key: "verbal", name: "Verbal Reasoning", desc: "True/False/Cannot Say passages and inference-based questions.", active: true, href: "oa-verbal.html", type: "drill" },
+    { key: "logical", name: "Logical / Inductive Reasoning", desc: "Number sequences and abstract pattern-matching.", active: true, href: "oa-logical.html", type: "drill" },
+    { key: "sjt", name: "Situational Judgement", desc: "Scenario + best-practice reasoning, cheat-sheet style rather than drilled.", active: true, href: "oa-sjt.html", type: "reference" },
+    { key: "gamified", name: "Gamified / Cognitive", desc: "What to expect from Pymetrics-style assessments, and how not to overthink them.", active: true, href: "oa-gamified.html", type: "reference" },
+  ];
+
+  function relativeDate(iso) {
+    if (!iso) return "—";
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    return `${days}d ago`;
+  }
+
+  async function loadCategories() {
+    const grid = document.getElementById("cat-grid");
+    grid.innerHTML = CATEGORIES.map(cat => {
+      const tag = cat.active ? (cat.type === "reference" ? "Browse" : "Practice") : "Coming soon";
+      const statsHtml = cat.type === "reference"
+        ? `<div class="cat-stats"><div class="cat-stat"><div class="label">Format</div><div class="value dim">Reference, not scored</div></div></div>`
+        : `<div class="cat-stats">
+             <div class="cat-stat"><div class="label">Accuracy</div><div class="value dim" id="acc-${cat.key}">—</div></div>
+             <div class="cat-stat"><div class="label">Completed</div><div class="value dim" id="count-${cat.key}">—</div></div>
+             <div class="cat-stat"><div class="label">Last practiced</div><div class="value dim" id="last-${cat.key}">—</div></div>
+           </div>`;
+      return `
+        <div class="cat-card ${cat.active ? "active" : "locked"}" data-cat="${cat.key}">
+          <span class="cat-tag ${cat.active ? "" : "soon"}">${tag}</span>
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-desc">${cat.desc}</div>
+          ${statsHtml}
+        </div>`;
+    }).join("");
+
+    // One query for all attempts, aggregated client-side per drill category —
+    // reference categories (SJT, Gamified) aren't scored so they're skipped here.
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return;
+      const { data, error } = await sb.from("oa_attempts").select("category, correct, created_at").eq("user_id", userId);
+      if (error) { console.warn("Couldn't load OA Prep stats:", error.message); return; }
+
+      CATEGORIES.filter(c => c.type !== "reference").forEach(cat => {
+        const rows = (data || []).filter(r => r.category === cat.key);
+        const accEl = document.getElementById("acc-" + cat.key);
+        const countEl = document.getElementById("count-" + cat.key);
+        const lastEl = document.getElementById("last-" + cat.key);
+        if (rows.length === 0) {
+          accEl.textContent = "—"; countEl.textContent = "0"; lastEl.textContent = "Not started";
+          return;
+        }
+        const correct = rows.filter(r => r.correct).length;
+        const acc = Math.round((correct / rows.length) * 100);
+        const last = rows.reduce((max, r) => (!max || r.created_at > max ? r.created_at : max), null);
+        accEl.textContent = acc + "%"; accEl.classList.remove("dim");
+        countEl.textContent = String(rows.length); countEl.classList.remove("dim");
+        lastEl.textContent = relativeDate(last); lastEl.classList.remove("dim");
+      });
+    } catch (e) {
+      console.warn("Couldn't load OA Prep stats:", e);
+    }
+
+    document.querySelectorAll(".cat-card.active").forEach(card => {
+      const cat = CATEGORIES.find(c => c.key === card.dataset.cat);
+      if (cat && cat.href) card.addEventListener("click", () => { window.location.href = cat.href; });
+    });
+  }
+</script>
+</body>
+</html>
