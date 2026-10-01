@@ -283,9 +283,7 @@
   function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
 
   // =====================================================================
-  // Sub-skills — only the two procedurally-generatable ones are active.
-  // The other three need real hand-authored content (data tables, charts,
-  // multi-step word problems) and aren't built yet.
+  // Sub-skills — all five are active and procedurally generated.
   // =====================================================================
   const SUBSKILLS = [
     { key: "percentages_ratios", name: "Percentages & Ratios", active: true, source: "procedural" },
@@ -311,10 +309,12 @@
     };
   }
   function genPercentChange() {
-    const oldVal = randInt(4, 40) * 10;
     const p = pick([5,10,15,20,25,30,40,50]);
+    // oldVal is a multiple of step so oldVal * p / 100 is always a whole number.
+    const step = 100 / gcdLocal(p, 100);
+    const oldVal = step * randInt(Math.ceil(40/step), Math.floor(400/step));
     const direction = Math.random() < 0.7 ? 1 : -1;
-    const newVal = Math.round(oldVal * (1 + direction*p/100));
+    const newVal = oldVal + direction * (oldVal * p / 100);
     const verb = direction > 0 ? "increases" : "decreases";
     return {
       text: `A value ${verb} from ${oldVal} to ${newVal}. What is the percentage ${direction>0?"increase":"decrease"}?`,
@@ -556,10 +556,17 @@
 
   // --- Multi-step Word Problems (templated, free-text numeric) ---
   function genWP_RevenueGrowthDecline() {
-    const base = randInt(6,25) * 10;
-    const g1 = pick([10,15,20,25,30]), g2 = pick([5,10,15,20]);
-    const v1 = Math.round(base * (1 + g1/100));
-    const v2 = Math.round(v1 * (1 - g2/100));
+    // Retry until both years' values are whole numbers, so the answer needs no rounding.
+    let base, g1, g2, v1, v2;
+    let guard = 0;
+    do {
+      base = randInt(6,25) * 10;
+      g1 = pick([10,15,20,25,30]); g2 = pick([5,10,15,20]);
+      v1 = base * (100 + g1) / 100;
+      v2 = v1 * (100 - g2) / 100;
+      guard++;
+    } while ((!Number.isInteger(v1) || !Number.isInteger(v2)) && guard < 200);
+    if (!Number.isInteger(v1) || !Number.isInteger(v2)) { base = 200; g1 = 10; g2 = 10; v1 = 220; v2 = 198; }
     return {
       text: `A company's revenue grows ${g1}% in Year 1, then declines ${g2}% in Year 2. If it started at $${base}m, what is the revenue at the end of Year 2 ($m)?`,
       answer: v2,
@@ -567,11 +574,18 @@
     };
   }
   function genWP_PagesReview() {
-    const totalPages = randInt(4,10) * 6;
-    const firstHour = Math.round(totalPages * pick([0.25,0.3,0.375,0.4]));
-    const remaining = totalPages - firstHour;
-    const hoursLeft = pick([2,3]);
-    const rate = Math.round(remaining/hoursLeft);
+    // Retry until the remaining pages divide evenly over the remaining hours.
+    let totalPages, firstHour, remaining, hoursLeft;
+    let guard = 0;
+    do {
+      totalPages = randInt(4,10) * 6;
+      firstHour = Math.round(totalPages * pick([0.25,0.3,0.375,0.4]));
+      remaining = totalPages - firstHour;
+      hoursLeft = pick([2,3]);
+      guard++;
+    } while (remaining % hoursLeft !== 0 && guard < 200);
+    if (remaining % hoursLeft !== 0) { totalPages = 48; firstHour = 12; remaining = 36; hoursLeft = 3; }
+    const rate = remaining / hoursLeft;
     return {
       text: `An analyst has ${1+hoursLeft} hours to review a ${totalPages}-page CIM. After reviewing ${firstHour} pages in the first hour, how many pages per hour must they review over the remaining ${hoursLeft} hours to finish on time?`,
       answer: rate,
@@ -590,9 +604,16 @@
     };
   }
   function genWP_TimeReduction() {
-    const mins = pick([30,40,45,50,60]);
-    const pct = pick([10,20,25,30]);
-    const result = Math.round(mins * (1 - pct/100));
+    // Retry until the reduced time is a whole number of minutes.
+    let mins, pct;
+    let guard = 0;
+    do {
+      mins = pick([30,40,45,50,60]);
+      pct = pick([10,20,25,30]);
+      guard++;
+    } while ((mins * (100 - pct)) % 100 !== 0 && guard < 200);
+    if ((mins * (100 - pct)) % 100 !== 0) { mins = 60; pct = 25; }
+    const result = mins * (100 - pct) / 100;
     return {
       text: `A team completes an OA in ${mins} minutes at normal speed. If they aim to finish ${pct}% faster, how many minutes should it take?`,
       answer: result,
@@ -600,9 +621,16 @@
     };
   }
   function genWP_COGS() {
-    const revenue = randInt(10,50) * 10;
-    const margin = pick([30,35,40,45,50]);
-    const grossProfit = Math.round(revenue * margin/100);
+    // Retry until gross profit (and so COGS) is a whole number.
+    let revenue, margin;
+    let guard = 0;
+    do {
+      revenue = randInt(10,50) * 10;
+      margin = pick([30,35,40,45,50]);
+      guard++;
+    } while ((revenue * margin) % 100 !== 0 && guard < 200);
+    if ((revenue * margin) % 100 !== 0) { revenue = 200; margin = 35; }
+    const grossProfit = revenue * margin / 100;
     const cogs = revenue - grossProfit;
     return {
       text: `A company has revenue of $${revenue}m and a gross margin of ${margin}%. What is its COGS ($m)?`,
@@ -832,6 +860,8 @@
 
   async function submitAnswer(timedOut, mcqChoice, mcqBtnEl) {
     if (answered) return;
+    // An empty free-text answer does nothing (a timeout still submits).
+    if (!timedOut && !currentQuestion.options && document.getElementById("drill-answer-input").value.trim() === "") return;
     answered = true;
     clearInterval(drillTimerInterval);
 
