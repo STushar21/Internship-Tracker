@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600;1,8..60,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reps — Gamified / Cognitive</title>
+<style>
+  :root {
+    --bg: #F7F3EA; --surface: #FFFFFF; --surface-alt: #F1EBDC; --border: #E3DAC4;
+    --ink: #21283B; --ink-soft: #5B6472; --ink-faint: #948E7A;
+    --gold: #A8843F; --gold-dim: #8C6A28; --gold-soft: rgba(168,132,63,0.10);
+    --green: #2F6B4F; --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B; --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A; --steel-soft: rgba(79,107,138,0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(760px, 94vw); margin: 32px auto 60px; padding: 0 16px;
+  }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 24px; margin: 0 0 4px; }
+  h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; margin: 0 0 10px; }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--gold-dim);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-dim); display: inline-block; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 22px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; margin: 0 0 26px; width: fit-content;
+    box-shadow: 0 2px 14px rgba(33,40,59,0.05);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13px; color: var(--gold);
+    padding: 8px 14px; text-decoration: none; letter-spacing: 0.14em; text-transform: uppercase;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 15px; border-radius: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+  .top-nav a.nav-link.active { background: var(--gold-soft); color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(33,40,59,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+  .back-link { display: inline-block; margin-bottom: 14px; font-size: 12px; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--gold-dim); }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { text-align: center; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 1px 8px rgba(33,40,59,0.04); }
+  .panel ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+  .panel p { font-size: 13px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 12px; }
+  .firm-note { font-size: 11.5px; color: var(--ink-faint); font-style: italic; margin-top: 10px; }
+
+  .game-panel { text-align: center; }
+  .game-sub { font-size: 12px; color: var(--ink-faint); margin-bottom: 18px; }
+
+  /* --- Balloon game --- */
+  .balloon-stage { display: flex; flex-direction: column; align-items: center; padding: 20px 0; min-height: 220px; justify-content: flex-end; }
+  #balloon-svg-wrap { transition: transform 0.15s ease; margin-bottom: 14px; }
+  .balloon-hud { display: flex; gap: 26px; justify-content: center; margin-bottom: 16px; font-family: 'IBM Plex Mono', monospace; }
+  .balloon-hud .hstat { text-align: center; }
+  .balloon-hud .hstat .l { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+  .balloon-hud .hstat .v { font-size: 20px; font-weight: 700; color: var(--ink); }
+  .balloon-btns button { border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 6px; }
+  #pump-btn { background: var(--gold); color: var(--bg); }
+  #cashout-btn { background: transparent; border: 1px solid var(--green); color: var(--green); }
+  #pump-btn:disabled, #cashout-btn:disabled { opacity: 0.4; cursor: default; }
+  .pop-msg { color: var(--red); font-weight: 700; margin-top: 10px; font-size: 13px; }
+
+  /* --- Memory game --- */
+  .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 220px; margin: 0 auto 18px; }
+  .memory-tile { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; height: 62px; cursor: pointer; transition: background 0.15s ease; }
+  .memory-tile.lit { background: var(--gold); }
+  .memory-tile.correct { background: var(--green-soft); border-color: var(--green); }
+  .memory-tile.wrong { background: var(--red-soft); border-color: var(--red); }
+  .memory-status { font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; min-height: 18px; }
+  #memory-start-btn { background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 12px 24px; font-weight: 700; cursor: pointer; font-size: 13px; }
+
+  /* --- mobile --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .panel { padding: 16px 18px; }
+    .balloon-btns button { padding: 11px 16px; font-size: 12.5px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="games.html" class="nav-link">Games</a>
+  <a href="oa-prep.html" class="nav-link active">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to view this page.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<a href="oa-prep.html" class="back-link">&larr; OA Prep</a>
+
+<div class="kicker">Gamified / Cognitive</div>
+<h1>What to expect, not what to study</h1>
+<div class="sub">This category can't be drilled like the others — it's testing attention, memory, and decision-making patterns, not finance knowledge. This page is a briefing, plus two illustrative mini-games to show the format.</div>
+
+<div class="panel">
+  <h2>What these actually are</h2>
+  <p>A growing number of firms — including JPMorgan, Blackstone, and Standard Chartered — use gamified psychometric assessments (often built by providers like Pymetrics) alongside or instead of traditional numerical/verbal tests. These usually take 15–25 minutes and consist of a series of short mini-games measuring things like risk tolerance, memory, attention, and reaction time.</p>
+  <p>Unlike numerical or verbal reasoning, there's no "correct" way to play these games. Your responses are typically compared statistically against a model built from existing employees, or used to build a broader behavioral profile — there's no single "right" personality, and different roles may even look for different trait profiles.</p>
+  <div class="firm-note">Which firms use which specific games changes over time, so treat "JPMorgan/Blackstone/StanChart" as examples of the type of firm using this format, not a guarantee of exactly what you'll see.</div>
+</div>
+
+<div class="panel">
+  <h2>How to actually approach it</h2>
+  <ul>
+    <li>Don't try to "game" the games by guessing what trait looks good — the models are generally resistant to obvious gaming, and trying too hard to appear a certain way tends to produce inconsistent, unnatural responses that stand out more than genuine ones.</li>
+    <li>Respond naturally and at a normal pace — reaction-time-based games measure genuine processing speed, not a clever strategy.</li>
+    <li>Don't overthink risk-based games — a wide range of risk appetites is generally fine, since firms aren't looking for one "correct" amount of risk tolerance.</li>
+    <li>Take them somewhere quiet, undistracted, and when you're not fatigued — since these measure real-time responses, tiredness and interruptions genuinely affect the results.</li>
+    <li>If one game feels like it went badly, don't dwell on it — these are typically evaluated in aggregate across the full set of games, not pass/fail individually.</li>
+  </ul>
+</div>
+
+<div class="panel game-panel">
+  <h2>Example: Risk-tolerance game (Balloon)</h2>
+  <div class="game-sub">Each pump adds points but raises the chance the balloon pops and you lose them. Cash out anytime to bank what you've got. This mimics the format — there's no "good" score here.</div>
+
+  <div class="balloon-hud">
+    <div class="hstat"><div class="l">Balloon</div><div class="v" id="balloon-num">1 / 5</div></div>
+    <div class="hstat"><div class="l">Pending</div><div class="v" id="balloon-pending">0</div></div>
+    <div class="hstat"><div class="l">Total</div><div class="v" id="balloon-total">0</div></div>
+  </div>
+
+  <div class="balloon-stage">
+    <div id="balloon-svg-wrap"></div>
+  </div>
+  <div class="pop-msg" id="balloon-msg"></div>
+
+  <div class="balloon-btns">
+    <button type="button" id="pump-btn">Pump</button>
+    <button type="button" id="cashout-btn">Cash Out</button>
+  </div>
+</div>
+
+<div class="panel game-panel">
+  <h2>Example: Memory sequence game</h2>
+  <div class="game-sub">A sequence of tiles lights up, one at a time. Repeat it back in the same order. Each round adds one more tile.</div>
+
+  <div class="memory-status" id="memory-status">Click Start to begin.</div>
+  <div class="memory-grid" id="memory-grid"></div>
+  <button type="button" id="memory-start-btn">Start</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  // =====================================================================
+  // Balloon Risk game — illustrative only, no scoring persisted anywhere.
+  // =====================================================================
+  const MAX_BALLOONS = 5;
+  let balloonIndex = 0, pumps = 0, pending = 0, total = 0, balloonLocked = false;
+
+  function balloonSvg(size) {
+    const w = 60 + size * 8, h = 76 + size * 10;
+    return `<svg width="${w}" height="${h}" viewBox="0 0 100 130">
+      <ellipse cx="50" cy="50" rx="42" ry="48" fill="var(--gold)"/>
+      <path d="M50 98 L44 108 L56 108 Z" fill="var(--gold-dim)"/>
+      <line x1="50" y1="108" x2="50" y2="122" stroke="var(--ink-faint)" stroke-width="2"/>
+    </svg>`;
+  }
+
+  function renderBalloon() {
+    document.getElementById("balloon-svg-wrap").innerHTML = balloonSvg(pumps);
+    document.getElementById("balloon-num").textContent = `${balloonIndex+1} / ${MAX_BALLOONS}`;
+    document.getElementById("balloon-pending").textContent = String(pending);
+    document.getElementById("balloon-total").textContent = String(total);
+  }
+
+  function popChance() { return Math.min(0.5, pumps * 0.035); }
+
+  function pumpBalloon() {
+    if (balloonLocked) return;
+    const popped = Math.random() < popChance();
+    if (popped) {
+      balloonLocked = true;
+      document.getElementById("balloon-msg").textContent = `Pop! Lost ${pending} pending points on this balloon.`;
+      pending = 0;
+      renderBalloon();
+      setTimeout(nextBalloon, 1100);
+      return;
+    }
+    pumps += 1;
+    pending += 1;
+    document.getElementById("balloon-msg").textContent = "";
+    renderBalloon();
+  }
+
+  function cashOut() {
+    if (balloonLocked) return;
+    total += pending;
+    document.getElementById("balloon-msg").textContent = pending > 0 ? `Cashed out ${pending} points.` : "";
+    pending = 0;
+    balloonLocked = true;
+    renderBalloon();
+    setTimeout(nextBalloon, 900);
+  }
+
+  function nextBalloon() {
+    balloonIndex += 1;
+    pumps = 0;
+    pending = 0;
+    balloonLocked = false;
+    document.getElementById("balloon-msg").textContent = "";
+    if (balloonIndex >= MAX_BALLOONS) {
+      document.getElementById("pump-btn").disabled = true;
+      document.getElementById("cashout-btn").disabled = true;
+      document.getElementById("balloon-msg").textContent = `Done — final total: ${total}. There's no "good" score here, this was just to show the format.`;
+      renderBalloon();
+      return;
+    }
+    renderBalloon();
+  }
+
+  document.getElementById("pump-btn").addEventListener("click", pumpBalloon);
+  document.getElementById("cashout-btn").addEventListener("click", cashOut);
+  renderBalloon();
+
+  // =====================================================================
+  // Memory sequence game — illustrative only, no scoring persisted anywhere.
+  // =====================================================================
+  const memoryGrid = document.getElementById("memory-grid");
+  const memoryStatus = document.getElementById("memory-status");
+  let memSequence = [], memPlayerIndex = 0, memAccepting = false, memRound = 0;
+
+  for (let i = 0; i < 9; i++) {
+    const tile = document.createElement("div");
+    tile.className = "memory-tile";
+    tile.dataset.i = i;
+    tile.addEventListener("click", () => handleTileClick(i, tile));
+    memoryGrid.appendChild(tile);
+  }
+
+  function startMemoryGame() {
+    memSequence = [randInt(0, 8)];
+    memRound = 1;
+    document.getElementById("memory-start-btn").style.display = "none";
+    playSequence();
+  }
+
+  function playSequence() {
+    memAccepting = false;
+    memPlayerIndex = 0;
+    memoryStatus.textContent = `Round ${memRound} — watch closely...`;
+    document.querySelectorAll(".memory-tile").forEach(t => t.classList.remove("correct", "wrong"));
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i > 0) {
+        const prevTile = memoryGrid.querySelector(`[data-i="${memSequence[i-1]}"]`);
+        prevTile.classList.remove("lit");
+      }
+      if (i >= memSequence.length) {
+        clearInterval(interval);
+        memAccepting = true;
+        memoryStatus.textContent = "Your turn — repeat the sequence.";
+        return;
+      }
+      const tile = memoryGrid.querySelector(`[data-i="${memSequence[i]}"]`);
+      tile.classList.add("lit");
+      i++;
+    }, 550);
+  }
+
+  function handleTileClick(i, tileEl) {
+    if (!memAccepting) return;
+    const expected = memSequence[memPlayerIndex];
+    if (i === expected) {
+      tileEl.classList.add("correct");
+      setTimeout(() => tileEl.classList.remove("correct"), 250);
+      memPlayerIndex += 1;
+      if (memPlayerIndex === memSequence.length) {
+        memAccepting = false;
+        memRound += 1;
+        memoryStatus.textContent = "Correct! Next round...";
+        memSequence.push(randInt(0, 8));
+        setTimeout(playSequence, 900);
+      }
+    } else {
+      tileEl.classList.add("wrong");
+      memAccepting = false;
+      memoryStatus.textContent = `Game over — you reached a sequence of ${memSequence.length - 1}. This is just to show the format, not a real score.`;
+      document.getElementById("memory-start-btn").textContent = "Try again";
+      document.getElementById("memory-start-btn").style.display = "inline-block";
+    }
+  }
+
+  document.getElementById("memory-start-btn").addEventListener("click", startMemoryGame);
+</script>
+</body>
+</html>
