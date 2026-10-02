@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600;1,8..60,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reps — Verbal Reasoning</title>
+<style>
+  :root {
+    --bg: #F7F3EA; --surface: #FFFFFF; --surface-alt: #F1EBDC; --border: #E3DAC4;
+    --ink: #21283B; --ink-soft: #5B6472; --ink-faint: #948E7A;
+    --gold: #A8843F; --gold-dim: #8C6A28; --gold-soft: rgba(168,132,63,0.10);
+    --green: #2F6B4F; --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B; --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A; --steel-soft: rgba(79,107,138,0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(760px, 94vw); margin: 32px auto 60px; padding: 0 16px;
+  }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 24px; margin: 0 0 4px; }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--gold-dim);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-dim); display: inline-block; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 22px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; margin: 0 0 26px; width: fit-content;
+    box-shadow: 0 2px 14px rgba(33,40,59,0.05);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13px; color: var(--gold);
+    padding: 8px 14px; text-decoration: none; letter-spacing: 0.14em; text-transform: uppercase;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 15px; border-radius: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+  .top-nav a.nav-link.active { background: var(--gold-soft); color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(33,40,59,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+  .back-link { display: inline-block; margin-bottom: 14px; font-size: 12px; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--gold-dim); }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; margin-bottom: 6px; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  .drill-cta {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 22px 24px; margin-bottom: 22px; box-shadow: 0 1px 8px rgba(33,40,59,0.04);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .drill-cta .txt h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; margin: 0 0 4px; }
+  .drill-cta .txt p { font-size: 12px; color: var(--ink-soft); margin: 0; }
+  #start-drill-btn { background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 13px 26px; font-weight: 700; cursor: pointer; font-size: 13.5px; white-space: nowrap; }
+
+  .subskill-list { display: flex; flex-direction: column; gap: 8px; }
+  .subskill-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+    padding: 14px 18px; box-shadow: 0 1px 6px rgba(33,40,59,0.03);
+  }
+  .subskill-row.locked { opacity: 0.5; }
+  .subskill-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .subskill-name { font-size: 13.5px; font-weight: 600; }
+  .subskill-meta { font-size: 11px; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
+  .accuracy-track { height: 6px; background: var(--surface-alt); border-radius: 4px; overflow: hidden; }
+  .accuracy-fill { height: 100%; background: var(--gold); border-radius: 4px; }
+  .soon-tag { font-size: 10px; font-weight: 700; color: var(--ink-faint); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; }
+
+  /* --- drill screen --- */
+  #drill-screen, #summary-screen { display: none; }
+  .drill-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .drill-progress { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); }
+  .drill-timer { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; color: var(--gold); }
+  .drill-timer.low { color: var(--red); }
+  .drill-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 40px 26px; text-align: center; box-shadow: 0 1px 10px rgba(33,40,59,0.04);
+  }
+  .drill-subskill-tag { font-size: 10px; font-weight: 700; color: var(--gold); background: var(--gold-soft); padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 16px; display: inline-block; }
+  .drill-question { font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+  .drill-answer-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 6px; }
+  #drill-answer-input { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 12px 16px; font-size: 17px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; width: 160px; text-align: center; color: var(--ink); }
+  #drill-answer-input:focus { outline: none; border-color: var(--gold-dim); }
+  #drill-submit-btn { background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 12px 24px; font-weight: 700; cursor: pointer; font-size: 13.5px; }
+
+  .drill-feedback { margin-top: 22px; padding: 16px 18px; border-radius: 7px; text-align: left; }
+  .drill-feedback.correct { background: var(--green-soft); border: 1px solid var(--green); }
+  .drill-feedback.wrong { background: var(--red-soft); border: 1px solid var(--red); }
+  .drill-feedback .verdict { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .drill-feedback.correct .verdict { color: var(--green); }
+  .drill-feedback.wrong .verdict { color: var(--red); }
+  .drill-feedback .explanation { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; }
+  #drill-next-btn { background: var(--ink); color: var(--bg); border: none; border-radius: 999px; padding: 11px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin-top: 16px; }
+
+  .qd-title { font-size: 11.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; font-weight: 600; }
+  .qd-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; font-size: 12.5px; }
+  .qd-table th, .qd-table td { border: 1px solid var(--border); padding: 7px 12px; text-align: right; }
+  .qd-table th:first-child, .qd-table td:first-child { text-align: left; color: var(--ink-soft); }
+  .qd-table th { background: var(--surface-alt); font-weight: 700; }
+  .qd-table td { font-family: 'IBM Plex Mono', monospace; }
+  .qd-chart { margin-bottom: 22px; }
+  .qd-passage {
+    text-align: left; font-size: 13px; line-height: 1.7; color: var(--ink-soft);
+    background: var(--surface-alt); border: 1px solid var(--border); border-radius: 7px;
+    padding: 18px 20px; margin-bottom: 22px;
+  }
+  .qd-bar-row { display: flex; align-items: flex-end; gap: 14px; height: 140px; justify-content: center; padding: 0 8px; }
+  .qd-bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; width: 52px; }
+  .qd-bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .qd-bar { width: 100%; background: var(--gold); border-radius: 3px 3px 0 0; }
+  .qd-bar-label { font-size: 10.5px; color: var(--ink-faint); margin-top: 6px; }
+
+  .mcq-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 560px; margin: 0 auto; }
+  .mcq-btn { text-align: left; }
+  .mcq-btn {
+    background: transparent; border: 1px solid var(--gold-dim); color: var(--ink);
+    padding: 13px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;
+  }
+  .mcq-btn:hover { background: var(--gold-soft); }
+  .mcq-btn.correct-flag { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+  .mcq-btn.wrong-flag { border-color: var(--red); background: var(--red-soft); color: var(--red); }
+  .mcq-btn:disabled { cursor: default; }
+
+  #summary-screen { text-align: center; padding: 20px 0; }
+  #summary-screen .score { font-family: 'IBM Plex Mono', monospace; font-size: 44px; font-weight: 700; color: var(--gold); margin: 10px 0; }
+  #summary-screen button { border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 6px; }
+  #summary-screen .primary { background: var(--gold); color: var(--bg); }
+  #summary-screen .secondary { background: transparent; border: 1px solid var(--border); color: var(--ink-soft); }
+
+  /* --- mobile --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .drill-card { padding: 26px 16px; }
+    .drill-question { font-size: 18px; }
+    .mcq-grid { max-width: 100%; }
+    .qd-passage { padding: 14px 16px; font-size: 12.5px; }
+    .drill-cta { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="games.html" class="nav-link">Games</a>
+  <a href="oa-prep.html" class="nav-link active">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to practice.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<a href="oa-prep.html" class="back-link">&larr; OA Prep</a>
+
+<div id="landing-screen">
+  <div class="kicker">Verbal Reasoning</div>
+  <h1>True/False/Cannot Say passages and inference-based questions</h1>
+  <div class="sub">Daily Drill adaptively weights questions toward whichever sub-skill you're weakest in.</div>
+
+  <div class="drill-cta">
+    <div class="txt">
+      <h2>Daily Drill</h2>
+      <p>5 questions, ~90 seconds each, mixed across True/False/Cannot Say and Inference.</p>
+    </div>
+    <button type="button" id="start-drill-btn">Start Drill</button>
+  </div>
+
+  <div class="subskill-list" id="subskill-list"></div>
+</div>
+
+<div id="drill-screen">
+  <div class="drill-head">
+    <span class="drill-progress" id="drill-progress">Question 1 of 5</span>
+    <span class="drill-timer" id="drill-timer">75</span>
+  </div>
+  <div class="drill-card">
+    <span class="drill-subskill-tag" id="drill-subskill-tag"></span>
+    <div id="drill-qdata"></div>
+    <div class="drill-question" id="drill-question"></div>
+    <div class="drill-answer-row" id="drill-freetext-row">
+      <input type="text" id="drill-answer-input" inputmode="decimal" placeholder="Answer" autocomplete="off">
+      <button type="button" id="drill-submit-btn">Submit</button>
+    </div>
+    <div class="mcq-grid" id="drill-mcq-grid" style="display:none;"></div>
+    <div class="drill-feedback" id="drill-feedback" style="display:none;">
+      <div class="verdict" id="drill-verdict"></div>
+      <div class="explanation" id="drill-explanation"></div>
+      <button type="button" id="drill-next-btn">Next question →</button>
+    </div>
+  </div>
+</div>
+
+<div id="summary-screen">
+  <div class="kicker" style="justify-content:center;">Drill complete</div>
+  <h1>Session score</h1>
+  <div class="score" id="summary-score">0 / 5</div>
+  <div class="sub" id="summary-breakdown"></div>
+  <button type="button" class="primary" id="summary-again-btn">Do another drill</button>
+  <button type="button" class="secondary" id="summary-back-btn">Back to Verbal Reasoning</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) loadSubskillStats();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+
+  // =====================================================================
+  // Sub-skills — True/False/Cannot Say is procedurally generated here;
+  // Inference draws from a hand-authored question bank (oa_questions)
+  // since recognizing an inference requires real passages, not templates.
+  // =====================================================================
+  const SUBSKILLS = [
+    { key: "true_false_cannot_say", name: "True / False / Cannot Say", active: true, source: "procedural" },
+    { key: "inference", name: "Inference", active: true, source: "bank" },
+  ];
+  const ACTIVE_KEYS = SUBSKILLS.filter(s => s.active).map(s => s.key);
+  const BANK_KEYS = SUBSKILLS.filter(s => s.source === "bank").map(s => s.key);
+
+  // --- Question bank (Inference still needs real hand-authored passages —
+  // recognizing an inference PATTERN across variants is fine to keep fixed,
+  // unlike T/F/CS where a memorized fixed answer would defeat the point) ---
+  let bankCache = {};
+  let usedBankIds = new Set();
+
+  async function loadBankCache() {
+    if (BANK_KEYS.length === 0) return;
+    const { data, error } = await sb.from("oa_questions").select("*").eq("category", "verbal").in("sub_skill", BANK_KEYS);
+    bankCache = {};
+    BANK_KEYS.forEach(k => bankCache[k] = []);
+    if (error) { console.warn("Couldn't load question bank:", error.message); return; }
+    (data || []).forEach(row => { if (bankCache[row.sub_skill]) bankCache[row.sub_skill].push(row); });
+  }
+
+  function generateBankQuestion(subskillKey) {
+    const pool = bankCache[subskillKey] || [];
+    if (pool.length === 0) {
+      return { text: "No questions available yet for this sub-skill.", answer: null, explanation: "", subskillKey, options: null, questionData: null, questionId: null };
+    }
+    let candidates = pool.filter(q => !usedBankIds.has(q.id));
+    if (candidates.length === 0) { usedBankIds.clear(); candidates = pool; }
+    const row = pick(candidates);
+    usedBankIds.add(row.id);
+    return {
+      text: row.question_text,
+      answer: row.correct_answer,
+      explanation: row.explanation,
+      subskillKey,
+      options: row.options || null,
+      questionData: row.question_data || null,
+      questionId: row.id,
+    };
+  }
+
+  // --- True/False/Cannot Say: templated passages. The CORRECT ANSWER
+  // itself varies based on randomized values, not just the surface
+  // numbers — otherwise "statement 3 is always Cannot Say" could be
+  // memorized regardless of passage content, which would defeat the point. ---
+
+  function genEarningsScenario() {
+    const companies = ["TechCorp","NovaSystems","Meridian Software","BrightWave Inc","Solstice Digital"];
+    const drivers = ["cloud services","enterprise software","digital payments","data analytics"];
+    const secondaries = ["legacy hardware","on-premise licensing","physical retail","print media"];
+    const company = pick(companies);
+    const driver = pick(drivers);
+    const secondary = pick(secondaries.filter(d => d !== driver));
+    const revenue = randInt(20,80) * 10;
+    const yoyGrowth = pick([8,10,12,15,18,20]);
+    const marginBefore = randInt(15,25);
+    const marginDirection = pick(["up","down"]);
+    const marginChange = pick([1,2,3]);
+    const marginAfter = marginDirection === "up" ? marginBefore + marginChange : marginBefore - marginChange;
+    const secondaryDirection = pick(["declined","grew_slower","grew_faster"]);
+    const driverGrowth = yoyGrowth + randInt(3,10);
+    const secondaryGrowth = secondaryDirection === "declined" ? -randInt(2,8)
+      : secondaryDirection === "grew_slower" ? randInt(1, Math.max(1, driverGrowth-2))
+      : driverGrowth + randInt(2,8);
+    const secondaryClause = secondaryDirection === "declined"
+      ? `the ${secondary} division saw a decline in sales`
+      : `the ${secondary} division also grew, though at a different pace`;
+
+    const passageText = `${company} reported quarterly revenue of $${revenue}m, a ${yoyGrowth}% increase year-over-year, driven primarily by strong growth in its ${driver} division. However, operating margins ${marginDirection==="up"?"improved":"declined"} to ${marginAfter}% from ${marginBefore}% in the prior year, as the company ${marginDirection==="up"?"benefited from cost discipline":"increased investment in research and development"}. The CEO stated that despite ${marginDirection==="up"?"this progress":"short-term margin pressure"}, the company remains committed to long-term profitability targets. Analysts noted that while ${driver} revenue growth was robust, ${secondaryClause}.`;
+
+    let secondaryFasterExplanation;
+    if (secondaryDirection === "declined") secondaryFasterExplanation = `The ${secondary} division declined in sales while the ${driver} division grew — the opposite of what the statement claims.`;
+    else if (secondaryDirection === "grew_slower") secondaryFasterExplanation = `The ${secondary} division grew, but more slowly than the ${driver} division — so it did not grow faster.`;
+    else secondaryFasterExplanation = `In this case, the ${secondary} division actually grew faster than the ${driver} division, matching the statement.`;
+
+    const questions = [
+      { statement: `${company}'s operating margin increased year-over-year.`,
+        answer: marginDirection === "up" ? "True" : "False",
+        explanation: marginDirection === "up" ? `The passage states margins improved to ${marginAfter}% from ${marginBefore}%.` : `The passage states margins declined to ${marginAfter}% from ${marginBefore}%, the opposite of an increase.` },
+      { statement: `The ${driver} division was the primary driver of revenue growth.`,
+        answer: "True",
+        explanation: `The passage directly states growth was "driven primarily by strong growth in its ${driver} division."` },
+      { statement: `${company} plans to reduce R&D spending next year.`,
+        answer: "Cannot Say",
+        explanation: `The passage only discusses this period's margin drivers — it says nothing about future R&D plans.` },
+      { statement: `The ${secondary} division grew faster than the ${driver} division.`,
+        answer: secondaryGrowth > driverGrowth ? "True" : "False",
+        explanation: secondaryFasterExplanation },
+    ];
+    return { passageText, questions };
+  }
+
+  function genAcquisitionScenario() {
+    const sectors = ["manufacturing","logistics","specialty chemicals","industrial equipment","packaging"];
+    const sector = pick(sectors);
+    const total = randInt(15,60) * 10;
+    const equityPct = pick([25,30,35,40,45,55,60,65]);
+    const equity = Math.round(total * equityPct/100);
+    const debt = total - equity;
+    const approvalStatus = pick(["pending","received"]);
+    const managementStatus = pick(["remain","review"]);
+    const quarters = pick([1,2,3]);
+
+    const passageText = `A private equity firm completed the acquisition of a mid-sized ${sector} company for $${total}m, funded through a combination of $${equity}m in equity and the remainder in debt financing. The deal is expected to close within the next ${quarters} quarter${quarters>1?"s":""}, ${approvalStatus==="pending" ? "pending regulatory approval" : "having already received all necessary regulatory approvals"}. The firm's stated strategy involves consolidating the target's operations with an existing portfolio company to realize cost synergies. ${managementStatus==="remain" ? "Management of the target company will remain in place following the transaction" : "Management of the target company will be reviewed following the transaction"}, according to the firm's press release.`;
+
+    const questions = [
+      { statement: `The deal was funded with more debt than equity.`,
+        answer: debt > equity ? "True" : "False",
+        explanation: `Debt = ${total} − ${equity} = ${debt}m, versus ${equity}m of equity — ${debt>equity ? "debt is larger." : "equity is actually larger here."}` },
+      { statement: `The acquisition has already received regulatory approval.`,
+        answer: approvalStatus === "received" ? "True" : "False",
+        explanation: approvalStatus === "received" ? `The passage states approvals have already been received.` : `The passage says the deal is "pending regulatory approval" — it has not yet been received.` },
+      { statement: `The private equity firm plans to replace the target's management team.`,
+        answer: managementStatus === "remain" ? "False" : "Cannot Say",
+        explanation: managementStatus === "remain" ? `The passage explicitly states management "will remain in place."` : `The passage says management will be "reviewed" — this doesn't confirm they'll be replaced.` },
+      { statement: `The ${sector} company was founded more than 20 years ago.`,
+        answer: "Cannot Say",
+        explanation: `The passage gives no information about when the company was founded.` },
+    ];
+    return { passageText, questions };
+  }
+
+  function genIPOScenario() {
+    const duration = pick([1,2,3]);
+    const regionOptions = ["", "in the technology sector ", "in the biotech sector ", "in the consumer sector "];
+    const region = pick(regionOptions);
+    const passageText = `Despite a slowdown in IPO activity over the past ${duration} year${duration>1?"s":""}, several large ${region}companies have recently filed for public listings, signaling renewed investor confidence. Underwriters report strong early demand for these offerings, particularly from institutional investors seeking growth exposure. However, market volatility remains a concern, with some bankers cautioning that pricing could be challenging if broader equity markets weaken before the listings are completed. One senior banker noted that companies are keeping flexible timelines to allow for market conditions to improve if needed.`;
+
+    const claimedDuration = Math.random() < 0.6 ? duration : pick([1,2,3].filter(d => d !== duration));
+    const questions = [
+      { statement: `IPO activity has been declining for the past ${claimedDuration} year${claimedDuration>1?"s":""}.`,
+        answer: claimedDuration === duration ? "True" : "False",
+        explanation: claimedDuration === duration ? `The passage states a slowdown "over the past ${duration} year${duration>1?"s":""}," matching the statement.` : `The passage states the slowdown has lasted ${duration} year${duration>1?"s":""}, not ${claimedDuration}.` },
+      { statement: `All recent IPO filings have been oversubscribed.`,
+        answer: "Cannot Say",
+        explanation: `The passage mentions "strong early demand" generally, but never states all filings were oversubscribed.` },
+      { statement: `Bankers are certain that market volatility will not affect pricing.`,
+        answer: "False",
+        explanation: `Bankers are described as cautioning pricing "could be challenging" — the opposite of certainty it won't be affected.` },
+      { statement: `Companies filing for IPOs are prepared to delay their listings if needed.`,
+        answer: "True",
+        explanation: `The passage states companies "are keeping flexible timelines to allow for market conditions to improve if needed."` },
+    ];
+    return { passageText, questions };
+  }
+
+  function genRestructuringScenario() {
+    const savingsTarget = randInt(20,80) * 10;
+    const workforcePct = pick([2,3,4,5,6,8]);
+    const severancePct = pick([20,30,40,50,60,110,120]);
+    const severance = Math.round(savingsTarget * severancePct/100);
+    const protectedFns = pick([["technology","compliance"],["risk management","legal"],["technology","operations"]]);
+    const affectedDivision = pick(["trading","investment banking","sales","research"]);
+
+    const passageText = `A global investment bank announced a restructuring plan aimed at reducing annual costs by $${savingsTarget}m, primarily through headcount reductions in its ${affectedDivision} division. The bank stated that approximately ${workforcePct}% of its global workforce would be affected, with most reductions concentrated in underperforming regions. Severance costs related to the restructuring are expected to total $${severance}m, to be recognized over the next two quarters. The bank's CEO emphasized that the restructuring would not affect its ${protectedFns[0]} or ${protectedFns[1]} functions, which remain priority areas for continued investment.`;
+
+    const askAboutProtected = Math.random() < 0.5;
+    const targetFn = askAboutProtected ? pick(protectedFns) : affectedDivision;
+    const thresholdPct = pick([3,5,8,10]);
+
+    const questions = [
+      { statement: `The restructuring will primarily affect the bank's ${targetFn} function.`,
+        answer: askAboutProtected ? "False" : "True",
+        explanation: askAboutProtected
+          ? `The CEO explicitly said the restructuring "would not affect its ${protectedFns[0]} or ${protectedFns[1]} functions."`
+          : `The passage states reductions are primarily in the ${affectedDivision} division.` },
+      { statement: `Severance costs will exceed the total cost savings target.`,
+        answer: severance > savingsTarget ? "True" : "False",
+        explanation: `Severance is $${severance}m versus a $${savingsTarget}m savings target — ${severance>savingsTarget ? "severance is larger." : "severance is well below the target."}` },
+      { statement: `The restructuring affects less than ${thresholdPct}% of the bank's global workforce.`,
+        answer: workforcePct < thresholdPct ? "True" : "False",
+        explanation: `The passage states approximately ${workforcePct}% of the workforce is affected, which is ${workforcePct<thresholdPct ? "less" : "not less"} than ${thresholdPct}%.` },
+      { statement: `The bank plans to increase investment in ${pick(protectedFns)}.`,
+        answer: "Cannot Say",
+        explanation: `The passage says this function "remains a priority area for continued investment" — continued is not the same as increased.` },
+    ];
+    return { passageText, questions };
+  }
+
+  const PASSAGE_GENERATORS = [genEarningsScenario, genAcquisitionScenario, genIPOScenario, genRestructuringScenario];
+
+  function genTrueFalseCannotSay() {
+    const scenario = pick(PASSAGE_GENERATORS)();
+    const q = pick(scenario.questions);
+    return {
+      text: q.statement,
+      questionData: { type: "passage", text: scenario.passageText },
+      options: ["True","False","Cannot Say"],
+      answer: q.answer,
+      explanation: q.explanation,
+    };
+  }
+
+  const GENERATORS = {
+    true_false_cannot_say: [genTrueFalseCannotSay],
+  };
+
+  function generateQuestion(subskillKey) {
+    if (BANK_KEYS.includes(subskillKey)) return generateBankQuestion(subskillKey);
+    const gen = pick(GENERATORS[subskillKey]);
+    return { options: null, questionData: null, questionId: null, ...gen(), subskillKey };
+  }
+
+  // --- Rendering question_data (passages) ---
+  function renderQuestionData(qdata) {
+    const el = document.getElementById("drill-qdata");
+    if (!qdata) { el.innerHTML = ""; return; }
+
+    if (qdata.type === "table") {
+      const headerRow = qdata.headers.map(h => `<th>${h}</th>`).join("");
+      const bodyRows = qdata.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+      el.innerHTML = `<div class="qd-title">${qdata.title || ""}</div><table class="qd-table"><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+    } else if (qdata.type === "bar") {
+      const maxVal = Math.max(...qdata.values);
+      const bars = qdata.categories.map((cat, i) => {
+        const val = qdata.values[i];
+        const heightPct = Math.max(6, Math.round((val / maxVal) * 100));
+        return `<div class="qd-bar-col"><div class="qd-bar-val">${val}</div><div class="qd-bar" style="height:${heightPct}%;"></div><div class="qd-bar-label">${cat}</div></div>`;
+      }).join("");
+      el.innerHTML = `<div class="qd-title">${qdata.title || ""}</div><div class="qd-chart"><div class="qd-bar-row">${bars}</div></div>`;
+    } else if (qdata.type === "passage") {
+      el.innerHTML = `<div class="qd-passage">${qdata.text}</div>`;
+    } else {
+      el.innerHTML = "";
+    }
+  }
+
+  // =====================================================================
+  // Sub-skill stats (accuracy bars on the landing screen)
+  // =====================================================================
+  async function loadSubskillStats() {
+    const list = document.getElementById("subskill-list");
+    list.innerHTML = SUBSKILLS.map(s => `
+      <div class="subskill-row ${s.active ? "" : "locked"}">
+        <div class="subskill-top">
+          <span class="subskill-name">${s.name}</span>
+          <span class="subskill-meta" id="meta-${s.key}">${s.active ? "—" : ""}</span>
+          ${s.active ? "" : '<span class="soon-tag">Coming soon</span>'}
+        </div>
+        ${s.active ? `<div class="accuracy-track"><div class="accuracy-fill" id="fill-${s.key}" style="width:0%"></div></div>` : ""}
+      </div>
+    `).join("");
+
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return;
+      const { data, error } = await sb.from("oa_attempts").select("sub_skill, correct").eq("user_id", userId).eq("category", "verbal");
+      if (error) { console.warn(error.message); return; }
+
+      ACTIVE_KEYS.forEach(key => {
+        const rows = (data || []).filter(r => r.sub_skill === key);
+        const metaEl = document.getElementById("meta-" + key);
+        const fillEl = document.getElementById("fill-" + key);
+        if (rows.length === 0) { metaEl.textContent = "Not started"; return; }
+        const acc = Math.round((rows.filter(r => r.correct).length / rows.length) * 100);
+        metaEl.textContent = `${acc}% · ${rows.length} done`;
+        fillEl.style.width = acc + "%";
+      });
+    } catch (e) { console.warn(e); }
+  }
+
+  // =====================================================================
+  // Adaptive weighting — no-attempts sub-skills get top priority, then
+  // lower accuracy gets higher weight, with a floor so mastered sub-skills
+  // still occasionally show up.
+  // =====================================================================
+  async function pickWeightedSubskills(count) {
+    let weights = {};
+    ACTIVE_KEYS.forEach(k => weights[k] = 1);
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userId) {
+        const { data } = await sb.from("oa_attempts").select("sub_skill, correct").eq("user_id", userId).eq("category", "verbal");
+        ACTIVE_KEYS.forEach(key => {
+          const rows = (data || []).filter(r => r.sub_skill === key);
+          if (rows.length === 0) { weights[key] = 1.0; return; }
+          const acc = rows.filter(r => r.correct).length / rows.length;
+          weights[key] = Math.max(0.15, 1 - acc);
+        });
+      }
+    } catch (e) { console.warn(e); }
+
+    const totalWeight = Object.values(weights).reduce((a,b) => a+b, 0);
+    const picks = [];
+    for (let i = 0; i < count; i++) {
+      let r = Math.random() * totalWeight;
+      for (const key of ACTIVE_KEYS) {
+        r -= weights[key];
+        if (r <= 0) { picks.push(key); break; }
+      }
+      if (picks.length <= i) picks.push(ACTIVE_KEYS[ACTIVE_KEYS.length - 1]);
+    }
+    return picks;
+  }
+
+  // =====================================================================
+  // Drill flow
+  // =====================================================================
+  const DRILL_SIZE = 5;
+  const QUESTION_TIME = 90;
+  let drillQueue = [], drillIndex = 0, drillScore = 0, drillResults = [];
+  let currentQuestion = null, questionStartTime = 0, drillTimerInterval = null, drillTimeLeft = QUESTION_TIME, answered = false;
+
+  document.getElementById("start-drill-btn").addEventListener("click", startDrill);
+  document.getElementById("summary-again-btn").addEventListener("click", startDrill);
+  document.getElementById("summary-back-btn").addEventListener("click", () => showScreen("landing-screen"));
+
+  function showScreen(id) {
+    ["landing-screen", "drill-screen", "summary-screen"].forEach(s => {
+      document.getElementById(s).style.display = s === id ? "block" : "none";
+    });
+    if (id === "landing-screen") loadSubskillStats();
+  }
+
+  async function startDrill() {
+    usedBankIds.clear();
+    await loadBankCache();
+    drillQueue = await pickWeightedSubskills(DRILL_SIZE);
+    drillIndex = 0;
+    drillScore = 0;
+    drillResults = [];
+    showScreen("drill-screen");
+    showQuestion();
+  }
+
+  function showQuestion() {
+    answered = false;
+    document.getElementById("drill-progress").textContent = `Question ${drillIndex+1} of ${DRILL_SIZE}`;
+    currentQuestion = generateQuestion(drillQueue[drillIndex]);
+    const subName = SUBSKILLS.find(s => s.key === currentQuestion.subskillKey).name;
+    document.getElementById("drill-subskill-tag").textContent = subName;
+    document.getElementById("drill-question").textContent = currentQuestion.text;
+    renderQuestionData(currentQuestion.questionData);
+    document.getElementById("drill-feedback").style.display = "none";
+
+    const freetextRow = document.getElementById("drill-freetext-row");
+    const mcqGrid = document.getElementById("drill-mcq-grid");
+
+    if (currentQuestion.options && currentQuestion.options.length) {
+      freetextRow.style.display = "none";
+      mcqGrid.style.display = "grid";
+      mcqGrid.innerHTML = currentQuestion.options.map(opt =>
+        `<button type="button" class="mcq-btn" data-choice="${opt}">${opt}</button>`
+      ).join("");
+      mcqGrid.querySelectorAll(".mcq-btn").forEach(btn => {
+        btn.addEventListener("click", () => submitAnswer(false, btn.dataset.choice, btn));
+      });
+    } else {
+      mcqGrid.style.display = "none";
+      freetextRow.style.display = "flex";
+      document.getElementById("drill-answer-input").value = "";
+      document.getElementById("drill-answer-input").disabled = false;
+      document.getElementById("drill-submit-btn").disabled = false;
+      document.getElementById("drill-answer-input").focus();
+    }
+
+    questionStartTime = Date.now();
+    drillTimeLeft = QUESTION_TIME;
+    const deadline = Date.now() + QUESTION_TIME * 1000;
+    const timerEl = document.getElementById("drill-timer");
+    timerEl.textContent = String(QUESTION_TIME);
+    timerEl.classList.remove("low");
+
+    clearInterval(drillTimerInterval);
+    drillTimerInterval = setInterval(() => {
+      drillTimeLeft = Math.max(0, Math.round((deadline - Date.now())/1000));
+      timerEl.textContent = String(drillTimeLeft);
+      timerEl.classList.toggle("low", drillTimeLeft <= 15);
+      if (drillTimeLeft <= 0) { clearInterval(drillTimerInterval); submitAnswer(true); }
+    }, 250);
+  }
+
+  function isCorrectAnswer(given) {
+    if (currentQuestion.options) return given === currentQuestion.answer;
+    const val = parseFloat(given);
+    const target = parseFloat(currentQuestion.answer);
+    if (Number.isNaN(val) || Number.isNaN(target)) return false;
+    return Math.abs(val - target) < 0.01;
+  }
+
+  async function submitAnswer(timedOut, mcqChoice, mcqBtnEl) {
+    if (answered) return;
+    answered = true;
+    clearInterval(drillTimerInterval);
+
+    let given = null;
+    if (currentQuestion.options) {
+      document.querySelectorAll(".mcq-btn").forEach(b => b.disabled = true);
+      given = timedOut ? null : mcqChoice;
+      if (mcqBtnEl) mcqBtnEl.classList.add(isCorrectAnswer(given) ? "correct-flag" : "wrong-flag");
+      if (!isCorrectAnswer(given)) {
+        const correctBtn = [...document.querySelectorAll(".mcq-btn")].find(b => b.dataset.choice === currentQuestion.answer);
+        if (correctBtn) correctBtn.classList.add("correct-flag");
+      }
+    } else {
+      document.getElementById("drill-answer-input").disabled = true;
+      document.getElementById("drill-submit-btn").disabled = true;
+      given = document.getElementById("drill-answer-input").value.trim();
+    }
+
+    const correct = !timedOut && isCorrectAnswer(given);
+    const elapsed = Math.round((Date.now() - questionStartTime) / 1000);
+
+    if (correct) drillScore += 1;
+    drillResults.push({ subskillKey: currentQuestion.subskillKey, correct });
+
+    const fb = document.getElementById("drill-feedback");
+    fb.className = "drill-feedback " + (correct ? "correct" : "wrong");
+    fb.style.display = "block";
+    document.getElementById("drill-verdict").textContent = correct ? "Correct" : (timedOut ? "Time's up — correct answer:" : "Not quite — correct answer:");
+    document.getElementById("drill-explanation").textContent = correct
+      ? currentQuestion.explanation
+      : `${currentQuestion.answer}. ${currentQuestion.explanation}`;
+
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userId) {
+        await sb.from("oa_attempts").insert([{
+          user_id: userId, category: "verbal", sub_skill: currentQuestion.subskillKey,
+          question_id: currentQuestion.questionId, correct, time_taken_seconds: elapsed, mode: "drill"
+        }]);
+      }
+    } catch (e) { console.warn("Couldn't log attempt:", e); }
+  }
+
+  document.getElementById("drill-submit-btn").addEventListener("click", () => submitAnswer(false));
+  document.getElementById("drill-answer-input").addEventListener("keydown", (e) => { if (e.key === "Enter") submitAnswer(false); });
+
+  document.getElementById("drill-next-btn").addEventListener("click", () => {
+    drillIndex += 1;
+    if (drillIndex >= DRILL_SIZE) { showSummary(); return; }
+    showQuestion();
+  });
+
+  function showSummary() {
+    showScreen("summary-screen");
+    document.getElementById("summary-score").textContent = `${drillScore} / ${DRILL_SIZE}`;
+    const bySkill = {};
+    drillResults.forEach(r => {
+      bySkill[r.subskillKey] = bySkill[r.subskillKey] || { correct: 0, total: 0 };
+      bySkill[r.subskillKey].total += 1;
+      if (r.correct) bySkill[r.subskillKey].correct += 1;
+    });
+    const lines = Object.entries(bySkill).map(([key, v]) => {
+      const name = SUBSKILLS.find(s => s.key === key).name;
+      return `${name}: ${v.correct}/${v.total}`;
+    });
+    document.getElementById("summary-breakdown").textContent = lines.join(" · ");
+  }
+</script>
+</body>
+</html>
