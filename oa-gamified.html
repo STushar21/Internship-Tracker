@@ -92,6 +92,7 @@
   #cashout-btn { background: transparent; border: 1px solid var(--green); color: var(--green); }
   #pump-btn:disabled, #cashout-btn:disabled { opacity: 0.4; cursor: default; }
   .pop-msg { color: var(--red); font-weight: 700; margin-top: 10px; font-size: 13px; }
+  #balloon-replay-btn { display: none; margin: 12px auto 4px; background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; }
 
   /* --- Memory game --- */
   .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 220px; margin: 0 auto 18px; }
@@ -183,6 +184,7 @@
     <div id="balloon-svg-wrap"></div>
   </div>
   <div class="pop-msg" id="balloon-msg"></div>
+  <button type="button" id="balloon-replay-btn">Play Again</button>
 
   <div class="balloon-btns">
     <button type="button" id="pump-btn">Pump</button>
@@ -296,14 +298,29 @@
       document.getElementById("pump-btn").disabled = true;
       document.getElementById("cashout-btn").disabled = true;
       document.getElementById("balloon-msg").textContent = `Done — final total: ${total}. There's no "good" score here, this was just to show the format.`;
+      document.getElementById("balloon-replay-btn").style.display = "block";
       renderBalloon();
       return;
     }
     renderBalloon();
   }
 
+  function resetBalloonGame() {
+    balloonIndex = 0;
+    pumps = 0;
+    pending = 0;
+    total = 0;
+    balloonLocked = false;
+    document.getElementById("pump-btn").disabled = false;
+    document.getElementById("cashout-btn").disabled = false;
+    document.getElementById("balloon-msg").textContent = "";
+    document.getElementById("balloon-replay-btn").style.display = "none";
+    renderBalloon();
+  }
+
   document.getElementById("pump-btn").addEventListener("click", pumpBalloon);
   document.getElementById("cashout-btn").addEventListener("click", cashOut);
+  document.getElementById("balloon-replay-btn").addEventListener("click", resetBalloonGame);
   renderBalloon();
 
   // =====================================================================
@@ -333,22 +350,22 @@
     memPlayerIndex = 0;
     memoryStatus.textContent = `Round ${memRound} — watch closely...`;
     document.querySelectorAll(".memory-tile").forEach(t => t.classList.remove("correct", "wrong"));
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i > 0) {
-        const prevTile = memoryGrid.querySelector(`[data-i="${memSequence[i-1]}"]`);
-        prevTile.classList.remove("lit");
-      }
+    // Every step turns all tiles off, pauses, then lights — so a tile repeated
+    // back-to-back still shows as two separate flashes.
+    const OFF_MS = 150, ON_MS = 400;
+    function step(i) {
+      document.querySelectorAll(".memory-tile").forEach(t => t.classList.remove("lit"));
       if (i >= memSequence.length) {
-        clearInterval(interval);
         memAccepting = true;
         memoryStatus.textContent = "Your turn — repeat the sequence.";
         return;
       }
-      const tile = memoryGrid.querySelector(`[data-i="${memSequence[i]}"]`);
-      tile.classList.add("lit");
-      i++;
-    }, 550);
+      setTimeout(() => {
+        memoryGrid.querySelector(`[data-i="${memSequence[i]}"]`).classList.add("lit");
+        setTimeout(() => step(i + 1), ON_MS);
+      }, OFF_MS);
+    }
+    step(0);
   }
 
   function handleTileClick(i, tileEl) {
