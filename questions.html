@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -13,8 +13,8 @@
 <style>
   * { box-sizing: border-box; }
   body {
-    background: #F5F4EF;
-    color: #16233F;
+    background: #F2ECDF;
+    color: #1A1A18;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     max-width: min(960px, 94vw);
     margin: 40px auto;
@@ -30,21 +30,21 @@
     align-items: center;
     gap: 4px;
     width: fit-content;
-    background: #FFFFFF;
-    border: 1px solid #D8DADD;
+    background: #1D1D1B;
+    border: 1px solid #2E2E2A;
     border-radius: 10px;
     padding: 5px;
     margin: 0 auto 28px;
     box-shadow: 0 2px 12px rgba(15,23,42,0.08);
   }
   .top-nav .brand {
-    font-family: 'Source Serif 4', Georgia, serif;
+    font-family: 'EB Garamond', Georgia, serif;
     font-weight: 700;
     font-size: 14px;
-    color: #8C6A28;
+    color: #C9956A;
     padding: 8px 14px 8px 12px;
     margin-right: 4px;
-    border-right: 1px solid #D8DADD;
+    border-right: 1px solid rgba(255,255,255,0.15);
     text-decoration: none;
     letter-spacing: 0.03em;
   }
@@ -53,12 +53,13 @@
     border-radius: 7px;
     font-size: 13px;
     font-weight: 600;
-    color: #5B6472;
+    color: #FFFFFF;
     text-decoration: none;
   }
   .top-nav a.nav-link.active {
-    background: #B08D57;
-    color: #16233F;
+    background: rgba(201,149,106,0.15);
+    color: #C9956A;
+    border-bottom: 2px solid #C9956A;
   }
   .top-nav a.nav-link.soon {
     color: #8A8F99;
@@ -97,7 +98,7 @@
     text-decoration: none;
   }
   .nav-dropdown-menu a:hover { background: #F6F6F3; }
-  .nav-dropdown-menu a.active { color: #8C6A28; font-weight: 600; }
+  .nav-dropdown-menu a.active { color: #6F5439; font-weight: 600; }
 
   /* --- login gate --- */
   #login-gate {
@@ -105,7 +106,7 @@
     margin: 60px auto;
   }
   #login-gate h2 {
-    font-family: 'Source Serif 4', Georgia, serif;
+    font-family: 'EB Garamond', Georgia, serif;
     font-size: 22px;
     margin-bottom: 4px;
     text-align: center;
@@ -156,12 +157,12 @@
   }
   textarea { resize: vertical; min-height: 70px; }
   button {
-    background: #B08D57;
+    background: #8B6B49;
     border: none;
     border-radius: 6px;
     padding: 10px;
     font-weight: 600;
-    color: #16233F;
+    color: #FFFFFF;
     cursor: pointer;
     font-family: inherit;
   }
@@ -220,7 +221,7 @@
   .q-app-tag {
     font-size: 10.5px;
     font-weight: 700;
-    color: #8C6A28;
+    color: #6F5439;
     background: #F6EFDE;
     padding: 3px 10px;
     border-radius: 20px;
@@ -264,7 +265,7 @@
     background: #F9F8F4;
     border-radius: 8px;
     padding: 10px 12px;
-    border-left: 3px solid #B08D57;
+    border-left: 3px solid #8B6B49;
   }
   .q-final-answer {
     width: 100%;
@@ -321,7 +322,7 @@
 
 <div id="login-gate">
   <h2>Locked</h2>
-  <div class="sub">This page holds personal data. <a href="index.html" style="color:#8C6A28;">Sign in from the home page</a>, then come back.</div>
+  <div class="sub">This page holds personal data. <a href="index.html" style="color:#6F5439;">Sign in from the home page</a>, then come back.</div>
 </div>
 
 <div id="app-content" style="display:none;">
