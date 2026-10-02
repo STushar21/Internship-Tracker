@@ -109,6 +109,13 @@
   #drill-answer-input { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 12px 16px; font-size: 17px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; width: 160px; text-align: center; color: var(--ink); }
   #drill-answer-input:focus { outline: none; border-color: var(--gold-dim); }
   #drill-submit-btn { background: var(--gold); color: var(--bg); border: none; border-radius: 999px; padding: 12px 24px; font-weight: 700; cursor: pointer; font-size: 13.5px; }
+  #sign-toggle-btn {
+    background: transparent; border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 5px;
+    width: 46px; font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; cursor: pointer;
+  }
+  #sign-toggle-btn:hover { background: var(--gold-soft); }
+  #sign-toggle-btn.active { background: var(--gold); color: var(--bg); }
+  #sign-toggle-btn:disabled { cursor: default; }
 
   .drill-feedback { margin-top: 22px; padding: 16px 18px; border-radius: 7px; text-align: left; }
   .drill-feedback.correct { background: var(--green-soft); border: 1px solid var(--green); }
@@ -231,6 +238,7 @@
     <div id="drill-qdata"></div>
     <div class="drill-question" id="drill-question"></div>
     <div class="drill-answer-row" id="drill-freetext-row">
+      <button type="button" id="sign-toggle-btn" aria-label="Make answer negative" aria-pressed="false">±</button>
       <input type="text" id="drill-answer-input" inputmode="decimal" placeholder="Answer" autocomplete="off">
       <button type="button" id="drill-submit-btn">Submit</button>
     </div>
@@ -560,6 +568,22 @@
   let drillQueue = [], drillIndex = 0, drillScore = 0, drillResults = [];
   let currentQuestion = null, questionStartTime = 0, drillTimerInterval = null, drillTimeLeft = QUESTION_TIME, answered = false;
 
+  // Sign toggle — the decimal keypad has no minus key on iOS. It's shown on every
+  // free-text question and never looks at the answer, so it gives nothing away.
+  let answerIsNegative = false;
+  function renderSignToggle() {
+    const btn = document.getElementById("sign-toggle-btn");
+    btn.classList.toggle("active", answerIsNegative);
+    btn.textContent = answerIsNegative ? "−" : "±";
+    btn.setAttribute("aria-pressed", String(answerIsNegative));
+  }
+  document.getElementById("sign-toggle-btn").addEventListener("click", () => {
+    if (answered) return;
+    answerIsNegative = !answerIsNegative;
+    renderSignToggle();
+    document.getElementById("drill-answer-input").focus();
+  });
+
   document.getElementById("start-drill-btn").addEventListener("click", startDrill);
   document.getElementById("summary-again-btn").addEventListener("click", startDrill);
   document.getElementById("summary-back-btn").addEventListener("click", () => showScreen("landing-screen"));
@@ -582,6 +606,8 @@
 
   function showQuestion() {
     answered = false;
+    answerIsNegative = false;
+    renderSignToggle();
     document.getElementById("drill-progress").textContent = `Question ${drillIndex+1} of ${DRILL_SIZE}`;
     currentQuestion = generateQuestion(drillQueue[drillIndex]);
     const subName = SUBSKILLS.find(s => s.key === currentQuestion.subskillKey).name;
@@ -608,12 +634,10 @@
     } else {
       mcqGrid.style.display = "none";
       freetextRow.style.display = "flex";
-      // The decimal keypad has no minus key on iOS, so negative answers get the full keyboard.
-      const answerIsNegative = typeof currentQuestion.answer === "number" && currentQuestion.answer < 0;
-      document.getElementById("drill-answer-input").inputMode = answerIsNegative ? "text" : "decimal";
       document.getElementById("drill-answer-input").value = "";
       document.getElementById("drill-answer-input").disabled = false;
       document.getElementById("drill-submit-btn").disabled = false;
+      document.getElementById("sign-toggle-btn").disabled = false;
       document.getElementById("drill-answer-input").focus();
     }
 
@@ -668,7 +692,9 @@
     } else {
       document.getElementById("drill-answer-input").disabled = true;
       document.getElementById("drill-submit-btn").disabled = true;
-      given = document.getElementById("drill-answer-input").value.trim();
+      document.getElementById("sign-toggle-btn").disabled = true;
+      const raw = document.getElementById("drill-answer-input").value.trim();
+      given = answerIsNegative ? "-" + raw : raw;
     }
 
     const correct = !timedOut && isCorrectAnswer(given);
