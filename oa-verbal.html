@@ -353,20 +353,17 @@
     const marginChange = pick([1,2,3]);
     const marginAfter = marginDirection === "up" ? marginBefore + marginChange : marginBefore - marginChange;
     const secondaryDirection = pick(["declined","grew_slower","grew_faster"]);
-    const driverGrowth = yoyGrowth + randInt(3,10);
-    const secondaryGrowth = secondaryDirection === "declined" ? -randInt(2,8)
-      : secondaryDirection === "grew_slower" ? randInt(1, Math.max(1, driverGrowth-2))
-      : driverGrowth + randInt(2,8);
     const secondaryClause = secondaryDirection === "declined"
       ? `the ${secondary} division saw a decline in sales`
       : `the ${secondary} division also grew, though at a different pace`;
 
     const passageText = `${company} reported quarterly revenue of $${revenue}m, a ${yoyGrowth}% increase year-over-year, driven primarily by strong growth in its ${driver} division. However, operating margins ${marginDirection==="up"?"improved":"declined"} to ${marginAfter}% from ${marginBefore}% in the prior year, as the company ${marginDirection==="up"?"benefited from cost discipline":"increased investment in research and development"}. The CEO stated that despite ${marginDirection==="up"?"this progress":"short-term margin pressure"}, the company remains committed to long-term profitability targets. Analysts noted that while ${driver} revenue growth was robust, ${secondaryClause}.`;
 
-    let secondaryFasterExplanation;
-    if (secondaryDirection === "declined") secondaryFasterExplanation = `The ${secondary} division declined in sales while the ${driver} division grew — the opposite of what the statement claims.`;
-    else if (secondaryDirection === "grew_slower") secondaryFasterExplanation = `The ${secondary} division grew, but more slowly than the ${driver} division — so it did not grow faster.`;
-    else secondaryFasterExplanation = `In this case, the ${secondary} division actually grew faster than the ${driver} division, matching the statement.`;
+    // When the secondary division grew, the passage only says "at a different pace" —
+    // it never says faster or slower, so the comparison can't be determined.
+    const secondaryFasterExplanation = secondaryDirection === "declined"
+      ? `The ${secondary} division declined in sales while the ${driver} division grew — the opposite of what the statement claims.`
+      : `The passage says the ${secondary} division grew at a different pace, but never states whether it grew faster or slower than the ${driver} division — there's no way to determine this from the text alone.`;
 
     const questions = [
       { statement: `${company}'s operating margin increased year-over-year.`,
@@ -379,7 +376,7 @@
         answer: "Cannot Say",
         explanation: `The passage only discusses this period's margin drivers — it says nothing about future R&D plans.` },
       { statement: `The ${secondary} division grew faster than the ${driver} division.`,
-        answer: secondaryGrowth > driverGrowth ? "True" : "False",
+        answer: secondaryDirection === "declined" ? "False" : "Cannot Say",
         explanation: secondaryFasterExplanation },
     ];
     return { passageText, questions };
@@ -396,10 +393,10 @@
     const managementStatus = pick(["remain","review"]);
     const quarters = pick([1,2,3]);
 
-    const passageText = `A private equity firm completed the acquisition of a mid-sized ${sector} company for $${total}m, funded through a combination of $${equity}m in equity and the remainder in debt financing. The deal is expected to close within the next ${quarters} quarter${quarters>1?"s":""}, ${approvalStatus==="pending" ? "pending regulatory approval" : "having already received all necessary regulatory approvals"}. The firm's stated strategy involves consolidating the target's operations with an existing portfolio company to realize cost synergies. ${managementStatus==="remain" ? "Management of the target company will remain in place following the transaction" : "Management of the target company will be reviewed following the transaction"}, according to the firm's press release.`;
+    const passageText = `A private equity firm has agreed to acquire a mid-sized ${sector} company for $${total}m, to be funded through a combination of $${equity}m in equity and the remainder in debt financing. The deal is expected to close within the next ${quarters} quarter${quarters>1?"s":""}, ${approvalStatus==="pending" ? "pending regulatory approval" : "having already received all necessary regulatory approvals"}. The firm's stated strategy involves consolidating the target's operations with an existing portfolio company to realize cost synergies. ${managementStatus==="remain" ? "Management of the target company will remain in place following the transaction" : "Management of the target company will be reviewed following the transaction"}, according to the firm's press release.`;
 
     const questions = [
-      { statement: `The deal was funded with more debt than equity.`,
+      { statement: `The deal will be funded with more debt than equity.`,
         answer: debt > equity ? "True" : "False",
         explanation: `Debt = ${total} − ${equity} = ${debt}m, versus ${equity}m of equity — ${debt>equity ? "debt is larger." : "equity is actually larger here."}` },
       { statement: `The acquisition has already received regulatory approval.`,
@@ -451,7 +448,8 @@
 
     const askAboutProtected = Math.random() < 0.5;
     const targetFn = askAboutProtected ? pick(protectedFns) : affectedDivision;
-    const thresholdPct = pick([3,5,8,10]);
+    // At least 2 points away from workforcePct, so "approximately X%" vs "less than Y%" is never borderline.
+    const thresholdPct = pick([3,5,8,10].filter(t => Math.abs(t - workforcePct) >= 2));
 
     const questions = [
       { statement: `The restructuring will primarily affect the bank's ${targetFn} function.`,
@@ -560,15 +558,16 @@
   // lower accuracy gets higher weight, with a floor so mastered sub-skills
   // still occasionally show up.
   // =====================================================================
-  async function pickWeightedSubskills(count) {
+  async function pickWeightedSubskills(count, keys) {
+    if (keys.length === 0) return [];
     let weights = {};
-    ACTIVE_KEYS.forEach(k => weights[k] = 1);
+    keys.forEach(k => weights[k] = 1);
     try {
       const { data: userData } = await sb.auth.getUser();
       const userId = userData?.user?.id;
       if (userId) {
         const { data } = await sb.from("oa_attempts").select("sub_skill, correct").eq("user_id", userId).eq("category", "verbal");
-        ACTIVE_KEYS.forEach(key => {
+        keys.forEach(key => {
           const rows = (data || []).filter(r => r.sub_skill === key);
           if (rows.length === 0) { weights[key] = 1.0; return; }
           const acc = rows.filter(r => r.correct).length / rows.length;
@@ -581,11 +580,11 @@
     const picks = [];
     for (let i = 0; i < count; i++) {
       let r = Math.random() * totalWeight;
-      for (const key of ACTIVE_KEYS) {
+      for (const key of keys) {
         r -= weights[key];
         if (r <= 0) { picks.push(key); break; }
       }
-      if (picks.length <= i) picks.push(ACTIVE_KEYS[ACTIVE_KEYS.length - 1]);
+      if (picks.length <= i) picks.push(keys[keys.length - 1]);
     }
     return picks;
   }
@@ -612,7 +611,13 @@
   async function startDrill() {
     usedBankIds.clear();
     await loadBankCache();
-    drillQueue = await pickWeightedSubskills(DRILL_SIZE);
+    // Bank-sourced sub-skills are only drilled if their bank actually has questions.
+    const drillableKeys = ACTIVE_KEYS.filter(k => !BANK_KEYS.includes(k) || (bankCache[k] || []).length > 0);
+    if (drillableKeys.length === 0) {
+      document.querySelector(".drill-cta .txt p").textContent = "No questions are available to drill yet.";
+      return;
+    }
+    drillQueue = await pickWeightedSubskills(DRILL_SIZE, drillableKeys);
     drillIndex = 0;
     drillScore = 0;
     drillResults = [];
@@ -677,6 +682,8 @@
 
   async function submitAnswer(timedOut, mcqChoice, mcqBtnEl) {
     if (answered) return;
+    // An empty free-text answer does nothing (a timeout still submits).
+    if (!timedOut && !currentQuestion.options && document.getElementById("drill-answer-input").value.trim() === "") return;
     answered = true;
     clearInterval(drillTimerInterval);
 
