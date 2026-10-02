@@ -246,6 +246,8 @@
 
     list.querySelectorAll(".scenario-card").forEach(card => {
       card.addEventListener("click", () => {
+        // A click that ends a text-selection drag shouldn't open or close the card.
+        if (window.getSelection().toString().length > 0) return;
         const id = parseInt(card.dataset.id, 10);
         openId = openId === id ? null : id;
         renderList();
