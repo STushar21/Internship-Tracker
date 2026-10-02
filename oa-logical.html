@@ -608,6 +608,9 @@
     } else {
       mcqGrid.style.display = "none";
       freetextRow.style.display = "flex";
+      // The decimal keypad has no minus key on iOS, so negative answers get the full keyboard.
+      const answerIsNegative = typeof currentQuestion.answer === "number" && currentQuestion.answer < 0;
+      document.getElementById("drill-answer-input").inputMode = answerIsNegative ? "text" : "decimal";
       document.getElementById("drill-answer-input").value = "";
       document.getElementById("drill-answer-input").disabled = false;
       document.getElementById("drill-submit-btn").disabled = false;
