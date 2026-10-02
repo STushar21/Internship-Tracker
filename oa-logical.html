@@ -694,7 +694,7 @@
       document.getElementById("drill-submit-btn").disabled = true;
       document.getElementById("sign-toggle-btn").disabled = true;
       const raw = document.getElementById("drill-answer-input").value.trim();
-      given = answerIsNegative ? "-" + raw : raw;
+      given = answerIsNegative && !raw.startsWith("-") ? "-" + raw : raw;
     }
 
     const correct = !timedOut && isCorrectAnswer(given);
