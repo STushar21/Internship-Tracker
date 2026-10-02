@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600;1,8..60,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Reps — Situational Judgement</title>
+<style>
+  :root {
+    --bg: #F7F3EA; --surface: #FFFFFF; --surface-alt: #F1EBDC; --border: #E3DAC4;
+    --ink: #21283B; --ink-soft: #5B6472; --ink-faint: #948E7A;
+    --gold: #A8843F; --gold-dim: #8C6A28; --gold-soft: rgba(168,132,63,0.10);
+    --green: #2F6B4F; --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B; --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A; --steel-soft: rgba(79,107,138,0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(760px, 94vw); margin: 32px auto 60px; padding: 0 16px;
+  }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 24px; margin: 0 0 4px; }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--gold-dim);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+  }
+  .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-dim); display: inline-block; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 22px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; margin: 0 0 26px; width: fit-content;
+    box-shadow: 0 2px 14px rgba(33,40,59,0.05);
+  }
+  .top-nav .brand {
+    font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13px; color: var(--gold);
+    padding: 8px 14px; text-decoration: none; letter-spacing: 0.14em; text-transform: uppercase;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 15px; border-radius: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+  .top-nav a.nav-link.active { background: var(--gold-soft); color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(33,40,59,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+  .back-link { display: inline-block; margin-bottom: 14px; font-size: 12px; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--gold-dim); }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; margin-bottom: 6px; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+  .filter-chip {
+    background: var(--surface); border: 1px solid var(--border); color: var(--ink-soft);
+    font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 20px; cursor: pointer;
+  }
+  .filter-chip.active { background: var(--gold-soft); color: var(--gold); border-color: var(--gold-dim); }
+
+  .scenario-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px 20px; margin-bottom: 12px; box-shadow: 0 1px 8px rgba(33,40,59,0.04); cursor: pointer;
+  }
+  .scenario-tag {
+    font-size: 10px; font-weight: 700; color: var(--gold); background: var(--gold-soft);
+    padding: 3px 9px; border-radius: 20px; display: inline-block; letter-spacing: 0.04em;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .scenario-text { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+  .scenario-text.preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--ink-soft); }
+  .expand-hint { font-size: 11px; color: var(--ink-faint); margin-top: 10px; }
+
+  .options-list { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .option-row { border: 1px solid var(--border); border-radius: 7px; padding: 14px 16px; background: var(--bg); }
+  .option-row.rank-0 { border-color: var(--green); background: var(--green-soft); }
+  .option-row.rank-3 { border-color: var(--red); background: var(--red-soft); }
+  .option-rank-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .option-row.rank-0 .option-rank-label { color: var(--green); }
+  .option-row.rank-3 .option-rank-label { color: var(--red); }
+  .option-row.rank-1 .option-rank-label, .option-row.rank-2 .option-rank-label { color: var(--ink-faint); }
+  .option-text { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .option-reasoning { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+
+  /* --- mobile --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .scenario-card { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="games.html" class="nav-link">Games</a>
+  <a href="oa-prep.html" class="nav-link active">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to browse scenarios.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<a href="oa-prep.html" class="back-link">&larr; OA Prep</a>
+
+<div class="kicker">Situational Judgement</div>
+<h1>Scenario + best-practice reasoning</h1>
+<div class="sub">Not a drill — SJT is about knowing how firms want you to respond, not a skill to practice by repetition. Read the scenario, then see how each response ranks and why.</div>
+
+<div class="filter-row" id="filter-row"></div>
+<div id="scenario-list"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session) loadScenarios();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  document.querySelectorAll('.nav-caret').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+    });
+  });
+
+  const RANK_LABELS = ["Best approach", "Reasonable, but not ideal", "Weaker approach", "Avoid this response"];
+  let allScenarios = [];
+  let activeFilter = "All";
+  let openId = null;
+
+  async function loadScenarios() {
+    const { data, error } = await sb.from("oa_sjt_scenarios").select("*").order("id");
+    if (error) {
+      document.getElementById("scenario-list").innerHTML = `<div class="sub">Couldn't load scenarios: ${error.message}</div>`;
+      return;
+    }
+    allScenarios = data || [];
+    renderFilters();
+    renderList();
+  }
+
+  function renderFilters() {
+    const competencies = ["All", ...new Set(allScenarios.map(s => s.competency))];
+    const row = document.getElementById("filter-row");
+    row.innerHTML = competencies.map(c =>
+      `<button type="button" class="filter-chip ${c === activeFilter ? "active" : ""}" data-c="${c}">${c}</button>`
+    ).join("");
+    row.querySelectorAll(".filter-chip").forEach(btn => {
+      btn.addEventListener("click", () => { activeFilter = btn.dataset.c; openId = null; renderFilters(); renderList(); });
+    });
+  }
+
+  function renderList() {
+    const list = document.getElementById("scenario-list");
+    const filtered = activeFilter === "All" ? allScenarios : allScenarios.filter(s => s.competency === activeFilter);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="sub">No scenarios available yet.</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(s => {
+      const isOpen = s.id === openId;
+      const optionsHtml = isOpen ? `<div class="options-list">${
+        s.options.map((opt, i) => `
+          <div class="option-row rank-${i}">
+            <div class="option-rank-label">${RANK_LABELS[i] || ""}</div>
+            <div class="option-text">${opt.text}</div>
+            <div class="option-reasoning">${opt.reasoning}</div>
+          </div>
+        `).join("")
+      }</div>` : "";
+
+      return `
+        <div class="scenario-card" data-id="${s.id}">
+          <span class="scenario-tag">${s.competency}</span>
+          <div class="scenario-text ${isOpen ? "" : "preview"}">${s.scenario_text}</div>
+          ${isOpen ? optionsHtml : `<div class="expand-hint">Click to see how the responses rank →</div>`}
+        </div>`;
+    }).join("");
+
+    list.querySelectorAll(".scenario-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const id = parseInt(card.dataset.id, 10);
+        openId = openId === id ? null : id;
+        renderList();
+      });
+    });
+  }
+</script>
+</body>
+</html>
