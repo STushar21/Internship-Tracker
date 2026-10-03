@@ -90,6 +90,7 @@
     .top-nav::-webkit-scrollbar { display: none; }
     .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
     input, select, textarea { font-size: 16px; }
+    #habit_name { min-width: 0; }
     .day-cell { width: 12px; height: 12px; }
     .habit-top { flex-wrap: wrap; gap: 8px; }
   }
@@ -135,6 +136,7 @@
 </form>
 
 <div id="list"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -155,14 +157,24 @@
     return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
   }
 
-  async function loadData() {
-    const { data: habits, error: hErr } = await sb.from("habits").select("*").eq("archived", false).order("created_at", { ascending: true });
-    if (hErr) { console.error(hErr); return; }
-    allHabits = habits || [];
+  function showLoadError(err) {
+    console.error(err);
+    document.getElementById("list").innerHTML = '<div class="empty">Couldn\'t load your habits — check the console (F12) for details.</div>';
+  }
 
-    const { data: completions, error: cErr } = await sb.from("habit_completions").select("habit_id, completed_date");
-    if (cErr) { console.error(cErr); return; }
-    allCompletions = completions || [];
+  async function loadData() {
+    try {
+      const { data: habits, error: hErr } = await sb.from("habits").select("*").eq("archived", false).order("created_at", { ascending: true });
+      if (hErr) { showLoadError(hErr); return; }
+      allHabits = habits || [];
+
+      const { data: completions, error: cErr } = await sb.from("habit_completions").select("habit_id, completed_date");
+      if (cErr) { showLoadError(cErr); return; }
+      allCompletions = completions || [];
+    } catch (err) {
+      // e.g. the network request itself failing, rather than Supabase returning an error
+      showLoadError(err); return;
+    }
 
     render();
   }
@@ -243,7 +255,7 @@
 
     const archiveBtn = e.target.closest("[data-archive]");
     if (archiveBtn) {
-      if (!confirm("Archive this habit? You can still see its history, it just won't show in your daily list.")) return;
+      if (!confirm("Archive this habit? It'll disappear from this list, and there's currently no way to view archived habits — this can effectively hide it for good.")) return;
       const { error } = await sb.from("habits").update({ archived: true }).eq("id", archiveBtn.dataset.archive);
       if (error) { console.error(error); return; }
       loadData();
