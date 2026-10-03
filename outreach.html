@@ -21,7 +21,7 @@
     padding: 0 16px;
   }
   h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 28px; margin-bottom: 4px; }
-  .sub { color: #5B6472; font-size: 13px; margin-bottom: 24px; }
+  .sub { color: #5A5650; font-size: 13px; margin-bottom: 24px; }
   .top-nav {
     position: sticky;
     top: 16px;
@@ -111,7 +111,7 @@
     padding: 7px 14px;
     border-radius: 20px;
     text-decoration: none;
-    color: #5B6472;
+    color: #5A5650;
     background: #FFFFFF;
     border: 1px solid #D8DADD;
   }
@@ -140,7 +140,7 @@
     border: 1px solid #D8DADD;
     border-radius: 6px;
     padding: 8px 10px;
-    color: #16233F;
+    color: #1A1A18;
     font-size: 14px;
     font-family: inherit;
     width: 100%;
@@ -148,7 +148,7 @@
   textarea { resize: vertical; min-height: 60px; }
   label.field-label {
     font-size: 11px;
-    color: #5B6472;
+    color: #5A5650;
     margin-bottom: 3px;
     display: block;
   }
@@ -179,13 +179,13 @@
   .tab {
     background: none;
     border: none;
-    color: #5B6472;
+    color: #5A5650;
     font-size: 13px;
     padding: 6px 12px;
     border-radius: 6px;
     font-weight: 400;
   }
-  .tab.active { background: #EFEEE9; color: #16233F; }
+  .tab.active { background: #EFEEE9; color: #1A1A18; }
   .status { font-size: 12px; color: #8A8F99; margin-left: auto; }
 
   /* --- rows --- */
@@ -204,7 +204,7 @@
     cursor: pointer;
   }
   .row .company { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
-  .row .role { font-size: 12.5px; color: #5B6472; margin-top: 1px; overflow-wrap: anywhere; }
+  .row .role { font-size: 12.5px; color: #5A5650; margin-top: 1px; overflow-wrap: anywhere; }
   .tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
   .tag {
     font-size: 10.5px;
@@ -214,7 +214,7 @@
     border-radius: 20px;
   }
   .tag.overdue { color: #A8572A; background: #FBEEE6; }
-  .deadline { font-size: 12px; color: #5B6472; text-align: right; white-space: nowrap; }
+  .deadline { font-size: 12px; color: #5A5650; text-align: right; white-space: nowrap; }
 
   /* --- stage track --- */
   .stage-track { display: flex; align-items: center; padding: 0 16px 14px; }
@@ -248,13 +248,13 @@
   }
   .row-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
   .action-link {
-    background: none; border: none; color: #5B6472;
+    background: none; border: none; color: #5A5650;
     font-size: 12.5px; padding: 0; cursor: pointer;
   }
   .empty {
     padding: 48px 20px; text-align: center;
     border: 1px dashed #D8DADD; border-radius: 10px;
-    color: #5B6472; font-size: 13px;
+    color: #5A5650; font-size: 13px;
   }
 
   /* --- login gate --- */
@@ -283,7 +283,7 @@
   #logout-btn {
     background: none;
     border: 1px solid #D8DADD;
-    color: #5B6472;
+    color: #5A5650;
     font-size: 12px;
     font-weight: 600;
     padding: 6px 14px;
@@ -399,7 +399,7 @@
   </div>
 
   <button type="submit" id="submit-btn">Add contact</button>
-  <button type="button" id="cancel-edit-btn" style="display:none; background:#D8DADD; color:#16233F;">Cancel edit</button>
+  <button type="button" id="cancel-edit-btn" style="display:none; background:#D8DADD; color:#1A1A18;">Cancel edit</button>
 </form>
 
 <div class="filters">
@@ -545,7 +545,7 @@
     } else {
       const badge = document.createElement("div");
       const positive = c.closed === "referral";
-      badge.style.cssText = `padding:0 16px 14px; font-size:11px; color:${positive ? "#1F7A4C" : "#5B6472"};`;
+      badge.style.cssText = `padding:0 16px 14px; font-size:11px; color:${positive ? "#1F7A4C" : "#5A5650"};`;
       badge.textContent = CLOSED_LABELS[c.closed] || c.closed;
       row.appendChild(badge);
     }
