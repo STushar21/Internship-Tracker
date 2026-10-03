@@ -221,15 +221,22 @@
     }).join("");
   }
 
+  function showActionError(what, err) {
+    console.error(err);
+    alert(`Couldn't ${what} — check the console (F12) for details.`);
+  }
+
   document.getElementById("add-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = document.getElementById("habit_name");
     const name = input.value.trim();
     if (!name) return;
-    const { data: userData } = await sb.auth.getUser();
-    const userId = userData?.user?.id;
-    const { error } = await sb.from("habits").insert([{ user_id: userId, name }]);
-    if (error) { console.error(error); return; }
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const userId = userData?.user?.id;
+      const { error } = await sb.from("habits").insert([{ user_id: userId, name }]);
+      if (error) { showActionError("add that habit", error); return; }
+    } catch (err) { showActionError("add that habit", err); return; }
     input.value = "";
     loadData();
   });
@@ -240,15 +247,17 @@
       const habitId = toggleBtn.dataset.toggle;
       const today = todayStr();
       const alreadyDone = allCompletions.some(c => String(c.habit_id) === habitId && c.completed_date === today);
-      if (alreadyDone) {
-        const { error } = await sb.from("habit_completions").delete().eq("habit_id", habitId).eq("completed_date", today);
-        if (error) { console.error(error); return; }
-      } else {
-        const { data: userData } = await sb.auth.getUser();
-        const userId = userData?.user?.id;
-        const { error } = await sb.from("habit_completions").insert([{ user_id: userId, habit_id: habitId, completed_date: today }]);
-        if (error) { console.error(error); return; }
-      }
+      try {
+        if (alreadyDone) {
+          const { error } = await sb.from("habit_completions").delete().eq("habit_id", habitId).eq("completed_date", today);
+          if (error) { showActionError("update today's check-off", error); return; }
+        } else {
+          const { data: userData } = await sb.auth.getUser();
+          const userId = userData?.user?.id;
+          const { error } = await sb.from("habit_completions").insert([{ user_id: userId, habit_id: habitId, completed_date: today }]);
+          if (error) { showActionError("update today's check-off", error); return; }
+        }
+      } catch (err) { showActionError("update today's check-off", err); return; }
       loadData();
       return;
     }
@@ -256,8 +265,10 @@
     const archiveBtn = e.target.closest("[data-archive]");
     if (archiveBtn) {
       if (!confirm("Archive this habit? It'll disappear from this list, and there's currently no way to view archived habits — this can effectively hide it for good.")) return;
-      const { error } = await sb.from("habits").update({ archived: true }).eq("id", archiveBtn.dataset.archive);
-      if (error) { console.error(error); return; }
+      try {
+        const { error } = await sb.from("habits").update({ archived: true }).eq("id", archiveBtn.dataset.archive);
+        if (error) { showActionError("archive that habit", error); return; }
+      } catch (err) { showActionError("archive that habit", err); return; }
       loadData();
     }
   });
