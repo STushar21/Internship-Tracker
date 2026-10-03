@@ -245,6 +245,23 @@
     border-radius: 6px;
     cursor: pointer;
   }
+
+  /* --- mobile (phone-width) nav: copied verbatim from tracker.html --- */
+  @media (max-width: 640px) {
+    /* The nav bar has ~7 items — too many to fit a phone's width without
+       shrinking text to the point of being unreadable. Scrolling
+       horizontally keeps every item tappable at a normal size, same idea
+       as a native app's tab bar overflowing sideways. */
+    .top-nav {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand { flex-shrink: 0; }
+    .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+  }
 </style>
 </head>
 <body>
