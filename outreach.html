@@ -312,6 +312,14 @@
     .field-row { flex-direction: column; gap: 10px; }
     .row-top { flex-wrap: wrap; gap: 6px; }
     .deadline { text-align: left; }
+
+    input, select, textarea { font-size: 16px; } /* 16px stops iOS Safari auto-zooming in on focus */
+
+    /* Let stacked/side-by-side fields shrink to their column, and stop native date
+       inputs (whose internal controls carry their own minimum width on iOS Safari)
+       from pushing past it. */
+    .field-row > * { min-width: 0; }
+    input[type="date"] { min-width: 0; max-width: 100%; }
   }
 </style>
 </head>

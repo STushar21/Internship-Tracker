@@ -422,6 +422,12 @@
     .status-text, .status { width: 100%; margin-left: 0; order: 10; }
 
     .stage-label { font-size: 10px; }
+
+    /* Let stacked/side-by-side fields shrink to their column, and stop native date
+       inputs (whose internal controls carry their own minimum width on iOS Safari)
+       from pushing past it. */
+    .field-row > * { min-width: 0; }
+    input[type="date"] { min-width: 0; max-width: 100%; }
   }
 </style>
 </head>
