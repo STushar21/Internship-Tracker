@@ -188,7 +188,7 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 100;
+    z-index: 101;
   }
   #auth-signed-out {
     display: flex;
@@ -320,8 +320,8 @@
     font-size: 13px;
   }
   .dash-item:first-of-type { border-top: none; }
-  .dash-item-name { color: #16233F; font-weight: 500; }
-  .dash-item-sub { color: #5B6472; font-size: 11.5px; }
+  .dash-item-name { color: #16233F; font-weight: 500; overflow-wrap: anywhere; }
+  .dash-item-sub { color: #5B6472; font-size: 11.5px; overflow-wrap: anywhere; }
   .dash-item-status {
     font-size: 11px;
     font-weight: 600;
@@ -378,6 +378,7 @@
       right: auto;
       left: 50%;
       transform: translateX(-50%);
+      z-index: 150;
     }
 
     .card-grid { grid-template-columns: 1fr; }

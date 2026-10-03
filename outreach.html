@@ -203,8 +203,8 @@
     padding: 14px 16px 10px;
     cursor: pointer;
   }
-  .row .company { font-weight: 600; font-size: 15px; }
-  .row .role { font-size: 12.5px; color: #5B6472; margin-top: 1px; }
+  .row .company { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+  .row .role { font-size: 12.5px; color: #5B6472; margin-top: 1px; overflow-wrap: anywhere; }
   .tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
   .tag {
     font-size: 10.5px;
@@ -308,6 +308,10 @@
     .top-nav::-webkit-scrollbar { display: none; }
     .top-nav .brand { flex-shrink: 0; }
     .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+
+    .field-row { flex-direction: column; gap: 10px; }
+    .row-top { flex-wrap: wrap; gap: 6px; }
+    .deadline { text-align: left; }
   }
 </style>
 </head>
