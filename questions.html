@@ -469,6 +469,13 @@
     }
   });
 
+  // User-entered text goes into innerHTML on this page, so every interpolated
+  // value is escaped first. Missing values (null/undefined) render as nothing.
+  function esc(v) {
+    if (v === null || v === undefined) return "";
+    return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
   async function loadApplications() {
     const { data, error } = await sb
       .from("applications")
@@ -477,14 +484,18 @@
     if (error) { console.error(error); return; }
     allApplications = data;
 
-    const options = data.map(a => `<option value="${a.id}">${a.company} — ${a.role}</option>`).join("");
+    const options = data.map(a => `<option value="${esc(a.id)}">${esc(appText(a))}</option>`).join("");
     appSelect.innerHTML = '<option value="">— Select an application —</option>' + options;
     appFilter.innerHTML = '<option value="">All applications</option>' + options;
   }
 
   function appLabel(applicationId) {
     const app = allApplications.find(a => String(a.id) === String(applicationId));
-    return app ? `${app.company} — ${app.role}` : "Unknown application";
+    return app ? appText(app) : "Unknown application";
+  }
+  // "Company — Role", leaving out whichever part is missing rather than showing "null".
+  function appText(a) {
+    return [a.company, a.role].filter(Boolean).join(" — ");
   }
 
   async function loadQuestions() {
@@ -538,22 +549,22 @@
       <div class="q-card-head">
         <div class="q-card-head-left">
           <div class="q-card-meta">
-            <span class="q-app-tag">${appLabel(q.application_id)}</span>
-            <span class="q-date">${formatDate(q.created_at)}</span>
+            <span class="q-app-tag">${esc(appLabel(q.application_id))}</span>
+            <span class="q-date">${esc(formatDate(q.created_at))}</span>
           </div>
-          <div class="q-question">${q.question_text}</div>
+          <div class="q-question">${esc(q.question_text)}</div>
         </div>
         <span class="q-chevron">&#9662;</span>
       </div>
       <div class="q-card-body">
         <div class="q-section-label">Model answer</div>
-        <div class="q-model-answer">${q.model_answer || "—"}</div>
+        <div class="q-model-answer">${esc(q.model_answer || "—")}</div>
         <div class="q-section-label">Your final answer (optional — paste what you actually submitted)</div>
-        <textarea class="q-final-answer" data-question-id="${q.id}" placeholder="Paste your final wording here once you've submitted it, for your own records">${q.final_answer || ""}</textarea>
+        <textarea class="q-final-answer" data-question-id="${esc(q.id)}" placeholder="Paste your final wording here once you've submitted it, for your own records">${esc(q.final_answer || "")}</textarea>
         <div class="q-actions">
-          <button type="button" data-save-final="${q.id}">Save final answer</button>
-          <button type="button" data-delete-question="${q.id}" style="color:#8A3A2E;">Delete</button>
-          <span class="save-hint" id="save-hint-${q.id}"></span>
+          <button type="button" data-save-final="${esc(q.id)}">Save final answer</button>
+          <button type="button" data-delete-question="${esc(q.id)}" style="color:#8A3A2E;">Delete</button>
+          <span class="save-hint" id="save-hint-${esc(q.id)}"></span>
         </div>
       </div>
     `;
