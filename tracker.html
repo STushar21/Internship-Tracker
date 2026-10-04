@@ -656,6 +656,26 @@
   let currentTab = "active";
   let editingId = null; // tracks whether the form is adding a new entry or editing an existing one
 
+  // User-entered text goes into innerHTML on this page, so every interpolated
+  // value is escaped first. Missing values (null/undefined) render as nothing.
+  function esc(v) {
+    if (v === null || v === undefined) return "";
+    return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  // Only http:// and https:// links are rendered as links; anything else
+  // (javascript:, data:, a typo) is shown as plain escaped text instead.
+  function safeUrl(v) {
+    if (typeof v !== "string") return null;
+    const t = v.trim();
+    return /^https?:\/\//i.test(t) ? t : null;
+  }
+  function linkOrText(url, label) {
+    const ok = safeUrl(url);
+    return ok
+      ? `<a class="action-link" href="${esc(ok)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+      : `<span style="font-size:12px;color:#5A5650;overflow-wrap:anywhere;align-self:center;">${esc(url)}</span>`;
+  }
+
   // Loads contacts from the outreach tracker so applications can be linked to
   // whichever contact led to them.
   async function loadContactsForDropdown() {
@@ -673,14 +693,19 @@
     const select = document.getElementById("source_contact_id");
     const current = select.value;
     select.innerHTML = '<option value="">— None / found independently —</option>' +
-      data.map(c => `<option value="${c.id}">${c.name} (${c.firm})</option>`).join("");
+      data.map(c => `<option value="${esc(c.id)}">${esc(contactText(c))}</option>`).join("");
     select.value = current;
   }
 
   // Looks up a contact's display name by id, for showing on application rows
   function contactLabel(id) {
     const c = allContacts.find(c => String(c.id) === String(id));
-    return c ? `${c.name} (${c.firm})` : null;
+    return c ? contactText(c) : null;
+  }
+  // "Name (Firm)", leaving out whichever part is missing rather than showing "null".
+  function contactText(c) {
+    const name = c.name || "";
+    return c.firm ? (name ? `${name} (${c.firm})` : c.firm) : name;
   }
 
   async function loadApps() {
@@ -711,10 +736,10 @@
     const currentProgramme = programmeFilter.value;
 
     sectorFilter.innerHTML = '<option value="">All sectors</option>' +
-      sectors.map(s => `<option ${s === currentSector ? "selected" : ""}>${s}</option>`).join("");
+      sectors.map(s => `<option ${s === currentSector ? "selected" : ""}>${esc(s)}</option>`).join("");
 
     programmeFilter.innerHTML = '<option value="">All programme types</option>' +
-      programmes.map(p => `<option ${p === currentProgramme ? "selected" : ""}>${p}</option>`).join("");
+      programmes.map(p => `<option ${p === currentProgramme ? "selected" : ""}>${esc(p)}</option>`).join("");
   }
 
   function renderList() {
@@ -746,16 +771,16 @@
     const sourceLabel = app.source_contact_id ? contactLabel(app.source_contact_id) : null;
     const tagsHtml = [app.sector, app.programme_type]
       .filter(Boolean)
-      .map(t => `<span class="tag">${t}</span>`)
-      .join("") + (sourceLabel ? `<span class="tag" style="color:#1F7A4C;background:#E4F3EA;">via ${sourceLabel}</span>` : "");
+      .map(t => `<span class="tag">${esc(t)}</span>`)
+      .join("") + (sourceLabel ? `<span class="tag" style="color:#1F7A4C;background:#E4F3EA;">via ${esc(sourceLabel)}</span>` : "");
 
     top.innerHTML = `
       <div>
-        <div class="company">${app.company}</div>
-        <div class="role">${app.role}</div>
+        <div class="company">${esc(app.company)}</div>
+        <div class="role">${esc(app.role)}</div>
         ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ""}
       </div>
-      <div class="deadline">${app.deadline ? "Closes " + app.deadline : "No deadline"}</div>
+      <div class="deadline">${app.deadline ? "Closes " + esc(app.deadline) : "No deadline"}</div>
     `;
     top.addEventListener("click", () => {
       const exp = row.querySelector(".row-expanded");
@@ -772,28 +797,28 @@
     expanded.style.display = "none";
     expanded.innerHTML = `
       <div class="grid">
-        <div><span>Applied date</span>${app.applied_date || "—"}</div>
-        <div><span>Closing date</span>${app.deadline || "—"}</div>
-        <div><span>Sourced via</span>${sourceLabel || "Found independently"}</div>
+        <div><span>Applied date</span>${esc(app.applied_date || "—")}</div>
+        <div><span>Closing date</span>${esc(app.deadline || "—")}</div>
+        <div><span>Sourced via</span>${esc(sourceLabel || "Found independently")}</div>
       </div>
-      ${app.description ? `<div class="desc">${app.description}</div>` : ""}
-      ${app.notes ? `<div class="desc" style="color:#5A5650">${app.notes}</div>` : ""}
+      ${app.description ? `<div class="desc">${esc(app.description)}</div>` : ""}
+      ${app.notes ? `<div class="desc" style="color:#5A5650">${esc(app.notes)}</div>` : ""}
       <div class="row-actions">
-        ${app.link ? `<a class="action-link" href="${app.link}" target="_blank" rel="noopener">Open listing</a>` : ""}
-        ${app.cv_url ? `<button type="button" class="action-link" data-view-doc="${app.cv_url}">View CV</button>` : ""}
-        ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${app.cover_letter_url}">View cover letter</button>` : ""}
+        ${app.link ? linkOrText(app.link, "Open listing") : ""}
+        ${app.cv_url ? `<button type="button" class="action-link" data-view-doc="${esc(app.cv_url)}">View CV</button>` : ""}
+        ${app.cover_letter_url ? `<button type="button" class="action-link" data-view-doc="${esc(app.cover_letter_url)}">View cover letter</button>` : ""}
         ${app.cv_tailoring_result
-          ? `<button type="button" class="action-link" style="color:#6F5439" data-show-tailor="${app.id}" data-tailor-kind="cv">View tailored CV advice</button>`
-          : (app.description ? `<button type="button" class="action-link" style="color:#6F5439" data-tailor-cv="${app.id}" data-tailor-kind="cv">Tailor CV ✨</button>` : "")}
+          ? `<button type="button" class="action-link" style="color:#6F5439" data-show-tailor="${esc(app.id)}" data-tailor-kind="cv">View tailored CV advice</button>`
+          : (app.description ? `<button type="button" class="action-link" style="color:#6F5439" data-tailor-cv="${esc(app.id)}" data-tailor-kind="cv">Tailor CV ✨</button>` : "")}
         ${app.cover_letter_tailoring_result
-          ? `<button type="button" class="action-link" style="color:#6F5439" data-show-tailor="${app.id}" data-tailor-kind="coverLetter">View tailored cover letter advice</button>`
-          : (app.description ? `<button type="button" class="action-link" style="color:#6F5439" data-tailor-cv="${app.id}" data-tailor-kind="coverLetter">Tailor cover letter ✨</button>` : "")}
-        <button class="action-link" data-edit="${app.id}">Edit</button>
+          ? `<button type="button" class="action-link" style="color:#6F5439" data-show-tailor="${esc(app.id)}" data-tailor-kind="coverLetter">View tailored cover letter advice</button>`
+          : (app.description ? `<button type="button" class="action-link" style="color:#6F5439" data-tailor-cv="${esc(app.id)}" data-tailor-kind="coverLetter">Tailor cover letter ✨</button>` : "")}
+        <button class="action-link" data-edit="${esc(app.id)}">Edit</button>
         ${!app.closed
-          ? `<button class="action-link" style="color:#1F7A4C" data-offer="${app.id}">Mark offer</button>
-             <button class="action-link" style="color:#B14432" data-reject="${app.id}">Mark rejected</button>`
-          : `<button class="action-link" data-reopen="${app.id}">Reopen</button>`}
-        <button class="action-link" style="color:#8A3A2E;margin-left:auto" data-delete="${app.id}">Delete</button>
+          ? `<button class="action-link" style="color:#1F7A4C" data-offer="${esc(app.id)}">Mark offer</button>
+             <button class="action-link" style="color:#B14432" data-reject="${esc(app.id)}">Mark rejected</button>`
+          : `<button class="action-link" data-reopen="${esc(app.id)}">Reopen</button>`}
+        <button class="action-link" style="color:#8A3A2E;margin-left:auto" data-delete="${esc(app.id)}">Delete</button>
       </div>
     `;
     row.appendChild(expanded);
@@ -888,10 +913,10 @@
     document.getElementById("notes").value = app.notes || "";
 
     document.getElementById("current-cv-status").innerHTML = app.cv_url
-      ? `Current CV attached — <button type="button" class="action-link" style="display:inline;padding:0;text-decoration:underline;" data-view-doc="${app.cv_url}">view it</button> — choose a file to replace it`
+      ? `Current CV attached — <button type="button" class="action-link" style="display:inline;padding:0;text-decoration:underline;" data-view-doc="${esc(app.cv_url)}">view it</button> — choose a file to replace it`
       : "No CV uploaded yet";
     document.getElementById("current-cover-status").innerHTML = app.cover_letter_url
-      ? `Current cover letter attached — <button type="button" class="action-link" style="display:inline;padding:0;text-decoration:underline;" data-view-doc="${app.cover_letter_url}">view it</button> — choose a file to replace it`
+      ? `Current cover letter attached — <button type="button" class="action-link" style="display:inline;padding:0;text-decoration:underline;" data-view-doc="${esc(app.cover_letter_url)}">view it</button> — choose a file to replace it`
       : "No cover letter uploaded yet";
 
     document.getElementById("submit-btn").textContent = "Save changes";
@@ -1242,7 +1267,7 @@
   // "Try again" button that retries with the exact same reference document and context.
   function showTailorError(message) {
     document.getElementById("tailor-modal-body").innerHTML = `
-      <p style="color:#B14432;">${message}</p>
+      <p style="color:#B14432;">${esc(message)}</p>
       <button type="button" class="tailor-modal-regen" id="tailor-retry-btn" style="width:auto;">Try again</button>`;
     document.getElementById("tailor-retry-btn").addEventListener("click", () => {
       runTailorCV(lastTailorAttempt.appId, lastTailorAttempt.cvText, lastTailorAttempt.filename, lastTailorAttempt.extraContext, lastTailorAttempt.kind);
@@ -1326,7 +1351,7 @@
     document.getElementById("tailor-modal-title").textContent = cfg.title;
     document.getElementById("tailor-modal-sub").textContent = app ? `${app.company} — ${app.role}` : "";
     document.getElementById("tailor-modal-body").innerHTML =
-      `<p style="color:#5A5650;">Reading ${filename || cfg.docLabel} and comparing it against the job description — this can take up to a minute.</p>`;
+      `<p style="color:#5A5650;">Reading ${esc(filename || cfg.docLabel)} and comparing it against the job description — this can take up to a minute.</p>`;
     document.getElementById("tailor-modal-timestamp").textContent = "";
     document.getElementById("tailor-modal-backdrop").classList.add("open");
 
