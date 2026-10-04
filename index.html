@@ -191,15 +191,18 @@
   }
 
   /* --- auth widget --- */
+  /* In the normal page flow, centred above the nav, at every width. A fixed
+     top-right corner widget collided with the nav once the nav grew wider. */
   .auth-widget {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 101;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
   }
   #auth-signed-out {
     display: flex;
     align-items: center;
+    justify-content: center;
+    position: relative;
   }
   #auth-toggle-btn {
     background: #FFFFFF;
@@ -216,7 +219,9 @@
     display: none;
     position: absolute;
     top: 110%;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 150; /* above the sticky nav (100) */
     background: #FFFFFF;
     border: 1px solid #D8DADD;
     border-radius: 10px;
@@ -262,6 +267,7 @@
   #auth-signed-in {
     display: none;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     background: #FFFFFF;
     border: 1px solid #D8DADD;
@@ -397,31 +403,6 @@
     .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
     .nav-dropdown-menu { position: fixed; }
     .nav-caret { padding: 11px 14px 11px 6px; }
-
-    /* The sign-in widget was fixed to the top-right corner, which put it
-       on a collision course with the nav bar on a narrow screen — the nav
-       (later in the page) would visually paint over it. Moving it into
-       the normal page flow, centered above the nav, removes any chance of
-       overlap rather than trying to out-stack it with z-index. */
-    .auth-widget {
-      position: static;
-      display: flex;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-    #auth-signed-out {
-      position: relative;
-      justify-content: center;
-    }
-    #auth-signed-in {
-      justify-content: center;
-    }
-    #auth-form-panel {
-      right: auto;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 150;
-    }
 
     .card-grid { grid-template-columns: 1fr; }
     .dash-grid { grid-template-columns: 1fr; }
