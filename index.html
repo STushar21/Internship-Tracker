@@ -626,6 +626,12 @@
     return Math.round((new Date(a) - new Date(b)) / 86400000);
   }
 
+  // User-entered text is inserted with innerHTML below, so every interpolated
+  // value is escaped first. String(v) keeps the output identical to before.
+  function esc(v) {
+    return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
   function renderDeadlines(items, today) {
     document.getElementById("dash-deadline-count").textContent = items.length;
     const el = document.getElementById("dash-deadlines");
@@ -645,10 +651,10 @@
       return `
         <div class="dash-item">
           <div>
-            <div class="dash-item-name">${a.company}</div>
-            <div class="dash-item-sub">${a.role}</div>
+            <div class="dash-item-name">${esc(a.company)}</div>
+            <div class="dash-item-sub">${esc(a.role)}</div>
           </div>
-          <div class="dash-item-status ${cls}">${status}</div>
+          <div class="dash-item-status ${esc(cls)}">${esc(status)}</div>
         </div>`;
     }).join("");
   }
@@ -668,10 +674,10 @@
       return `
         <div class="dash-item">
           <div>
-            <div class="dash-item-name">${c.name}</div>
-            <div class="dash-item-sub">${c.firm}</div>
+            <div class="dash-item-name">${esc(c.name)}</div>
+            <div class="dash-item-sub">${esc(c.firm)}</div>
           </div>
-          <div class="dash-item-status overdue">${status}</div>
+          <div class="dash-item-status overdue">${esc(status)}</div>
         </div>`;
     }).join("");
   }
