@@ -346,6 +346,32 @@
     font-size: 12px;
     color: #8A8F99;
   }
+
+  /* --- today strip (calendar-events, cached in sessionStorage only) --- */
+  #today-wrap { display: none; margin-bottom: 24px; }
+  #today-wrap .dash-card-head { margin-bottom: 8px; }
+  #today-heading { overflow-wrap: anywhere; }
+  .today-btn {
+    min-height: 44px; padding: 0 12px; margin: -10px -8px -10px 0;
+    background: none; border: 1px solid transparent; border-radius: 8px;
+    color: #6F5439; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+  }
+  .today-btn:hover { border-color: #D8DADD; }
+  .today-btn:focus-visible, .today-link:focus-visible, .today-retry:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .today-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid #ECEDEE; font-size: 13px; }
+  .today-row:first-child { border-top: none; }
+  .today-row.past { opacity: 0.5; }
+  .today-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; align-self: center; }
+  .today-time { flex: 0 0 92px; color: #5A5650; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .today-main { flex: 1; min-width: 0; }
+  .today-title { color: #1A1A18; font-weight: 500; overflow-wrap: anywhere; }
+  .today-cal { color: #5A5650; font-size: 11.5px; overflow-wrap: anywhere; }
+  .today-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .today-link, .today-retry {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; margin-top: 6px; margin-right: 8px;
+    border: 1px solid #D8DADD; border-radius: 8px; background: #FFFFFF;
+    color: #6F5439; font-family: inherit; font-size: 12.5px; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
   /* TEMPORARY: remove with calendar-test.html once calendar.html exists */
   .temp-link {
     text-align: center;
@@ -458,6 +484,16 @@
   <div class="hero-eyebrow">STK · IB RECRUITING HUB</div>
   <h1>Everything for the 2027 cycle, in one place</h1>
   <p>Track applications, drill assessment types, and build out your prep — all from here.</p>
+</div>
+
+<div id="today-wrap">
+  <div class="dash-card">
+    <div class="dash-card-head">
+      <div class="dash-title" id="today-heading">Today</div>
+      <button type="button" class="today-btn" id="today-refresh">Refresh</button>
+    </div>
+    <div id="today-body"><div class="dash-loading">Loading today's events…</div></div>
+  </div>
 </div>
 
 <div id="dashboard">
@@ -658,6 +694,176 @@
         </div>`;
     }).join("");
   }
+</script>
+
+<script>
+  // --- Today strip ---
+  // Today's events from calendar-events. Cached for 5 minutes in sessionStorage only
+  // (never localStorage or the database); the key is removed when this page loads
+  // signed out. Titles and calendar names are untrusted: textContent only.
+  (function () {
+    const TZ = "Europe/London";
+    const CACHE_KEY = "stk_today_cache";
+    const CACHE_TTL = 5 * 60 * 1000;
+    const HIDDEN_KEY = "stk.calendar.hiddenCalendars"; // shared with calendar.html
+    const TERM_CAL = "Term Dates";
+    const WEEK_RE = /^Wk\s/;
+    const COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
+    const MAX_ROWS = 5;
+    const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const dateFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+    const timeFmt = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    const londonToday = () => dateFmt.format(new Date());
+    const fmtTime = (iso) => timeFmt.format(new Date(iso));
+    const dayLabel = (ds) => {
+      const [y, m, d] = ds.split("-").map(Number);
+      return `${WD[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${d} ${MON[m - 1]}`;
+    };
+    const safeColor = (c) => (typeof c === "string" && COLOR_RE.test(c) ? c : "#8A8F99");
+
+    const wrap = document.getElementById("today-wrap");
+    const heading = document.getElementById("today-heading");
+    const body = document.getElementById("today-body");
+    let seq = 0;
+
+    function withTimeout(promise, ms) {
+      return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), ms))]);
+    }
+    function hiddenCalendars() {
+      try { const v = JSON.parse(localStorage.getItem(HIDDEN_KEY) || "[]"); return new Set(Array.isArray(v) ? v : []); }
+      catch (_) { return new Set(); }
+    }
+    function readCache(today) {
+      try {
+        const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+        if (c && c.date === today && typeof c.fetchedAt === "number" && Date.now() - c.fetchedAt >= 0 && Date.now() - c.fetchedAt < CACHE_TTL && Array.isArray(c.events)) return c;
+      } catch (_) { /* ignore a bad cache */ }
+      return null;
+    }
+    function writeCache(entry) { try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(entry)); } catch (_) { /* cache is optional */ } }
+    function clearCache() { try { sessionStorage.removeItem(CACHE_KEY); } catch (_) { /* nothing to clear */ } }
+
+    // Keep only what rendering needs.
+    function toEntry(today, data) {
+      const colors = new Map((Array.isArray(data.calendars) ? data.calendars : []).map((c) => [c.name, safeColor(c.color)]));
+      let week = null;
+      const events = [];
+      for (const e of Array.isArray(data.events) ? data.events : []) {
+        if (!e || typeof e.start !== "string") continue;
+        if (e.calendar === TERM_CAL && WEEK_RE.test(String(e.title || ""))) { if (!week) week = String(e.title); continue; }
+        events.push({ title: String(e.title || "(No title)"), calendar: String(e.calendar || ""), color: colors.get(e.calendar) || "#8A8F99",
+          start: e.start, end: typeof e.end === "string" ? e.end : e.start, allDay: !!e.allDay });
+      }
+      return { date: today, fetchedAt: Date.now(), week, events };
+    }
+
+    function setHeading(today, week) {
+      heading.textContent = `Today · ${dayLabel(today)}${week ? ` · ${week}` : ""}`;
+    }
+    function message(text, cls) {
+      const d = document.createElement("div");
+      d.className = cls;
+      d.textContent = text;
+      return d;
+    }
+    function timeText(e, today) {
+      if (e.allDay) return "All day";
+      const s = fmtTime(e.start), en = fmtTime(e.end);
+      if (e.start.slice(0, 10) < today) return `Until ${en}`;
+      if (e.end.slice(0, 10) > e.start.slice(0, 10)) return `${s} → ${en}`;
+      return en === s ? s : `${s}–${en}`;
+    }
+
+    function render(entry) {
+      const today = entry.date;
+      setHeading(today, entry.week);
+      const hidden = hiddenCalendars();
+      const list = entry.events.filter((e) => e.calendar === TERM_CAL || !hidden.has(e.calendar));
+      const allDay = list.filter((e) => e.allDay).sort((a, b) => a.title.localeCompare(b.title));
+      const timed = list.filter((e) => !e.allDay).sort((a, b) => Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title));
+      const rows = [...allDay, ...timed];
+      body.replaceChildren();
+      if (!rows.length) { body.append(message("Nothing in your calendar today.", "dash-empty")); return; }
+      const box = document.createElement("div");
+      const now = Date.now();
+      for (const e of rows.slice(0, MAX_ROWS)) {
+        const row = document.createElement("div");
+        row.className = "today-row";
+        const ended = !e.allDay && Date.parse(e.end) <= now;
+        if (ended) row.classList.add("past");
+        const dot = document.createElement("span");
+        dot.className = "today-dot";
+        dot.setAttribute("aria-hidden", "true");
+        dot.style.background = safeColor(e.color);
+        const time = message(timeText(e, today), "today-time");
+        const main = document.createElement("div");
+        main.className = "today-main";
+        main.append(message(e.title, "today-title"), message(e.calendar, "today-cal"));
+        if (ended) main.append(message("(finished)", "today-sr"));
+        row.append(dot, time, main);
+        box.append(row);
+      }
+      body.append(box);
+      if (rows.length > MAX_ROWS) {
+        const more = document.createElement("a");
+        more.className = "today-link";
+        more.href = "calendar.html";
+        more.textContent = `+${rows.length - MAX_ROWS} more — open Calendar`;
+        body.append(more);
+      }
+    }
+
+    function renderFailure() {
+      body.replaceChildren(message("Couldn't load today's events.", "dash-empty"));
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "today-retry";
+      retry.textContent = "Retry";
+      retry.addEventListener("click", () => load(true));
+      const open = document.createElement("a");
+      open.className = "today-link";
+      open.href = "calendar.html";
+      open.textContent = "Open Calendar";
+      body.append(retry, open);
+    }
+
+    async function load(force) {
+      const today = londonToday();
+      setHeading(today, null);
+      if (force) clearCache();
+      const cached = readCache(today);
+      if (cached) { render(cached); return; }
+      const mine = ++seq;
+      body.replaceChildren(message("Loading today's events…", "dash-loading"));
+      let ok = false, data = null;
+      try {
+        const { data: d, error } = await withTimeout(sb.functions.invoke("calendar-events", { body: { from: today, to: today } }), 45000);
+        if (error) {
+          // Same unwrapping as calendar.html: the real reason is on error.context.
+          // It is never shown here, only used to decide the state.
+          if (error.context && typeof error.context.json === "function") { try { await error.context.json(); } catch (_) { /* not JSON */ } }
+        } else if (d && d.ok === true) { ok = true; data = d; }
+      } catch (_) { /* timeout or network: shown as a failure */ }
+      if (mine !== seq) return;
+      if (!ok) { renderFailure(); return; }
+      const entry = toEntry(today, data);
+      writeCache(entry);
+      render(entry);
+    }
+
+    document.getElementById("today-refresh").addEventListener("click", () => load(true));
+
+    let started = false;
+    sb.auth.onAuthStateChange((event, session) => {
+      wrap.style.display = session ? "block" : "none";
+      if (!session) { clearCache(); started = false; seq++; return; }
+      if (started) return;
+      started = true;
+      // Next tick: the dashboard's own queries (registered first) are already under way.
+      setTimeout(() => load(false), 0);
+    });
+  })();
 </script>
 
 <script>
