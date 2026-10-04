@@ -391,6 +391,7 @@
     .top-nav::-webkit-scrollbar { display: none; }
     .top-nav .brand { flex-shrink: 0; }
     .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
 
     /* Side-by-side field pairs (Firm/Role, Sector/Programme, dates, files)
        become unreadably narrow on a phone — stack them instead. */
@@ -438,15 +439,21 @@
   <a href="tracker.html" class="nav-link active">Tracker</a>
   <a href="outreach.html" class="nav-link">Outreach</a>
   <a href="questions.html" class="nav-link">Questions</a>
-  <a href="habits.html" class="nav-link">Habits</a>
-  <a href="journal.html" class="nav-link">Journal</a>
-  <a href="games.html" class="nav-link">Games</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html">Games</a>
+    </div>
+  </div>
   <a href="oa-prep.html" class="nav-link">OA Prep</a>
   <div class="nav-dropdown">
     <a href="resources.html" class="nav-link">Resources</a>
     <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
     <div class="nav-dropdown-menu">
-      <a href="resources.html" class="active">Areas of Finance</a>
+      <a href="resources.html">Areas of Finance</a>
       <a href="resources-cheatsheets.html">Cheat Sheets</a>
       <a href="resources-calendar.html">Recruitment Calendar</a>
     </div>
@@ -1349,6 +1356,11 @@
 </script>
 
 <script>
+  // On phones the nav scrolls sideways, which clips anything hanging below it,
+  // so the menu is position: fixed there and placed under its trigger here.
+  document.querySelector('.top-nav').addEventListener('scroll', function () {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+  });
   document.querySelectorAll('.nav-caret').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1357,6 +1369,16 @@
         if (m !== menu) m.classList.remove('open');
       });
       menu.classList.toggle('open');
+      if (window.innerWidth <= 640 && menu.classList.contains('open')) {
+        var navBottom = btn.closest('.top-nav').getBoundingClientRect().bottom;
+        var left = btn.parentElement.getBoundingClientRect().left;
+        var maxLeft = window.innerWidth - Math.max(190, menu.offsetWidth) - 12;
+        menu.style.top = (navBottom + 6) + 'px';
+        menu.style.left = Math.max(12, Math.min(left, maxLeft)) + 'px';
+      } else if (window.innerWidth > 640) {
+        menu.style.top = '';
+        menu.style.left = '';
+      }
     });
   });
   document.addEventListener('click', function () {
