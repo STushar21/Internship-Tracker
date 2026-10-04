@@ -16,7 +16,7 @@
     background: #F2ECDF;
     color: #1A1A18;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    max-width: min(760px, 94vw);
+    max-width: min(960px, 94vw);
     margin: 40px auto;
     padding: 0 16px 80px;
   }
@@ -95,7 +95,6 @@
   .entry-mood-tag.m3 { background: #D8C9A3; color: #1A1A18; }   /* dark 10.63:1 */
   .entry-mood-tag.m4 { background: #9BB07A; color: #1A1A18; }   /* dark 7.37:1 */
   .entry-mood-tag.m5 { background: #527A52; color: #FFFFFF; }   /* white 4.92:1 */
-  .entry-preview { font-size: 12.5px; color: #5A5650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .entry-chevron { color: #8A8F99; font-size: 12px; flex-shrink: 0; transition: transform 150ms ease; }
   .entry-card.open .entry-chevron { transform: rotate(180deg); }
   .entry-body { display: none; padding: 0 18px 16px; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; color: #333B4D; }
@@ -111,7 +110,6 @@
     .nav-dropdown-menu { position: fixed; }
     input, select, textarea { font-size: 16px; }
     .mood-cell { width: 12px; height: 12px; }
-    .entry-preview { display: none; }
   }
 </style>
 </head>
@@ -249,14 +247,12 @@
     }
     list.innerHTML = allEntries.map(e => {
       const isOpen = e.id === openEntryId;
-      const preview = (e.entry_text || "").slice(0, 70);
       return `
         <div class="entry-card ${isOpen ? "open" : ""}" data-id="${e.id}">
           <div class="entry-head">
             <div class="entry-head-left">
               <span class="entry-date">${formatDate(e.entry_date)}</span>
               ${e.mood ? `<span class="entry-mood-tag m${e.mood}">${MOOD_LABELS[e.mood]}</span>` : ""}
-              <span class="entry-preview">${preview}</span>
             </div>
             <span class="entry-chevron">&#9662;</span>
           </div>
