@@ -65,9 +65,13 @@
   #logout-btn { background: none; border: 1px solid #D8DADD; color: #5A5650; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
 
   .card { background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
-  #run-btn { background: #8B6B49; border: none; border-radius: 6px; padding: 10px 20px; font-weight: 600; color: #FFFFFF; cursor: pointer; font-family: inherit; font-size: 14px; }
-  #run-btn:disabled { opacity: 0.6; cursor: default; }
-  #status { font-size: 13px; color: #5A5650; margin-top: 10px; }
+  #run-btn, #fetch-btn { background: #8B6B49; border: none; border-radius: 6px; padding: 10px 20px; font-weight: 600; color: #FFFFFF; cursor: pointer; font-family: inherit; font-size: 14px; }
+  #run-btn:disabled, #fetch-btn:disabled { opacity: 0.6; cursor: default; }
+  #status, #fetch-status { font-size: 13px; color: #5A5650; margin-top: 10px; }
+  .field-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .field-row > * { flex: 1; }
+  input { background: #F6F6F3; border: 1px solid #D8DADD; border-radius: 6px; padding: 8px 10px; color: #1A1A18; font-size: 14px; font-family: inherit; width: 100%; }
+  label.field-label { font-size: 11px; color: #5A5650; margin-bottom: 3px; display: block; }
   #output { background: #F6F6F3; border: 1px solid #D8DADD; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
 
   @media (max-width: 640px) {
@@ -77,6 +81,23 @@
     .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
     .nav-dropdown-menu { position: fixed; }
     .nav-caret { padding: 11px 14px 11px 6px; }
+
+    /* Date inputs: the same phone rules as tracker.html. */
+    .field-row { flex-direction: column; gap: 10px; }
+    input { font-size: 16px; } /* 16px stops iOS Safari auto-zooming in on focus */
+    .field-row > * { min-width: 0; }
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      min-height: 38px;
+    }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+    input[type="date"]::-webkit-datetime-edit,
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper { padding: 0; }
   }
 </style>
 </head>
@@ -125,6 +146,21 @@
   <div id="status"></div>
 </div>
 
+<div class="card">
+  <div class="field-row">
+    <div>
+      <label class="field-label" for="from-date">From</label>
+      <input type="date" id="from-date">
+    </div>
+    <div>
+      <label class="field-label" for="to-date">To</label>
+      <input type="date" id="to-date">
+    </div>
+  </div>
+  <button id="fetch-btn" type="button">Fetch events</button>
+  <div id="fetch-status"></div>
+</div>
+
 <pre id="output">(no result yet)</pre>
 </div>
 
@@ -133,6 +169,43 @@
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Default range: today (in Europe/London) to today + 14 days.
+  (function () {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+    const [y, m, d] = today.split("-").map(Number);
+    const plus14 = new Date(Date.UTC(y, m - 1, d + 14)).toISOString().slice(0, 10);
+    document.getElementById("from-date").value = today;
+    document.getElementById("to-date").value = plus14;
+  })();
+
+  document.getElementById("fetch-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("fetch-btn");
+    const status = document.getElementById("fetch-status");
+    const output = document.getElementById("output");
+    const from = document.getElementById("from-date").value;
+    const to = document.getElementById("to-date").value;
+    btn.disabled = true;
+    status.textContent = `Fetching ${from} to ${to}… this can take 5–20 seconds.`;
+    output.textContent = "";
+    const started = Date.now();
+    try {
+      const { data, error } = await sb.functions.invoke("calendar-events", { body: { from, to } });
+      let result = data;
+      if (error) {
+        // Non-2xx responses still carry the function's JSON body on error.context.
+        try { result = await error.context.json(); }
+        catch (_) { result = { ok: false, error: String(error.message || error) }; }
+      }
+      output.textContent = JSON.stringify(result, null, 2);
+      status.textContent = `Finished in ${((Date.now() - started) / 1000).toFixed(1)}s.`;
+    } catch (err) {
+      output.textContent = JSON.stringify({ ok: false, error: String(err) }, null, 2);
+      status.textContent = "The request itself failed.";
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   document.getElementById("run-btn").addEventListener("click", async () => {
     const btn = document.getElementById("run-btn");
