@@ -346,6 +346,13 @@
     font-size: 12px;
     color: #8A8F99;
   }
+  /* TEMPORARY: remove with calendar-test.html once calendar.html exists */
+  .temp-link {
+    text-align: center;
+    font-size: 12px;
+    margin: 24px 0 0;
+  }
+  .temp-link a { color: #6F5439; } /* 5.94:1 on the ivory background */
 
   /* --- mobile (phone-width) overrides --- */
   @media (max-width: 640px) {
@@ -516,6 +523,8 @@
     <div class="card-desc">Real situations and judgment calls — rejections, choices, networking, mindset — not templates.</div>
   </a>
 </div>
+
+<p class="temp-link"><a href="calendar-test.html">Calendar connection test (temporary)</a></p>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
