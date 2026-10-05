@@ -1,0 +1,535 @@
+/* =============================================================================
+   game-shell.js — shared shell for the STK game pages.
+   Load as game-shell.js?v=N (bump N whenever this file or game-shell.css changes;
+   GitHub Pages caches sub-resources for ~10 minutes).
+
+   INTERFACE
+   ---------
+   The page owns auth. Once it has a session it calls:
+
+     GameShell.mount({
+       sb,                 // Supabase client
+       userId,             // auth user id (uuid)
+       game,               // key stored in game_scores.game, e.g. "mental_maths"
+       title,              // name shown in the run layer's top strip
+       els: {
+         stats,            // element: the shell renders the 4-cell stat strip here
+         leaderboard,      // element: the shell renders the Leaderboard card body here
+         playCard,         // element: the pre-run Play card (hidden while a result shows)
+         resultCard,       // element: the shell fills and shows this after a run
+         startButton,      // element: starts a run
+       },
+       createRun(ctx),     // REQUIRED. Called after each countdown. See RUN CONTEXT.
+       renderResult(el, summary),  // REQUIRED. Fill `el` with the game-specific part of
+                                   // the Result card. summary = { score, stats, rankEl,
+                                   // bestEl }: rankEl ("4th of 37 runs, all-time") and
+                                   // bestEl are filled by the shell after saving; place
+                                   // them where they belong (appended after `el` if not).
+     })
+
+   RUN CONTEXT (argument to createRun)
+     ctx.stage      element in the full-screen layer for the game's own UI
+     ctx.pad        element at the bottom of the layer (for an on-screen keypad)
+     ctx.isTouch    true when matchMedia('(pointer: coarse)') matches
+     ctx.clock      { start(), pause(), resume(), elapsedMs(), remainingMs(totalMs), running }
+                    based on performance.now(); excludes paused time. Games must use
+                    this, never Date.now().
+     ctx.setTimer(text, fraction)   fills the top-strip timer slot and thin bar (0..1)
+     ctx.setScore(text)             fills the top-strip score slot
+     ctx.finish({ score, stats })   ends the run; the shell closes the layer, saves the
+                                    run and shows the Result card.
+   createRun must return { onKey(key) -> boolean, tick(), destroy() }:
+     onKey   receives KeyboardEvent.key while the layer is open and the run is live;
+             return true if handled (the shell then calls preventDefault).
+     tick    called about every 50 ms while the run is live (check the time limit here).
+     destroy called when the run ends or is quit.
+
+   SAVING
+     Finished runs only: game_scores { user_id, game, score, played_date (London date,
+     YYYY-MM-DD), player_name, stats }. Quit runs are never saved.
+
+   ACCESS RULES (not changed here)
+     The tables currently use the site-wide "authenticated full access" policy. Real
+     multi-user use needs row-level policies so that each user can insert only rows
+     with their own user_id (and player_profiles only their own row), while everyone
+     signed in can read the leaderboard.
+
+   TEST HOOKS
+     GameShell.config.countdownMs / goMs   countdown timings (default 1000 / 500)
+     GameShell.config.now                  time source (default performance.now)
+     GameShell.debug.tick()                run one tick immediately
+   ============================================================================= */
+(function () {
+  "use strict";
+
+  const TZ = "Europe/London";
+  const config = { countdownMs: 1000, goMs: 500, now: () => performance.now() };
+
+  // ---------------------------------------------------------------- utilities
+  function el(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+  function ordinal(n) {
+    const v = n % 100;
+    if (v >= 11 && v <= 13) return n + "th";
+    return n + ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th");
+  }
+
+  // London dates and midnights, computed with Intl (never the browser's own zone).
+  const partsFmt = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  function londonParts(ms) {
+    const p = {};
+    for (const x of partsFmt.formatToParts(new Date(ms))) if (x.type !== "literal") p[x.type] = Number(x.value);
+    return p; // year, month, day, hour, minute, second
+  }
+  const pad2 = (n) => String(n).padStart(2, "0");
+  function londonDate(ms) { const p = londonParts(ms); return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`; }
+  // UTC instant of 00:00 London time on the given calendar day (handles BST/GMT).
+  function londonMidnight(y, m, d) {
+    const guess = Date.UTC(y, m - 1, d);
+    let ms = guess;
+    for (let i = 0; i < 3; i++) {
+      const p = londonParts(ms);
+      const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+      ms = guess - (asUtc - Math.floor(ms / 1000) * 1000);
+    }
+    return ms;
+  }
+  function addDaysYMD(y, m, d, n) { const t = new Date(Date.UTC(y, m - 1, d + n)); return [t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()]; }
+  function rangeBounds(kind, nowMs) {
+    const p = londonParts(nowMs);
+    if (kind === "month") {
+      const next = p.month === 12 ? [p.year + 1, 1] : [p.year, p.month + 1];
+      return { from: new Date(londonMidnight(p.year, p.month, 1)).toISOString(), to: new Date(londonMidnight(next[0], next[1], 1)).toISOString() };
+    }
+    return null;
+  }
+  const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function whenLabel(iso, nowMs) {
+    const ms = Date.parse(iso);
+    const p = londonParts(ms);
+    const time = `${pad2(p.hour)}:${pad2(p.minute)}`;
+    const day = londonDate(ms);
+    const n = londonParts(nowMs);
+    const today = londonDate(nowMs);
+    const y = addDaysYMD(n.year, n.month, n.day, -1);
+    const yesterday = `${y[0]}-${pad2(y[1])}-${pad2(y[2])}`;
+    if (day === today) return `Today · ${time}`;
+    if (day === yesterday) return `Yesterday · ${time}`;
+    const wd = WD[new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay()];
+    return `${wd} ${p.day} ${MON[p.month - 1]}${p.year !== n.year ? ` ${p.year}` : ""} · ${time}`;
+  }
+  const wallNow = () => Date.now(); // wall clock, only for dates and leaderboard ranges
+
+  // --------------------------------------------------------------- run clock
+  function makeClock() {
+    let startedAt = null, pausedAt = null, pausedTotal = 0;
+    return {
+      get running() { return startedAt !== null && pausedAt === null; },
+      start() { startedAt = config.now(); pausedAt = null; pausedTotal = 0; },
+      pause() { if (startedAt !== null && pausedAt === null) pausedAt = config.now(); },
+      resume() { if (pausedAt !== null) { pausedTotal += config.now() - pausedAt; pausedAt = null; } },
+      elapsedMs() {
+        if (startedAt === null) return 0;
+        const end = pausedAt !== null ? pausedAt : config.now();
+        return Math.max(0, end - startedAt - pausedTotal);
+      },
+      remainingMs(total) { return Math.max(0, total - this.elapsedMs()); },
+    };
+  }
+
+  // ---------------------------------------------------------------- the shell
+  let opts = null, profileName = null, layer = null, run = null, tickTimer = null;
+  let lbTab = "all", lbSeq = 0;
+  const isTouch = () => window.matchMedia("(pointer: coarse)").matches;
+  const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function mount(o) {
+    opts = o;
+    o.els.startButton.addEventListener("click", startFlow);
+    refreshStats();
+    renderLeaderboardFrame();
+    loadLeaderboard();
+  }
+
+  // ---- stat strip ----
+  async function refreshStats() {
+    const box = opts.els.stats;
+    const cells = [["Best", "best"], ["Plays", "plays"], ["Today", "today"], ["7-day average", "avg7"]];
+    if (!box.firstChild) box.append(...cells.map(([label, key]) => el("div", { class: "gs-stat" }, el("div", { class: "gs-stat-label", text: label }), el("div", { class: "gs-stat-num", "data-stat": key, text: "–" }))));
+    const set = (k, v) => { const c = box.querySelector(`[data-stat="${k}"]`); if (c) c.textContent = v; };
+    const { sb, userId, game } = opts;
+    const now = wallNow();
+    const n = londonParts(now);
+    const todayStart = new Date(londonMidnight(n.year, n.month, n.day)).toISOString();
+    const w = addDaysYMD(n.year, n.month, n.day, -6);
+    const weekStart = new Date(londonMidnight(w[0], w[1], w[2])).toISOString();
+    try {
+      const mine = () => sb.from("game_scores").select("id", { count: "exact", head: true }).eq("game", game).eq("user_id", userId);
+      const [best, plays, today, week] = await Promise.all([
+        sb.from("game_scores").select("score").eq("game", game).eq("user_id", userId).order("score", { ascending: false }).limit(1),
+        mine(),
+        mine().gte("created_at", todayStart),
+        sb.from("game_scores").select("score").eq("game", game).eq("user_id", userId).gte("created_at", weekStart),
+      ]);
+      if (best.error || plays.error || today.error || week.error) throw best.error || plays.error || today.error || week.error;
+      set("best", best.data && best.data.length ? String(best.data[0].score) : "–");
+      set("plays", String(plays.count ?? 0));
+      set("today", String(today.count ?? 0));
+      const scores = (week.data || []).map((r) => r.score);
+      set("avg7", scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "–");
+      return { best: best.data && best.data.length ? best.data[0].score : null };
+    } catch (err) {
+      console.error("[game-shell] stats failed", err);
+      return { best: null };
+    }
+  }
+
+  // ---- leaderboard ----
+  function renderLeaderboardFrame() {
+    const box = opts.els.leaderboard;
+    box.replaceChildren(
+      el("div", { class: "gs-lb-head" },
+        el("h2", { class: "gs-card-title", text: "Leaderboard" }),
+        el("div", { class: "gs-tabs", role: "group", "aria-label": "Leaderboard range" },
+          el("button", { type: "button", class: "gs-tab", "data-tab": "all", "aria-pressed": "true", text: "All-time", onclick: () => setTab("all") }),
+          el("button", { type: "button", class: "gs-tab", "data-tab": "month", "aria-pressed": "false", text: "This month", onclick: () => setTab("month") }))),
+      el("div", { class: "gs-lb-body" }));
+  }
+  function setTab(t) {
+    lbTab = t;
+    for (const b of opts.els.leaderboard.querySelectorAll(".gs-tab")) b.setAttribute("aria-pressed", b.dataset.tab === t ? "true" : "false");
+    loadLeaderboard();
+  }
+  async function loadLeaderboard() {
+    const seq = ++lbSeq;
+    const body = opts.els.leaderboard.querySelector(".gs-lb-body");
+    body.replaceChildren(el("div", { class: "gs-muted", role: "status", text: "Loading the leaderboard…" }));
+    const { sb, userId, game } = opts;
+    const range = rangeBounds(lbTab, wallNow());
+    const inRange = (q) => (range ? q.gte("created_at", range.from).lt("created_at", range.to) : q);
+    try {
+      const [top, latest] = await Promise.all([
+        inRange(sb.from("game_scores").select("id, score, player_name, created_at").eq("game", game))
+          .order("score", { ascending: false }).order("created_at", { ascending: true }).limit(20),
+        sb.from("game_scores").select("id, score, created_at, player_name").eq("game", game).eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
+      ]);
+      if (top.error || latest.error) throw top.error || latest.error;
+      let pinned = null;
+      const mine = latest.data && latest.data[0];
+      const rows = top.data || [];
+      const latestInRange = mine && (!range || (mine.created_at >= range.from && mine.created_at < range.to));
+      if (mine && latestInRange && !rows.some((r) => r.id === mine.id)) {
+        const higher = await inRange(sb.from("game_scores").select("id", { count: "exact", head: true }).eq("game", game).gt("score", mine.score));
+        if (higher.error) throw higher.error;
+        pinned = { ...mine, rank: (higher.count || 0) + 1 };
+      }
+      if (seq !== lbSeq) return;
+      renderBoard(body, rows, mine && latestInRange ? mine.id : null, pinned);
+    } catch (err) {
+      console.error("[game-shell] leaderboard failed", err);
+      if (seq !== lbSeq) return;
+      body.replaceChildren(el("div", { class: "gs-error" }, el("span", { text: "Couldn't load the leaderboard." }),
+        el("button", { type: "button", class: "gs-btn-secondary", text: "Retry", onclick: loadLeaderboard })));
+    }
+  }
+  function boardRow(r, rank, isLatest) {
+    const badge = rank <= 3 ? el("span", { class: `gs-rank gs-rank-badge gs-rank-${rank}`, text: ordinal(rank) }) : el("span", { class: "gs-rank", text: `#${rank}` });
+    return el("li", { class: "gs-row" + (isLatest ? " gs-row-latest" : "") },
+      el("div", { class: "gs-row-line" }, badge, el("span", { class: "gs-name", text: r.player_name || "Anonymous" }),
+        isLatest ? el("span", { class: "gs-latest-tag", text: "latest" }) : null,
+        el("span", { class: "gs-score", text: String(r.score) })),
+      el("div", { class: "gs-row-when", text: whenLabel(r.created_at, wallNow()) }));
+  }
+  function renderBoard(body, rows, latestId, pinned) {
+    if (!rows.length) { body.replaceChildren(el("div", { class: "gs-muted", text: "No runs yet. Play one to start the board." })); return; }
+    const list = el("ol", { class: "gs-board" });
+    rows.forEach((r, i) => {
+      const firstSame = rows.findIndex((x) => x.score === r.score);
+      list.append(boardRow(r, firstSame + 1, r.id === latestId));
+    });
+    body.replaceChildren(list);
+    if (pinned) {
+      body.append(el("div", { class: "gs-pinned" },
+        el("div", { class: "gs-pinned-label", text: "Your latest run" }),
+        el("div", { class: "gs-row gs-row-latest" },
+          el("div", { class: "gs-row-line" }, el("span", { class: "gs-rank", text: ordinal(pinned.rank) }), el("span", { class: "gs-name", text: pinned.player_name || "Anonymous" }),
+            el("span", { class: "gs-score", text: String(pinned.score) })),
+          el("div", { class: "gs-row-when", text: whenLabel(pinned.created_at, wallNow()) }))));
+    }
+  }
+
+  // ---- name dialog ----
+  async function ensureName() {
+    if (profileName) return profileName;
+    const { sb, userId } = opts;
+    const { data, error } = await sb.from("player_profiles").select("display_name").eq("user_id", userId).limit(1);
+    if (error) { console.error("[game-shell] profile lookup failed", error); throw error; }
+    if (data && data.length && data[0].display_name) { profileName = data[0].display_name; return profileName; }
+    return new Promise((resolve) => {
+      const input = el("input", { type: "text", class: "gs-input", id: "gs-name-input", maxlength: "20", placeholder: "Your name", autocomplete: "nickname" });
+      const msg = el("div", { class: "gs-dialog-msg", role: "alert" });
+      const save = el("button", { type: "submit", class: "gs-btn", text: "Save and play" });
+      const cancel = el("button", { type: "button", class: "gs-btn-secondary", text: "Cancel" });
+      const form = el("form", { class: "gs-dialog", role: "dialog", "aria-modal": "true", "aria-labelledby": "gs-name-title" },
+        el("h2", { id: "gs-name-title", class: "gs-card-title", text: "What name should appear on the leaderboard?" }),
+        el("label", { for: "gs-name-input", class: "gs-visually-hidden", text: "Leaderboard name" }), input, msg,
+        el("div", { class: "gs-dialog-actions" }, cancel, save));
+      const backdrop = el("div", { class: "gs-backdrop" }, form);
+      document.body.append(backdrop);
+      input.focus();
+      cancel.addEventListener("click", () => { backdrop.remove(); resolve(null); });
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = input.value.trim();
+        if (name.length < 2 || name.length > 20) { msg.textContent = "Use 2 to 20 characters."; return; }
+        save.disabled = true; msg.textContent = "";
+        const { error: err } = await sb.from("player_profiles").insert({ user_id: userId, display_name: name });
+        if (err) { console.error("[game-shell] profile save failed", err); msg.textContent = "Couldn't save the name. Try again."; save.disabled = false; return; }
+        profileName = name; backdrop.remove(); resolve(name);
+      });
+    });
+  }
+
+  // ---- run layer ----
+  function lockScroll() {
+    const y = window.scrollY;
+    document.documentElement.classList.add("gs-locked");
+    document.body.style.top = `-${y}px`;
+    document.body.dataset.gsScrollY = String(y);
+    document.addEventListener("touchmove", blockTouchMove, { passive: false });
+  }
+  function unlockScroll() {
+    document.documentElement.classList.remove("gs-locked");
+    const y = Number(document.body.dataset.gsScrollY || 0);
+    document.body.style.top = "";
+    delete document.body.dataset.gsScrollY;
+    document.removeEventListener("touchmove", blockTouchMove, { passive: false });
+    window.scrollTo(0, y);
+  }
+  function blockTouchMove(e) { if (!e.target.closest || !e.target.closest("[data-gs-scroll]")) e.preventDefault(); }
+
+  function buildLayer() {
+    const timerText = el("span", { class: "gs-timer-text" });
+    const bar = el("div", { class: "gs-timer-bar" }, el("div", { class: "gs-timer-fill" }));
+    const scoreSlot = el("span", { class: "gs-score-slot" });
+    const stage = el("div", { class: "gs-stage" });
+    const padSlot = el("div", { class: "gs-pad-slot" });
+    const overlay = el("div", { class: "gs-overlay", hidden: true });
+    const quitBtn = el("button", { type: "button", class: "gs-x", "aria-label": "Quit this run", text: "×", onclick: openConfirm });
+    const root = el("div", { class: "gs-layer" + (prefersReducedMotion() ? " gs-reduced" : ""), role: "dialog", "aria-modal": "true", "aria-label": opts.title },
+      el("div", { class: "gs-strip" }, quitBtn, el("div", { class: "gs-strip-title", text: opts.title }), el("div", { class: "gs-strip-slots" }, timerText, scoreSlot)),
+      bar, stage, padSlot, overlay);
+    return { root, stage, padSlot, overlay, timerText, bar, scoreSlot };
+  }
+
+  async function startFlow() {
+    if (layer) return;
+    const btns = [opts.els.startButton, ...document.querySelectorAll("[data-gs-play-again]")];
+    btns.forEach((b) => (b.disabled = true));
+    let name, failed = false;
+    try { name = await ensureName(); } catch (_) { name = null; failed = true; }
+    btns.forEach((b) => (b.disabled = false));
+    let msg = opts.els.startButton.parentNode.querySelector(".gs-start-msg");
+    if (failed) {
+      if (!msg) { msg = el("div", { class: "gs-start-msg", role: "alert" }); opts.els.startButton.after(msg); }
+      msg.textContent = "Couldn't check your leaderboard name. Try again.";
+      return;
+    }
+    if (msg) msg.remove();
+    if (!name) return;
+    openLayer();
+  }
+
+  function openLayer() {
+    document.dispatchEvent(new MouseEvent("click", { bubbles: true })); // closes any open nav dropdown
+    layer = buildLayer();
+    run = { clock: makeClock(), state: "countdown", game: null, finished: false };
+    document.body.append(layer.root);
+    lockScroll();
+    document.addEventListener("keydown", onKeyDown, true);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("blur", onBlur);
+    countdown();
+  }
+  function closeLayer() {
+    if (!layer) return;
+    clearInterval(tickTimer); tickTimer = null;
+    if (run && run.game) { try { run.game.destroy(); } catch (e) { console.error(e); } }
+    run = null;
+    document.removeEventListener("keydown", onKeyDown, true);
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("blur", onBlur);
+    layer.root.remove();
+    layer = null;
+    unlockScroll();
+  }
+
+  let countdownTimers = [];
+  function clearCountdown() { countdownTimers.forEach(clearTimeout); countdownTimers = []; }
+  function showOverlay(children, cls) {
+    layer.overlay.className = "gs-overlay" + (cls ? " " + cls : "");
+    layer.overlay.replaceChildren(...children);
+    layer.overlay.hidden = false;
+    layer.stage.classList.add("gs-hidden");
+    layer.padSlot.classList.add("gs-hidden");
+  }
+  function hideOverlay() {
+    layer.overlay.hidden = true;
+    layer.overlay.replaceChildren();
+    layer.stage.classList.remove("gs-hidden");
+    layer.padSlot.classList.remove("gs-hidden");
+  }
+  // Countdown: 3-2-1-Go before the game starts, 3-2-1 when resuming it.
+  function countdown() {
+    if (!run) return;
+    clearCountdown();
+    const first = !run.game;
+    const steps = first ? ["3", "2", "1", "Go"] : ["3", "2", "1"];
+    let t = 0;
+    steps.forEach((s) => {
+      countdownTimers.push(setTimeout(() => {
+        if (!layer) return;
+        showOverlay([el("div", { class: "gs-count", "aria-live": "assertive", text: s })], "gs-overlay-count");
+      }, t));
+      t += s === "Go" ? config.goMs : config.countdownMs;
+    });
+    countdownTimers.push(setTimeout(() => {
+      if (!layer) return;
+      hideOverlay();
+      if (first) beginRun(); else { run.clock.resume(); run.state = "live"; }
+    }, t));
+    run.state = "countdown";
+  }
+  function beginRun() {
+    const clock = run.clock;
+    run.state = "live";
+    const ctx = {
+      stage: layer.stage, pad: layer.padSlot, isTouch: isTouch(), clock,
+      setTimer(text, fraction) { layer.timerText.textContent = text; layer.bar.firstChild.style.width = `${Math.max(0, Math.min(1, fraction)) * 100}%`; },
+      setScore(text) { layer.scoreSlot.textContent = text; },
+      finish(result) { finishRun(result); },
+    };
+    clock.start();
+    run.game = opts.createRun(ctx);
+    tickTimer = setInterval(tick, 50);
+  }
+  function tick() { if (run && run.state === "live" && run.game) run.game.tick(); }
+
+  function pauseRun() {
+    if (!run || !layer) return;
+    if (run.state === "paused" || run.state === "confirm") return;
+    clearCountdown();
+    run.clock.pause();
+    run.state = "paused";
+    showOverlay([
+      el("div", { class: "gs-overlay-title", text: "Paused" }),
+      el("button", { type: "button", class: "gs-btn", text: "Resume", onclick: () => countdown() }),
+    ], "gs-overlay-panel");
+  }
+  function onVisibility() { if (document.visibilityState === "hidden") pauseRun(); }
+  function onBlur() { if (!isTouch()) pauseRun(); }
+
+  let confirmPrev = null;
+  function openConfirm() {
+    if (!layer || !run) return;
+    if (run.state === "confirm") return;
+    confirmPrev = run.state;
+    clearCountdown();
+    run.clock.pause();
+    run.state = "confirm";
+    const keep = el("button", { type: "button", class: "gs-btn", text: "Keep playing", onclick: closeConfirm });
+    showOverlay([
+      el("div", { class: "gs-overlay-title", text: "Quit this run? It won't be saved." }),
+      el("div", { class: "gs-dialog-actions" }, keep, el("button", { type: "button", class: "gs-btn-secondary", text: "Quit", onclick: closeLayer })),
+    ], "gs-overlay-panel");
+    keep.focus();
+  }
+  function closeConfirm() {
+    if (!run || run.state !== "confirm") return;
+    if (confirmPrev === "paused") { run.state = "confirm-closed"; pauseRun(); return; }
+    if (confirmPrev === "countdown") { countdown(); return; }
+    hideOverlay();
+    run.clock.resume();
+    run.state = "live";
+  }
+  function onKeyDown(e) {
+    if (!layer) return;
+    if (e.key === "Escape") { e.preventDefault(); if (run && run.state === "confirm") closeConfirm(); else openConfirm(); return; }
+    if (run && run.state === "live" && run.game && run.game.onKey(e.key)) e.preventDefault();
+  }
+
+  // ---- finishing and saving ----
+  async function finishRun(result) {
+    if (!run || run.finished) return;
+    run.finished = true;
+    closeLayer();
+    const card = opts.els.resultCard;
+    const gamePart = el("div", { class: "gs-result-game" });
+    const rankLine = el("div", { class: "gs-result-rank", text: "Working out your rank…" });
+    const bestLine = el("div", { class: "gs-result-best" });
+    const status = el("div", { class: "gs-save-status", role: "status", text: "Saving…" });
+    const retry = el("button", { type: "button", class: "gs-btn-secondary", text: "Retry", hidden: true });
+    const again = el("button", { type: "button", class: "gs-btn gs-btn-wide", "data-gs-play-again": "", text: "Play again", onclick: startFlow });
+    card.replaceChildren(el("h2", { class: "gs-card-title", text: "Result" }), gamePart, el("div", { class: "gs-save-row" }, status, retry), again);
+    opts.renderResult(gamePart, { score: result.score, stats: result.stats, rankEl: rankLine, bestEl: bestLine });
+    if (!rankLine.isConnected) gamePart.after(rankLine, bestLine);
+    opts.els.playCard.hidden = true;
+    card.classList.add("gs-result");
+    card.hidden = false;
+    // Scroll once the card has been rendered and laid out (two frames), so the
+    // target position is final. scroll-margin-top keeps it clear of the sticky nav.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      card.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+    }));
+
+    const row = { user_id: opts.userId, game: opts.game, score: result.score, played_date: londonDate(wallNow()), player_name: profileName, stats: result.stats };
+    let saved = false, saving = false;
+    const attempt = async () => {
+      if (saved || saving) return;
+      saving = true; retry.disabled = true; retry.hidden = true; status.textContent = "Saving…";
+      const { error } = await opts.sb.from("game_scores").insert(row);
+      saving = false;
+      if (error) {
+        console.error("[game-shell] save failed", error);
+        status.textContent = "Couldn't save this run";
+        retry.hidden = false; retry.disabled = false;
+        return;
+      }
+      saved = true;
+      status.textContent = "Saved";
+      afterSave(result.score, rankLine, bestLine);
+    };
+    retry.addEventListener("click", attempt);
+    attempt();
+  }
+  async function afterSave(score, rankLine, bestLine) {
+    const { sb, game } = opts;
+    try {
+      const [higher, total] = await Promise.all([
+        sb.from("game_scores").select("id", { count: "exact", head: true }).eq("game", game).gt("score", score),
+        sb.from("game_scores").select("id", { count: "exact", head: true }).eq("game", game),
+      ]);
+      if (higher.error || total.error) throw higher.error || total.error;
+      rankLine.textContent = `${ordinal((higher.count || 0) + 1)} of ${total.count || 0} runs, all-time`;
+    } catch (err) { console.error("[game-shell] rank failed", err); rankLine.textContent = ""; }
+    const s = await refreshStats();
+    bestLine.textContent = s.best !== null ? `Your best: ${s.best}` : "";
+    loadLeaderboard();
+  }
+
+  window.GameShell = {
+    mount, config,
+    debug: { tick: () => tick(), get run() { return run; }, ordinal, londonMidnight, londonDate, rangeBounds, whenLabel },
+  };
+})();

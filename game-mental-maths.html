@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Mental maths — STK</title>
+<link rel="stylesheet" href="game-shell.css?v=1">
+<style>
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --ink-faint: #948E7A;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+    --gold-soft: rgba(139,107,73,0.10);
+    --green: #2F6B4F;
+    --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B;
+    --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A;
+    --steel-soft: rgba(79,107,138,0.10);
+  }
+
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; }
+  .num, .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
+  /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
+  #logout-btn { min-height: 44px; }
+
+  /* --- mental maths: run layer --- */
+  .mm-question { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(44px, 13vw, 96px); line-height: 1.1; text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .mm-typed { margin-top: 18px; min-width: 4ch; min-height: 1.25em; padding: 4px 16px; border-bottom: 3px solid #8B6B49; font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(40px, 10vw, 72px); line-height: 1.15; text-align: center; color: #1A1A18; font-variant-numeric: tabular-nums; }
+  .mm-typed.wrong { color: #A6453B; border-bottom-color: #A6453B; }
+  .mm-pad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 460px; margin: 0 auto; }
+  .mm-key { min-height: 64px; border: 1px solid #D8DADD; border-radius: 12px; background: #FFFFFF; color: #1A1A18; font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; font-variant-numeric: tabular-nums; cursor: pointer; touch-action: manipulation; }
+  .mm-key:active { background: #F1EBDC; }
+  .mm-key-back { font-family: 'Inter', sans-serif; font-size: 22px; }
+  .mm-key-blank { visibility: hidden; }
+
+  /* --- mental maths: result --- */
+  .mm-score { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .mm-score-label { font-size: 14px; color: #5A5650; margin-top: 4px; }
+  .mm-avg { font-size: 14px; color: #1A1A18; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .mm-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .mm-table th { text-align: left; font-size: 11px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 4px; border-bottom: 1px solid #E3DAC4; }
+  .mm-table td { padding: 7px 4px; border-bottom: 1px solid #EFE8DA; color: #1A1A18; }
+  .mm-table th:not(:first-child), .mm-table td:not(:first-child) { text-align: right; }
+  .mm-slowest { font-size: 14px; color: #1A1A18; margin-top: 10px; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    /* mental maths page */
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html" class="active">Games</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to track your scores and streak.</div>
+</div>
+
+<div id="app-content" class="gs-page" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Mental maths</h1>
+<p class="sub">Two minutes of addition, subtraction, multiplication and division. The next question appears the moment you type the right answer. It measures the arithmetic speed that numerical tests and some interviews check.</p>
+
+<div class="gs-stats" id="stats" aria-label="Your stats"></div>
+
+<div class="gs-grid">
+  <section class="gs-card" id="play-card" aria-labelledby="play-title">
+    <h2 class="gs-card-title" id="play-title">Play</h2>
+    <button type="button" class="gs-btn gs-btn-wide" id="start-btn">Start</button>
+    <h3>How to play</h3>
+    <p>Type the answer. There's no Enter: when it's right, the next question appears. If you type a wrong digit, backspace and carry on. There's no penalty except the time, and no skipping.</p>
+    <h3>Scoring</h3>
+    <p>One point for each correct answer in 120 seconds. Addition and subtraction use numbers from 2 to 100. Multiplication and division use 2 to 12 against 2 to 100. Subtraction and division are built backwards, so every answer is a whole, positive number.</p>
+    <h3>Best practice</h3>
+    <ul>
+      <li>Add left to right: for 47 + 68, do 47 + 60 = 107, then + 8 = 115.</li>
+      <li>Split multiplication: for 14 × 37, do 10 × 37 + 4 × 37.</li>
+      <li>For division, ask what times the small number gives the big one.</li>
+      <li>Don't type a digit you aren't sure of. A backspace costs more time than a slightly slower answer. Use the same method for each type of question until it's automatic.</li>
+    </ul>
+  </section>
+  <section class="gs-card" id="result-card" hidden aria-live="polite"></section>
+  <section class="gs-card" id="leaderboard" aria-label="Leaderboard"></section>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-shell.js?v=1"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Mental maths. Everything generic (layer, clock, saving, leaderboard) lives in
+  // game-shell.js; this file only knows the questions, the input and the result.
+  // ---------------------------------------------------------------------------
+  const MM_TOTAL_MS = 120000;
+  const MM_OPS = ["add", "sub", "mul", "div"];
+  const MM_NAMES = { add: "addition", sub: "subtraction", mul: "multiplication", div: "division" };
+  const MM_LABELS = { add: "Addition", sub: "Subtraction", mul: "Multiplication", div: "Division" };
+  const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+  // Subtraction and division are built backwards from addition and multiplication,
+  // so every answer is a whole, positive number.
+  function makeQuestion(prev) {
+    for (;;) {
+      const op = MM_OPS[Math.floor(Math.random() * MM_OPS.length)];
+      let a, b, text, answer;
+      if (op === "add") { a = randInt(2, 100); b = randInt(2, 100); text = `${a} + ${b}`; answer = a + b; }
+      else if (op === "sub") { a = randInt(2, 100); b = randInt(2, 100); text = `${a + b} − ${a}`; answer = b; }
+      else if (op === "mul") { a = randInt(2, 12); b = randInt(2, 100); text = `${a} × ${b}`; answer = a * b; }
+      else { a = randInt(2, 12); b = randInt(2, 100); text = `${a * b} ÷ ${a}`; answer = b; }
+      if (!prev || prev.text !== text) return { op, a, b, text, answer };
+    }
+  }
+
+  function mmEl(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+
+  function createRun(ctx) {
+    let q = null, typed = "", score = 0, shownAt = 0, done = false;
+    const times = { add: [], sub: [], mul: [], div: [] };
+    const qEl = mmEl("div", { class: "mm-question", "aria-live": "polite" });
+    const tEl = mmEl("div", { class: "mm-typed", "aria-label": "Your answer" });
+    ctx.stage.replaceChildren(qEl, tEl);
+
+    function render() {
+      tEl.textContent = typed;
+      const want = String(q.answer);
+      tEl.classList.toggle("wrong", typed.length >= want.length && typed !== want);
+    }
+    function next() {
+      q = makeQuestion(q);
+      typed = "";
+      shownAt = ctx.clock.elapsedMs();
+      qEl.textContent = q.text;
+      render();
+    }
+    function press(key) {
+      if (done || !ctx.clock.running) return false;
+      if (/^[0-9]$/.test(key)) { if (typed.length < 6) typed += key; }
+      else if (key === "Backspace") typed = typed.slice(0, -1);
+      else return false;
+      if (typed === String(q.answer)) {
+        times[q.op].push(ctx.clock.elapsedMs() - shownAt);
+        score++;
+        ctx.setScore(String(score));
+        next();
+      } else render();
+      return true;
+    }
+    if (ctx.isTouch) {
+      const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "Backspace"];
+      ctx.pad.replaceChildren(mmEl("div", { class: "mm-pad", role: "group", "aria-label": "Number pad" },
+        keys.map((k) => k === ""
+          ? mmEl("span", { class: "mm-key mm-key-blank", "aria-hidden": "true" })
+          : mmEl("button", { type: "button", class: "mm-key" + (k === "Backspace" ? " mm-key-back" : ""), "data-key": k,
+              "aria-label": k === "Backspace" ? "Backspace" : k, text: k === "Backspace" ? "⌫" : k,
+              onclick: () => press(k) }))));
+    }
+    function finish() {
+      if (done) return;
+      done = true; // the unanswered question is discarded
+      const ops = {}, all = [];
+      for (const op of MM_OPS) {
+        const a = times[op];
+        ops[op] = { n: a.length, avgMs: a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null };
+        all.push(...a);
+      }
+      ctx.finish({ score, stats: { ops, avgMs: all.length ? Math.round(all.reduce((x, y) => x + y, 0) / all.length) : null } });
+    }
+    function tick() {
+      const rem = ctx.clock.remainingMs(MM_TOTAL_MS);
+      ctx.setTimer(String(Math.ceil(rem / 1000)), rem / MM_TOTAL_MS);
+      if (rem <= 0) finish();
+    }
+    ctx.setScore("0");
+    next();
+    tick();
+    return { onKey: press, tick, destroy() { done = true; } };
+  }
+
+  const secs = (ms) => (ms / 1000).toFixed(1) + "s";
+  function renderResult(box, summary) {
+    const { score, stats } = summary;
+    box.append(
+      mmEl("div", { class: "mm-score", text: String(score) }),
+      mmEl("div", { class: "mm-score-label", text: score === 1 ? "correct answer" : "correct answers" }),
+      summary.rankEl, summary.bestEl,
+      mmEl("div", { class: "mm-avg", text: stats.avgMs !== null ? `Average: ${secs(stats.avgMs)} per question` : "Average: –" }),
+      mmEl("table", { class: "mm-table" },
+        mmEl("thead", null, mmEl("tr", null, mmEl("th", { text: "Operation" }), mmEl("th", { text: "Answered" }), mmEl("th", { text: "Avg time" }))),
+        mmEl("tbody", null, MM_OPS.map((op) => mmEl("tr", null,
+          mmEl("td", { text: MM_LABELS[op] }), mmEl("td", { text: String(stats.ops[op].n) }),
+          mmEl("td", { text: stats.ops[op].avgMs !== null ? secs(stats.ops[op].avgMs) : "–" }))))));
+    const answered = MM_OPS.filter((op) => stats.ops[op].n > 0);
+    if (answered.length) {
+      const slow = answered.reduce((a, b) => (stats.ops[b].avgMs > stats.ops[a].avgMs ? b : a));
+      box.append(mmEl("div", { class: "mm-slowest", text: `Slowest: ${MM_NAMES[slow]} (${secs(stats.ops[slow].avgMs)} per question)` }));
+    }
+  }
+  window.MentalMaths = { makeQuestion, createRun, renderResult, TOTAL_MS: MM_TOTAL_MS };
+
+  // --- Auth gate: locked when signed out; the shell mounts once per session ---
+  let mounted = false;
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session && !mounted) {
+      mounted = true;
+      GameShell.mount({
+        sb, userId: session.user.id, game: "mental_maths", title: "Mental maths",
+        els: {
+          stats: document.getElementById("stats"),
+          leaderboard: document.getElementById("leaderboard"),
+          playCard: document.getElementById("play-card"),
+          resultCard: document.getElementById("result-card"),
+          startButton: document.getElementById("start-btn"),
+        },
+        createRun, renderResult,
+      });
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  // --- nav dropdowns (identical on every page) ---
+  // On phones (640px and under) .top-nav scrolls sideways, and iOS WebKit clips or
+  // misplaces anything left inside it, so an open menu is moved into <body> and fixed
+  // under its trigger. There, the trigger label opens the menu instead of navigating
+  // (the label's page is the menu's first item). Outside taps use pointerdown, because
+  // iOS doesn't dispatch click to the document for taps on non-interactive elements.
+  (function () {
+    var nav = document.querySelector('.top-nav');
+    var dropdowns = Array.prototype.map.call(document.querySelectorAll('.nav-dropdown'), function (dd) {
+      return {
+        dd: dd,
+        label: dd.querySelector('a.nav-link'),
+        caret: dd.querySelector('.nav-caret'),
+        menu: dd.querySelector('.nav-dropdown-menu'),
+        scrollStart: 0
+      };
+    });
+    function isPhone() { return window.innerWidth <= 640; }
+    function close(d) {
+      d.menu.classList.remove('open');
+      if (d.menu.parentNode !== d.dd) {
+        d.menu.style.position = '';
+        d.menu.style.zIndex = '';
+        d.menu.style.top = '';
+        d.menu.style.left = '';
+        d.dd.appendChild(d.menu);
+      }
+    }
+    function closeAll(except) {
+      dropdowns.forEach(function (d) { if (d !== except) close(d); });
+    }
+    function open(d) {
+      closeAll(d);
+      d.scrollStart = nav.scrollLeft;
+      if (isPhone()) {
+        document.body.appendChild(d.menu);
+        d.menu.style.position = 'fixed';
+        d.menu.style.zIndex = '300';
+        d.menu.classList.add('open');
+        var maxLeft = window.innerWidth - Math.max(190, d.menu.offsetWidth) - 12;
+        d.menu.style.top = (nav.getBoundingClientRect().bottom + 6) + 'px';
+        d.menu.style.left = Math.max(12, Math.min(d.dd.getBoundingClientRect().left, maxLeft)) + 'px';
+      } else {
+        d.menu.classList.add('open');
+      }
+    }
+    function toggle(d) {
+      if (d.menu.classList.contains('open')) close(d); else open(d);
+    }
+    dropdowns.forEach(function (d) {
+      d.caret.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggle(d);
+      });
+      d.label.addEventListener('click', function (e) {
+        if (!isPhone()) return; // desktop: the label is an ordinary link
+        e.preventDefault();
+        e.stopPropagation();
+        toggle(d);
+      });
+    });
+    document.addEventListener('click', function () { closeAll(); });
+    document.addEventListener('pointerdown', function (e) {
+      if (!isPhone()) return;
+      if (e.target.closest && e.target.closest('.nav-dropdown, .nav-dropdown-menu')) return;
+      closeAll();
+    });
+    nav.addEventListener('scroll', function () {
+      dropdowns.forEach(function (d) {
+        if (d.menu.classList.contains('open') && Math.abs(nav.scrollLeft - d.scrollStart) > 4) close(d);
+      });
+    });
+    // iOS fires resize when its toolbars show or hide, so only a width change counts.
+    var lastWidth = window.innerWidth;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      closeAll();
+    });
+    window.addEventListener('orientationchange', function () { closeAll(); });
+  })();
+  // --- end nav dropdowns ---
+</script>
+</body>
+</html>
