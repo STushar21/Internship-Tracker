@@ -112,6 +112,10 @@ html.gs-locked body { position: fixed; left: 0; right: 0; }
 .gs-hint { min-height: 44px; padding: 0 14px; border: none; background: none; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer; }
 .gs-pad-slot { flex: 0 0 auto; padding: 0 12px; }
 .gs-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 18px; padding: clamp(16px, 6vh, 56px) 16px 16px; text-align: center; }
+/* Pad mode (USE_SYSTEM_KEYBOARD false): the 4e50d7e layout, question and overlays centred
+   in a full-height sheet, the pad at the bottom. */
+.gs-mode-pad .gs-play { justify-content: center; gap: 0; padding: 12px 16px; }
+.gs-mode-pad .gs-overlay { justify-content: center; padding: 16px; }
 .gs-overlay-title { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 26px; max-width: 22ch; }
 .gs-count { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(96px, 30vw, 200px); line-height: 1; font-variant-numeric: tabular-nums; animation: gs-pop 0.9s ease-out both; }
 @keyframes gs-pop { from { transform: scale(1.35); opacity: 0; } 30% { opacity: 1; } to { transform: scale(1); opacity: 1; } }

@@ -79,10 +79,13 @@
      GameShell.debug.tick()                run one tick immediately
    ============================================================================= */
 
-// Answers come from the phone's own number pad (a real <input inputmode="numeric">).
-// If testing on an iPhone shows a layout problem, set this to false: games then fall
-// back to document key events plus their own drawn on-screen pad (ctx.input is null).
-const USE_SYSTEM_KEYBOARD = true;
+// false (current): answers come from document key events plus the game's own drawn
+// on-screen number pad on touch devices (ctx.input is null), and the layer is a plain
+// 100dvh sheet. This is the behaviour of commit 4e50d7e.
+// true: a real <input inputmode="numeric"> so phones show their system number pad.
+// Tried in 8810084 and rejected on iPhone: iOS adds its accessory bar (arrows and a
+// tick) above the keypad and the page behind showed through. Kept for reference only.
+const USE_SYSTEM_KEYBOARD = false;
 
 (function () {
   "use strict";
@@ -354,20 +357,21 @@ const USE_SYSTEM_KEYBOARD = true;
       const name = input.value.trim();
       if (name.length < 2 || name.length > 20) { msg.textContent = "Use 2 to 20 characters."; return; }
       save.disabled = true; msg.textContent = "";
-      // Still inside the tap: open the layer and focus its input now; the countdown
-      // starts once the name is saved.
-      openLayer({ holdCountdown: true });
+      // Input mode only: still inside the tap, open the layer and focus its input now
+      // (iOS needs that); the countdown starts once the name is saved.
+      const early = wantsInput();
+      if (early) openLayer({ holdCountdown: true });
       const { error: err } = await opts.sb.from("player_profiles").insert({ user_id: opts.userId, display_name: name });
       if (err) {
         console.error("[game-shell] profile save failed", err);
-        closeLayer();
+        if (early) closeLayer();
         msg.textContent = "Couldn't save the name. Try again.";
         save.disabled = false;
         return;
       }
       profileName = name; profileState = "have";
       backdrop.remove();
-      countdown();
+      if (early) countdown(); else openLayer();
     });
   }
 
@@ -413,20 +417,20 @@ const USE_SYSTEM_KEYBOARD = true;
       type: "text", inputmode: "numeric", pattern: "[0-9]*", autocomplete: "off", autocorrect: "off",
       autocapitalize: "off", spellcheck: "false", enterkeyhint: "done", "aria-label": "Answer", class: "gs-answer",
     }) : null;
-    const hint = el("button", { type: "button", class: "gs-hint", hidden: true, text: "Tap to bring back the keyboard" });
+    const hint = input ? el("button", { type: "button", class: "gs-hint", hidden: true, text: "Tap to bring back the keyboard" }) : null;
     const play = el("div", { class: "gs-play" }, stage, input, hint);
     const overlay = el("div", { class: "gs-overlay", hidden: true });
     const body = el("div", { class: "gs-body" }, play, overlay);
     const padSlot = el("div", { class: "gs-pad-slot" });
     const quitBtn = el("button", { type: "button", class: "gs-x", "aria-label": "Quit this run", text: "×", onclick: openConfirm });
-    const root = el("div", { class: "gs-layer" + (prefersReducedMotion() ? " gs-reduced" : ""), role: "dialog", "aria-modal": "true", "aria-label": opts.title },
+    const root = el("div", { class: "gs-layer " + (input ? "gs-mode-input" : "gs-mode-pad") + (prefersReducedMotion() ? " gs-reduced" : ""), role: "dialog", "aria-modal": "true", "aria-label": opts.title },
       el("div", { class: "gs-strip" }, quitBtn, el("div", { class: "gs-strip-title", text: opts.title }), el("div", { class: "gs-strip-slots" }, timerText, scoreSlot)),
       bar, body, padSlot);
     return { root, stage, play, input, hint, overlay, padSlot, timerText, bar, scoreSlot, frozen: "" };
   }
 
   function focusInput() {
-    if (layer && layer.input) { layer.input.focus({ preventScroll: true }); layer.hint.hidden = true; }
+    if (layer && layer.input) { layer.input.focus({ preventScroll: true }); layer.hint.hidden = true; } // no-op in pad mode
   }
   function canType() { return run && run.state === "live"; }
   function wireInput() {
@@ -454,10 +458,12 @@ const USE_SYSTEM_KEYBOARD = true;
     run = { clock: makeClock(), state: "countdown", game: null, finished: false };
     document.body.append(layer.root);
     lockScroll();
-    wireInput();
-    fitToViewport();
-    watchViewport(true);
-    focusInput(); // synchronous, inside the tap that opened the layer
+    if (layer.input) {
+      wireInput();
+      fitToViewport();      // input mode only: follow the visible area above the keyboard
+      watchViewport(true);
+      focusInput();         // synchronous, inside the tap that opened the layer
+    }
     document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
@@ -473,7 +479,7 @@ const USE_SYSTEM_KEYBOARD = true;
     document.removeEventListener("keydown", onKeyDown, true);
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("blur", onBlur);
-    watchViewport(false);
+    if (layer.input) watchViewport(false);
     layer.root.remove();
     layer = null;
     unlockScroll();
@@ -483,19 +489,20 @@ const USE_SYSTEM_KEYBOARD = true;
   function clearCountdown() { countdownTimers.forEach(clearTimeout); countdownTimers = []; }
   // Overlays sit on top of the play area, which is faded out (opacity 0) rather than
   // hidden, so the answer input keeps its focus and the keyboard stays open.
+  // Pad mode (as in 4e50d7e): the stage and pad are hidden while an overlay shows.
   function showOverlay(children, cls) {
     if (layer.input) layer.frozen = layer.input.value;
     layer.overlay.className = "gs-overlay" + (cls ? " " + cls : "");
     layer.overlay.replaceChildren(...children);
     layer.overlay.hidden = false;
-    layer.play.classList.add("gs-dim");
-    layer.padSlot.classList.add("gs-dim");
+    if (layer.input) { layer.play.classList.add("gs-dim"); layer.padSlot.classList.add("gs-dim"); }
+    else { layer.stage.classList.add("gs-hidden"); layer.padSlot.classList.add("gs-hidden"); }
   }
   function hideOverlay() {
     layer.overlay.hidden = true;
     layer.overlay.replaceChildren();
-    layer.play.classList.remove("gs-dim");
-    layer.padSlot.classList.remove("gs-dim");
+    if (layer.input) { layer.play.classList.remove("gs-dim"); layer.padSlot.classList.remove("gs-dim"); }
+    else { layer.stage.classList.remove("gs-hidden"); layer.padSlot.classList.remove("gs-hidden"); }
   }
   // Countdown: 3-2-1-Go before the game starts, 3-2-1 when resuming it.
   function countdown() {
@@ -542,7 +549,7 @@ const USE_SYSTEM_KEYBOARD = true;
     run.state = "paused";
     showOverlay([
       el("div", { class: "gs-overlay-title", text: "Paused" }),
-      el("button", { type: "button", class: "gs-btn", text: "Resume", onclick: () => { focusInput(); countdown(); } }),
+      el("button", { type: "button", class: "gs-btn", text: "Resume", onclick: () => { if (layer.input) focusInput(); countdown(); } }),
     ], "gs-overlay-panel");
   }
   function onVisibility() { if (document.visibilityState === "hidden") pauseRun(); }
@@ -556,7 +563,7 @@ const USE_SYSTEM_KEYBOARD = true;
     clearCountdown();
     run.clock.pause();
     run.state = "confirm";
-    const keep = el("button", { type: "button", class: "gs-btn", text: "Keep playing", onclick: () => { focusInput(); closeConfirm(); } });
+    const keep = el("button", { type: "button", class: "gs-btn", text: "Keep playing", onclick: () => { if (layer.input) focusInput(); closeConfirm(); } });
     showOverlay([
       el("div", { class: "gs-overlay-title", text: "Quit this run? It won't be saved." }),
       el("div", { class: "gs-dialog-actions" }, keep, el("button", { type: "button", class: "gs-btn-secondary", text: "Quit", onclick: closeLayer })),
@@ -574,7 +581,7 @@ const USE_SYSTEM_KEYBOARD = true;
     if (!layer) return;
     if (e.key === "Escape") {
       e.preventDefault();
-      if (run && run.state === "confirm") { focusInput(); closeConfirm(); } else openConfirm();
+      if (run && run.state === "confirm") { if (layer.input) focusInput(); closeConfirm(); } else openConfirm();
       return;
     }
     if (layer.input) {
