@@ -1,5 +1,7 @@
 /* game-shell.css — shared styles for the STK game pages. Load as game-shell.css?v=N
    and bump N whenever this file or game-shell.js changes. */
+/* NB: rules below that set display must not override the hidden attribute. */
+.gs-layer [hidden], .gs-overlay[hidden] { display: none !important; }
 
 .gs-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .gs-hidden { display: none !important; }
@@ -92,9 +94,24 @@ html.gs-locked body { position: fixed; left: 0; right: 0; }
 .gs-score-slot { min-width: 2ch; text-align: right; color: #6F5439; }
 .gs-timer-bar { height: 4px; margin: 0 14px; background: #E3DAC4; border-radius: 2px; overflow: hidden; }
 .gs-timer-fill { height: 100%; width: 100%; background: #8B6B49; }
-.gs-stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 16px; }
+.gs-body { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+/* Question and answer sit in the upper part of the layer, clear of the keyboard. */
+.gs-play { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; padding: clamp(8px, 5vh, 48px) 16px 8px; }
+.gs-stage { display: flex; flex-direction: column; align-items: center; }
+/* Faded, never display:none or visibility:hidden, so a focused input keeps focus. */
+.gs-dim { opacity: 0; pointer-events: none; }
+.gs-answer {
+  display: block; width: 6ch; max-width: 80vw; margin-top: 4px; padding: 2px 8px;
+  border: none; border-bottom: 3px solid #8B6B49; border-radius: 0; background: transparent; outline: none;
+  font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(40px, 10vw, 72px); line-height: 1.15;
+  text-align: center; color: #1A1A18; caret-color: #8B6B49; font-variant-numeric: tabular-nums;
+  -webkit-appearance: none; appearance: none;
+}
+.gs-answer:focus-visible { outline: none; border-bottom-color: #6F5439; }
+.gs-answer.wrong { color: #A6453B; border-bottom-color: #A6453B; }
+.gs-hint { min-height: 44px; padding: 0 14px; border: none; background: none; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer; }
 .gs-pad-slot { flex: 0 0 auto; padding: 0 12px; }
-.gs-overlay { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 16px; text-align: center; }
+.gs-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 18px; padding: clamp(16px, 6vh, 56px) 16px 16px; text-align: center; }
 .gs-overlay-title { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 26px; max-width: 22ch; }
 .gs-count { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(96px, 30vw, 200px); line-height: 1; font-variant-numeric: tabular-nums; animation: gs-pop 0.9s ease-out both; }
 @keyframes gs-pop { from { transform: scale(1.35); opacity: 0; } 30% { opacity: 1; } to { transform: scale(1); opacity: 1; } }

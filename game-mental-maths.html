@@ -17,7 +17,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Mental maths — STK</title>
-<link rel="stylesheet" href="game-shell.css?v=1">
+<link rel="stylesheet" href="game-shell.css?v=2">
 <style>
   :root {
     --bg: #F2ECDF;
@@ -190,7 +190,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="game-shell.js?v=1"></script>
+<script src="game-shell.js?v=2"></script>
 <script>
   const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
@@ -233,39 +233,58 @@
     return n;
   }
 
+  // Answers arrive through ctx.input (the phone's own number pad, inputmode="numeric")
+  // when the shell provides it. If USE_SYSTEM_KEYBOARD is switched off in
+  // game-shell.js, ctx.input is null and the drawn pad below is used instead.
   function createRun(ctx) {
     let q = null, typed = "", score = 0, shownAt = 0, done = false;
     const times = { add: [], sub: [], mul: [], div: [] };
+    const input = ctx.input;
     const qEl = mmEl("div", { class: "mm-question", "aria-live": "polite" });
-    const tEl = mmEl("div", { class: "mm-typed", "aria-label": "Your answer" });
-    ctx.stage.replaceChildren(qEl, tEl);
+    const tEl = input ? null : mmEl("div", { class: "mm-typed", "aria-label": "Your answer" });
+    ctx.stage.replaceChildren(...[qEl, tEl].filter(Boolean));
 
     function render() {
-      tEl.textContent = typed;
       const want = String(q.answer);
-      tEl.classList.toggle("wrong", typed.length >= want.length && typed !== want);
+      const wrong = typed.length >= want.length && typed !== want;
+      if (input) input.classList.toggle("wrong", wrong);
+      else { tEl.textContent = typed; tEl.classList.toggle("wrong", wrong); }
     }
     function next() {
       q = makeQuestion(q);
       typed = "";
+      if (input) input.value = ""; // the same input element for every question
       shownAt = ctx.clock.elapsedMs();
       qEl.textContent = q.text;
       render();
     }
-    function press(key) {
-      if (done || !ctx.clock.running) return false;
-      if (/^[0-9]$/.test(key)) { if (typed.length < 6) typed += key; }
-      else if (key === "Backspace") typed = typed.slice(0, -1);
-      else return false;
+    function check() {
       if (typed === String(q.answer)) {
         times[q.op].push(ctx.clock.elapsedMs() - shownAt);
         score++;
         ctx.setScore(String(score));
         next();
       } else render();
+    }
+    // Input mode: strip anything that isn't a digit (covers paste and IME) on every event.
+    function onInput() {
+      if (done || !ctx.clock.running) return;
+      const clean = input.value.replace(/[^0-9]/g, "").slice(0, 6);
+      if (clean !== input.value) input.value = clean;
+      typed = clean;
+      check();
+    }
+    // Fallback (no input): hardware keys and the drawn pad.
+    function press(key) {
+      if (input || done || !ctx.clock.running) return false;
+      if (/^[0-9]$/.test(key)) { if (typed.length < 6) typed += key; }
+      else if (key === "Backspace") typed = typed.slice(0, -1);
+      else return false;
+      check();
       return true;
     }
-    if (ctx.isTouch) {
+    if (input) input.addEventListener("input", onInput);
+    else if (ctx.isTouch) {
       const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "Backspace"];
       ctx.pad.replaceChildren(mmEl("div", { class: "mm-pad", role: "group", "aria-label": "Number pad" },
         keys.map((k) => k === ""
@@ -293,7 +312,7 @@
     ctx.setScore("0");
     next();
     tick();
-    return { onKey: press, tick, destroy() { done = true; } };
+    return { onKey: press, tick, destroy() { done = true; if (input) input.removeEventListener("input", onInput); } };
   }
 
   const secs = (ms) => (ms / 1000).toFixed(1) + "s";
@@ -325,7 +344,7 @@
     if (session && !mounted) {
       mounted = true;
       GameShell.mount({
-        sb, userId: session.user.id, game: "mental_maths", title: "Mental maths",
+        sb, userId: session.user.id, game: "mental_maths", title: "Mental maths", answerInput: "numeric",
         els: {
           stats: document.getElementById("stats"),
           leaderboard: document.getElementById("leaderboard"),

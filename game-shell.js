@@ -12,6 +12,7 @@
        userId,             // auth user id (uuid)
        game,               // key stored in game_scores.game, e.g. "mental_maths"
        title,              // name shown in the run layer's top strip
+       answerInput,        // optional: "numeric" gives the run a real <input> (see ctx.input)
        els: {
          stats,            // element: the shell renders the 4-cell stat strip here
          leaderboard,      // element: the shell renders the Leaderboard card body here
@@ -28,8 +29,13 @@
      })
 
    RUN CONTEXT (argument to createRun)
-     ctx.stage      element in the full-screen layer for the game's own UI
-     ctx.pad        element at the bottom of the layer (for an on-screen keypad)
+     ctx.stage      element in the full-screen layer for the game's own UI (the question)
+     ctx.input      the answer <input> (inputmode="numeric") when answerInput is set and
+                    USE_SYSTEM_KEYBOARD is true, otherwise null. The shell creates it once
+                    per run, keeps it focused and never recreates it: the game listens for
+                    "input" events, and clears .value between questions.
+     ctx.pad        element at the bottom of the layer (for an on-screen keypad when
+                    ctx.input is null)
      ctx.isTouch    true when matchMedia('(pointer: coarse)') matches
      ctx.clock      { start(), pause(), resume(), elapsedMs(), remainingMs(totalMs), running }
                     based on performance.now(); excludes paused time. Games must use
@@ -40,9 +46,22 @@
                                     run and shows the Result card.
    createRun must return { onKey(key) -> boolean, tick(), destroy() }:
      onKey   receives KeyboardEvent.key while the layer is open and the run is live;
-             return true if handled (the shell then calls preventDefault).
+             return true if handled (the shell then calls preventDefault). Only used
+             when ctx.input is null; with ctx.input the keys go into the input.
      tick    called about every 50 ms while the run is live (check the time limit here).
      destroy called when the run ends or is quit.
+
+   FOCUS (iOS)
+     iOS opens the keyboard only when focus() runs inside a user gesture, so the shell
+     focuses ctx.input synchronously in the Start / "Save and play" / Resume / "Keep
+     playing" handlers, keeps it focused (opacity 0, never display:none) through the
+     countdown, shows "Tap to bring back the keyboard" if it loses focus mid-run, and
+     refocuses only on a tap on the layer. It blurs the input when the run ends.
+
+   LAYOUT
+     While a run is open the layer is sized to window.visualViewport (height and
+     offsetTop), so the timer, question and input sit above the on-screen keyboard;
+     100dvh is the fallback.
 
    SAVING
      Finished runs only: game_scores { user_id, game, score, played_date (London date,
@@ -59,6 +78,12 @@
      GameShell.config.now                  time source (default performance.now)
      GameShell.debug.tick()                run one tick immediately
    ============================================================================= */
+
+// Answers come from the phone's own number pad (a real <input inputmode="numeric">).
+// If testing on an iPhone shows a layout problem, set this to false: games then fall
+// back to document key events plus their own drawn on-screen pad (ctx.input is null).
+const USE_SYSTEM_KEYBOARD = true;
+
 (function () {
   "use strict";
 
@@ -149,14 +174,17 @@
   }
 
   // ---------------------------------------------------------------- the shell
-  let opts = null, profileName = null, layer = null, run = null, tickTimer = null;
+  let opts = null, layer = null, run = null, tickTimer = null;
+  let profileName = null, profileState = "unknown"; // unknown | loading | have | none | error
   let lbTab = "all", lbSeq = 0;
   const isTouch = () => window.matchMedia("(pointer: coarse)").matches;
   const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const wantsInput = () => USE_SYSTEM_KEYBOARD && opts && opts.answerInput === "numeric";
 
   function mount(o) {
     opts = o;
-    o.els.startButton.addEventListener("click", startFlow);
+    o.els.startButton.addEventListener("click", onStartTap);
+    loadProfile();
     refreshStats();
     renderLeaderboardFrame();
     loadLeaderboard();
@@ -254,7 +282,7 @@
   function renderBoard(body, rows, latestId, pinned) {
     if (!rows.length) { body.replaceChildren(el("div", { class: "gs-muted", text: "No runs yet. Play one to start the board." })); return; }
     const list = el("ol", { class: "gs-board" });
-    rows.forEach((r, i) => {
+    rows.forEach((r) => {
       const firstSame = rows.findIndex((x) => x.score === r.score);
       list.append(boardRow(r, firstSame + 1, r.id === latestId));
     });
@@ -269,35 +297,77 @@
     }
   }
 
-  // ---- name dialog ----
-  async function ensureName() {
-    if (profileName) return profileName;
+  // ---- leaderboard name (profile) ----
+  // Fetched at mount, so a Start tap normally knows synchronously whether to ask for a
+  // name, and can open the layer and focus the input inside the same gesture.
+  async function loadProfile() {
+    profileState = "loading";
     const { sb, userId } = opts;
-    const { data, error } = await sb.from("player_profiles").select("display_name").eq("user_id", userId).limit(1);
-    if (error) { console.error("[game-shell] profile lookup failed", error); throw error; }
-    if (data && data.length && data[0].display_name) { profileName = data[0].display_name; return profileName; }
-    return new Promise((resolve) => {
-      const input = el("input", { type: "text", class: "gs-input", id: "gs-name-input", maxlength: "20", placeholder: "Your name", autocomplete: "nickname" });
-      const msg = el("div", { class: "gs-dialog-msg", role: "alert" });
-      const save = el("button", { type: "submit", class: "gs-btn", text: "Save and play" });
-      const cancel = el("button", { type: "button", class: "gs-btn-secondary", text: "Cancel" });
-      const form = el("form", { class: "gs-dialog", role: "dialog", "aria-modal": "true", "aria-labelledby": "gs-name-title" },
-        el("h2", { id: "gs-name-title", class: "gs-card-title", text: "What name should appear on the leaderboard?" }),
-        el("label", { for: "gs-name-input", class: "gs-visually-hidden", text: "Leaderboard name" }), input, msg,
-        el("div", { class: "gs-dialog-actions" }, cancel, save));
-      const backdrop = el("div", { class: "gs-backdrop" }, form);
-      document.body.append(backdrop);
-      input.focus();
-      cancel.addEventListener("click", () => { backdrop.remove(); resolve(null); });
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const name = input.value.trim();
-        if (name.length < 2 || name.length > 20) { msg.textContent = "Use 2 to 20 characters."; return; }
-        save.disabled = true; msg.textContent = "";
-        const { error: err } = await sb.from("player_profiles").insert({ user_id: userId, display_name: name });
-        if (err) { console.error("[game-shell] profile save failed", err); msg.textContent = "Couldn't save the name. Try again."; save.disabled = false; return; }
-        profileName = name; backdrop.remove(); resolve(name);
-      });
+    try {
+      const { data, error } = await sb.from("player_profiles").select("display_name").eq("user_id", userId).limit(1);
+      if (error) throw error;
+      if (data && data.length && data[0].display_name) { profileName = data[0].display_name; profileState = "have"; }
+      else profileState = "none";
+    } catch (err) {
+      console.error("[game-shell] profile lookup failed", err);
+      profileState = "error";
+    }
+    return profileState;
+  }
+  function startMessage(text) {
+    let msg = opts.els.startButton.parentNode.querySelector(".gs-start-msg");
+    if (!text) { if (msg) msg.remove(); return; }
+    if (!msg) { msg = el("div", { class: "gs-start-msg", role: "alert" }); opts.els.startButton.after(msg); }
+    msg.textContent = text;
+  }
+  // Start and Play again: everything up to opening the layer and focusing the input is
+  // synchronous, so iOS treats the focus() as part of the tap and opens the keyboard.
+  function onStartTap() {
+    if (layer || document.querySelector(".gs-backdrop")) return;
+    if (profileState === "have") { startMessage(null); openLayer(); return; }
+    if (profileState === "none") { startMessage(null); showNameDialog(); return; }
+    // Profile not known yet (slow network or an earlier failure): fall back to async.
+    const btns = [opts.els.startButton, ...document.querySelectorAll("[data-gs-play-again]")];
+    btns.forEach((b) => (b.disabled = true));
+    loadProfile().then((state) => {
+      btns.forEach((b) => (b.disabled = false));
+      if (state === "have") { startMessage(null); openLayer(); }
+      else if (state === "none") { startMessage(null); showNameDialog(); }
+      else startMessage("Couldn't check your leaderboard name. Try again.");
+    });
+  }
+  function showNameDialog() {
+    const input = el("input", { type: "text", class: "gs-input", id: "gs-name-input", maxlength: "20", placeholder: "Your name", autocomplete: "nickname" });
+    const msg = el("div", { class: "gs-dialog-msg", role: "alert" });
+    const save = el("button", { type: "submit", class: "gs-btn", text: "Save and play" });
+    const cancel = el("button", { type: "button", class: "gs-btn-secondary", text: "Cancel" });
+    const form = el("form", { class: "gs-dialog", role: "dialog", "aria-modal": "true", "aria-labelledby": "gs-name-title" },
+      el("h2", { id: "gs-name-title", class: "gs-card-title", text: "What name should appear on the leaderboard?" }),
+      el("label", { for: "gs-name-input", class: "gs-visually-hidden", text: "Leaderboard name" }), input, msg,
+      el("div", { class: "gs-dialog-actions" }, cancel, save));
+    const backdrop = el("div", { class: "gs-backdrop" }, form);
+    document.body.append(backdrop);
+    input.focus();
+    cancel.addEventListener("click", () => backdrop.remove());
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = input.value.trim();
+      if (name.length < 2 || name.length > 20) { msg.textContent = "Use 2 to 20 characters."; return; }
+      save.disabled = true; msg.textContent = "";
+      // Still inside the tap: open the layer and focus its input now; the countdown
+      // starts once the name is saved.
+      openLayer({ holdCountdown: true });
+      const { error: err } = await opts.sb.from("player_profiles").insert({ user_id: opts.userId, display_name: name });
+      if (err) {
+        console.error("[game-shell] profile save failed", err);
+        closeLayer();
+        msg.textContent = "Couldn't save the name. Try again.";
+        save.disabled = false;
+        return;
+      }
+      profileName = name; profileState = "have";
+      backdrop.remove();
+      countdown();
     });
   }
 
@@ -319,57 +389,91 @@
   }
   function blockTouchMove(e) { if (!e.target.closest || !e.target.closest("[data-gs-scroll]")) e.preventDefault(); }
 
+  // Size the layer to the visible area (above the on-screen keyboard).
+  function fitToViewport() {
+    const vv = window.visualViewport;
+    if (!layer || !vv) return;
+    layer.root.style.height = `${vv.height}px`;
+    layer.root.style.top = `${vv.offsetTop}px`;
+  }
+  function watchViewport(on) {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const m = on ? "addEventListener" : "removeEventListener";
+    vv[m]("resize", fitToViewport);
+    vv[m]("scroll", fitToViewport);
+  }
+
   function buildLayer() {
     const timerText = el("span", { class: "gs-timer-text" });
     const bar = el("div", { class: "gs-timer-bar" }, el("div", { class: "gs-timer-fill" }));
     const scoreSlot = el("span", { class: "gs-score-slot" });
     const stage = el("div", { class: "gs-stage" });
-    const padSlot = el("div", { class: "gs-pad-slot" });
+    const input = wantsInput() ? el("input", {
+      type: "text", inputmode: "numeric", pattern: "[0-9]*", autocomplete: "off", autocorrect: "off",
+      autocapitalize: "off", spellcheck: "false", enterkeyhint: "done", "aria-label": "Answer", class: "gs-answer",
+    }) : null;
+    const hint = el("button", { type: "button", class: "gs-hint", hidden: true, text: "Tap to bring back the keyboard" });
+    const play = el("div", { class: "gs-play" }, stage, input, hint);
     const overlay = el("div", { class: "gs-overlay", hidden: true });
+    const body = el("div", { class: "gs-body" }, play, overlay);
+    const padSlot = el("div", { class: "gs-pad-slot" });
     const quitBtn = el("button", { type: "button", class: "gs-x", "aria-label": "Quit this run", text: "×", onclick: openConfirm });
     const root = el("div", { class: "gs-layer" + (prefersReducedMotion() ? " gs-reduced" : ""), role: "dialog", "aria-modal": "true", "aria-label": opts.title },
       el("div", { class: "gs-strip" }, quitBtn, el("div", { class: "gs-strip-title", text: opts.title }), el("div", { class: "gs-strip-slots" }, timerText, scoreSlot)),
-      bar, stage, padSlot, overlay);
-    return { root, stage, padSlot, overlay, timerText, bar, scoreSlot };
+      bar, body, padSlot);
+    return { root, stage, play, input, hint, overlay, padSlot, timerText, bar, scoreSlot, frozen: "" };
   }
 
-  async function startFlow() {
-    if (layer) return;
-    const btns = [opts.els.startButton, ...document.querySelectorAll("[data-gs-play-again]")];
-    btns.forEach((b) => (b.disabled = true));
-    let name, failed = false;
-    try { name = await ensureName(); } catch (_) { name = null; failed = true; }
-    btns.forEach((b) => (b.disabled = false));
-    let msg = opts.els.startButton.parentNode.querySelector(".gs-start-msg");
-    if (failed) {
-      if (!msg) { msg = el("div", { class: "gs-start-msg", role: "alert" }); opts.els.startButton.after(msg); }
-      msg.textContent = "Couldn't check your leaderboard name. Try again.";
-      return;
-    }
-    if (msg) msg.remove();
-    if (!name) return;
-    openLayer();
+  function focusInput() {
+    if (layer && layer.input) { layer.input.focus({ preventScroll: true }); layer.hint.hidden = true; }
+  }
+  function canType() { return run && run.state === "live"; }
+  function wireInput() {
+    const input = layer.input;
+    if (!input) return;
+    // Registered before the game's own listener: outside live play, undo any typing.
+    input.addEventListener("input", (e) => {
+      if (!canType()) { input.value = layer.frozen; e.stopImmediatePropagation(); }
+    });
+    input.addEventListener("blur", () => {
+      if (layer && run && (run.state === "live" || run.state === "countdown")) layer.hint.hidden = false;
+    });
+    input.addEventListener("focus", () => { if (layer) layer.hint.hidden = true; });
+    // A tap anywhere on the layer (except X and the overlay's own buttons) refocuses:
+    // that tap is a user gesture, so iOS reopens the keyboard.
+    layer.root.addEventListener("click", (e) => {
+      if (e.target.closest(".gs-x") || e.target.closest(".gs-overlay button")) return;
+      if (run && (run.state === "live" || run.state === "countdown")) focusInput();
+    });
   }
 
-  function openLayer() {
+  function openLayer(o) {
     document.dispatchEvent(new MouseEvent("click", { bubbles: true })); // closes any open nav dropdown
     layer = buildLayer();
     run = { clock: makeClock(), state: "countdown", game: null, finished: false };
     document.body.append(layer.root);
     lockScroll();
+    wireInput();
+    fitToViewport();
+    watchViewport(true);
+    focusInput(); // synchronous, inside the tap that opened the layer
     document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
-    countdown();
+    if (!(o && o.holdCountdown)) countdown();
   }
   function closeLayer() {
     if (!layer) return;
+    clearCountdown();
     clearInterval(tickTimer); tickTimer = null;
     if (run && run.game) { try { run.game.destroy(); } catch (e) { console.error(e); } }
     run = null;
+    if (layer.input) layer.input.blur(); // closes the keyboard
     document.removeEventListener("keydown", onKeyDown, true);
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("blur", onBlur);
+    watchViewport(false);
     layer.root.remove();
     layer = null;
     unlockScroll();
@@ -377,18 +481,21 @@
 
   let countdownTimers = [];
   function clearCountdown() { countdownTimers.forEach(clearTimeout); countdownTimers = []; }
+  // Overlays sit on top of the play area, which is faded out (opacity 0) rather than
+  // hidden, so the answer input keeps its focus and the keyboard stays open.
   function showOverlay(children, cls) {
+    if (layer.input) layer.frozen = layer.input.value;
     layer.overlay.className = "gs-overlay" + (cls ? " " + cls : "");
     layer.overlay.replaceChildren(...children);
     layer.overlay.hidden = false;
-    layer.stage.classList.add("gs-hidden");
-    layer.padSlot.classList.add("gs-hidden");
+    layer.play.classList.add("gs-dim");
+    layer.padSlot.classList.add("gs-dim");
   }
   function hideOverlay() {
     layer.overlay.hidden = true;
     layer.overlay.replaceChildren();
-    layer.stage.classList.remove("gs-hidden");
-    layer.padSlot.classList.remove("gs-hidden");
+    layer.play.classList.remove("gs-dim");
+    layer.padSlot.classList.remove("gs-dim");
   }
   // Countdown: 3-2-1-Go before the game starts, 3-2-1 when resuming it.
   function countdown() {
@@ -414,8 +521,9 @@
   function beginRun() {
     const clock = run.clock;
     run.state = "live";
+    if (layer.input) { layer.input.value = ""; layer.frozen = ""; }
     const ctx = {
-      stage: layer.stage, pad: layer.padSlot, isTouch: isTouch(), clock,
+      stage: layer.stage, input: layer.input, pad: layer.padSlot, isTouch: isTouch(), clock,
       setTimer(text, fraction) { layer.timerText.textContent = text; layer.bar.firstChild.style.width = `${Math.max(0, Math.min(1, fraction)) * 100}%`; },
       setScore(text) { layer.scoreSlot.textContent = text; },
       finish(result) { finishRun(result); },
@@ -434,7 +542,7 @@
     run.state = "paused";
     showOverlay([
       el("div", { class: "gs-overlay-title", text: "Paused" }),
-      el("button", { type: "button", class: "gs-btn", text: "Resume", onclick: () => countdown() }),
+      el("button", { type: "button", class: "gs-btn", text: "Resume", onclick: () => { focusInput(); countdown(); } }),
     ], "gs-overlay-panel");
   }
   function onVisibility() { if (document.visibilityState === "hidden") pauseRun(); }
@@ -448,12 +556,11 @@
     clearCountdown();
     run.clock.pause();
     run.state = "confirm";
-    const keep = el("button", { type: "button", class: "gs-btn", text: "Keep playing", onclick: closeConfirm });
+    const keep = el("button", { type: "button", class: "gs-btn", text: "Keep playing", onclick: () => { focusInput(); closeConfirm(); } });
     showOverlay([
       el("div", { class: "gs-overlay-title", text: "Quit this run? It won't be saved." }),
       el("div", { class: "gs-dialog-actions" }, keep, el("button", { type: "button", class: "gs-btn-secondary", text: "Quit", onclick: closeLayer })),
     ], "gs-overlay-panel");
-    keep.focus();
   }
   function closeConfirm() {
     if (!run || run.state !== "confirm") return;
@@ -465,7 +572,18 @@
   }
   function onKeyDown(e) {
     if (!layer) return;
-    if (e.key === "Escape") { e.preventDefault(); if (run && run.state === "confirm") closeConfirm(); else openConfirm(); return; }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (run && run.state === "confirm") { focusInput(); closeConfirm(); } else openConfirm();
+      return;
+    }
+    if (layer.input) {
+      // A hardware key is a user gesture: if the input lost focus mid-run, take it back
+      // so the key lands in it. Outside live play, typed characters are swallowed.
+      if (!canType()) { if (e.key.length === 1) e.preventDefault(); return; }
+      if (document.activeElement !== layer.input) focusInput();
+      return;
+    }
     if (run && run.state === "live" && run.game && run.game.onKey(e.key)) e.preventDefault();
   }
 
@@ -480,7 +598,7 @@
     const bestLine = el("div", { class: "gs-result-best" });
     const status = el("div", { class: "gs-save-status", role: "status", text: "Saving…" });
     const retry = el("button", { type: "button", class: "gs-btn-secondary", text: "Retry", hidden: true });
-    const again = el("button", { type: "button", class: "gs-btn gs-btn-wide", "data-gs-play-again": "", text: "Play again", onclick: startFlow });
+    const again = el("button", { type: "button", class: "gs-btn gs-btn-wide", "data-gs-play-again": "", text: "Play again", onclick: onStartTap });
     card.replaceChildren(el("h2", { class: "gs-card-title", text: "Result" }), gamePart, el("div", { class: "gs-save-row" }, status, retry), again);
     opts.renderResult(gamePart, { score: result.score, stats: result.stats, rankEl: rankLine, bestEl: bestLine });
     if (!rankLine.isConnected) gamePart.after(rankLine, bestLine);
@@ -529,7 +647,7 @@
   }
 
   window.GameShell = {
-    mount, config,
-    debug: { tick: () => tick(), get run() { return run; }, ordinal, londonMidnight, londonDate, rangeBounds, whenLabel },
+    mount, config, USE_SYSTEM_KEYBOARD,
+    debug: { tick: () => tick(), get run() { return run; }, get layer() { return layer; }, ordinal, londonMidnight, londonDate, rangeBounds, whenLabel },
   };
 })();
