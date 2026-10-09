@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Memory tiles — STK</title>
+<link rel="stylesheet" href="game-shell.css?v=4">
+<style>
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --ink-faint: #948E7A;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+    --gold-soft: rgba(139,107,73,0.10);
+    --green: #2F6B4F;
+    --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B;
+    --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A;
+    --steel-soft: rgba(79,107,138,0.10);
+  }
+
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; }
+  .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
+  /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
+  #logout-btn { min-height: 44px; }
+
+  /* --- memory tiles: run layer --- */
+  /* The shell centres the stage and lets it shrink to its content; stretch it so the
+     grid's width can be measured against the full play area. */
+  .gs-stage { align-self: stretch; }
+  .mt-status { min-height: 24px; font-size: 16px; font-weight: 700; color: #1A1A18; text-align: center; font-variant-numeric: tabular-nums; }
+  .mt-hearts { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+  .mt-heart { width: 24px; height: 22px; display: block; }
+  .mt-hearts-text { font-size: 14px; color: #5A5650; margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .mt-hearts.shake { animation: mt-shake 360ms ease-in-out; }
+  @keyframes mt-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+  @media (prefers-reduced-motion: reduce) { .mt-hearts.shake { animation: none; } }
+  .mt-grid { width: clamp(240px, calc(100% - 32px), 420px); margin: 14px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mt-tile { box-sizing: border-box; aspect-ratio: 1 / 1; min-width: 0; border-radius: 12px; border: 2px solid #7C818B; background: #F1EBDC; padding: 0; cursor: pointer;
+    font-family: inherit; font-size: 36px; font-weight: 700; color: #A6453B; line-height: 1; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; transition: none; }
+  .mt-tile.lit, .mt-tile.tap { background: #8B6B49; border: 2px solid #8B6B49; }
+  .mt-feedback { min-height: 24px; margin-top: 12px; font-size: 15px; color: #1A1A18; text-align: center; }
+  .mt-grid.inert .mt-tile { cursor: default; }
+
+  /* --- memory tiles: result --- */
+  .mt-score { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .mt-score-label { font-size: 14px; color: #5A5650; margin-top: 4px; }
+  .mt-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .mt-fact { background: #F6EFDE; border-radius: 8px; padding: 8px 10px; }
+  .mt-fact-label { font-size: 11px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mt-fact-num { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .mt-complete { margin: 14px 0 0; font-size: 14px; font-weight: 600; color: #1A1A18; }
+  .mt-rounds { margin-top: 14px; }
+  .mt-rounds summary { cursor: pointer; font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 17px; min-height: 44px; padding: 10px 0; }
+  .mt-list { list-style: none; margin: 0; padding: 0; }
+  .mt-item { padding: 7px 0; border-top: 1px solid #EFE8DA; font-size: 14px; color: #1A1A18; font-variant-numeric: tabular-nums; }
+  .mt-item:first-child { border-top: none; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    /* memory tiles page */
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html" class="active">Games</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to track your scores and streak.</div>
+</div>
+
+<div id="app-content" class="gs-page" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Memory tiles</h1>
+<p class="sub">A grid of nine tiles lights up in a sequence, and you repeat it back in order. Every round is a new random sequence, one tile longer than the last. You have three hearts: each mistake costs one, and when they're gone the run ends. It measures short-term visual memory, a task type used in some cognitive assessments. It doesn't build finance knowledge.</p>
+
+<div class="gs-stats" id="stats" aria-label="Your stats"></div>
+
+<div class="gs-grid">
+  <section class="gs-card" id="play-card" aria-labelledby="play-title">
+    <h2 class="gs-card-title" id="play-title">Play</h2>
+    <button type="button" class="gs-btn gs-btn-wide" id="start-btn">Start</button>
+    <h3>How to play</h3>
+    <p>Watch the tiles light up, then tap them in the same order. A correct round makes the next sequence one tile longer. A wrong tap costs a heart and repeats the same length with a new sequence. On a keyboard, keys 1 to 9 tap the tiles like a keypad: 1 is the top-left tile and 9 the bottom-right.</p>
+    <h3>Scoring</h3>
+    <p>Your score is the number of tiles you recall correctly, in order, across the whole run, including the correct tiles before a mistake. You start with three hearts and the run ends when the third one breaks. Sequences start at 3 tiles and can grow to 15.</p>
+    <h3>Best practice</h3>
+    <ul>
+      <li>Group the sequence into chunks of two or three tiles, and recall each chunk as a path or a shape, not as separate tiles.</li>
+      <li>A tile that lights twice in a row is two steps. It's the easiest place to lose count.</li>
+      <li>Wait for 'Your turn' before you tap, and take a breath before you start.</li>
+      <li>After a mistake the next sequence is new, so don't try to recall the old one. Reset and watch fresh.</li>
+    </ul>
+  </section>
+  <section class="gs-card" id="result-card" hidden aria-live="polite"></section>
+  <section class="gs-card" id="leaderboard" aria-label="Leaderboard"></section>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-shell.js?v=4"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Memory tiles. Everything generic (layer, clock, pause, saving, leaderboard) lives
+  // in game-shell.js. The rules are plain functions with no DOM; createRun wires them
+  // to the layer. Showing and pauses are timed in requestAnimationFrame against the
+  // shell's run clock (pause-aware), never Date.now() or setTimeout.
+  // ---------------------------------------------------------------------------
+  const MT_GAME = "memory_tiles_v1";
+  // Tuning: each value is one line.
+  const START_LENGTH = 3;       // tiles in the first sequence
+  const MAX_LENGTH = 15;        // solving a sequence this long ends the run
+  const HEARTS = 3;             // mistakes allowed; the run ends when they're gone
+  const LIT_MS = 400;           // how long each tile stays lit while showing
+  const GAP_MS = 150;           // all tiles dark between steps, so a repeat reads as two flashes
+  const SHOW_DELAY_MS = 600;    // before the first tile lights
+  const TAP_FLASH_MS = 150;     // bronze flash on a correct tap
+  const ROUND_PAUSE_MS = 700;   // "Round solved" shows this long
+  const MISS_PAUSE_MS = 1500;   // tiles inert this long after a mistake
+  const MAX_SAME_IN_ROW = 2;    // no tile lights more than this many times in a row
+  const TILES = 9;
+
+  function mtEl(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+
+  // ---- rules (no DOM) ----
+  const cryptoU32 = () => crypto.getRandomValues(new Uint32Array(1))[0];
+  // Uniform integer in lo..hi from 32-bit draws, by rejection sampling (no modulo bias).
+  function uniformInt(lo, hi, u32) {
+    const range = hi - lo + 1, limit = Math.floor(4294967296 / range) * range;
+    let u;
+    do { u = u32(); } while (u >= limit);
+    return lo + (u % range);
+  }
+  // A sequence of tiles 0..8: a draw that would make a tile appear more than
+  // MAX_SAME_IN_ROW times in a row is redrawn, and a whole sequence already used in
+  // this run (the `used` set of keys) is regenerated.
+  const seqKey = (seq) => seq.map((t) => t + 1).join(",");
+  function makeSequence(length, used, u32) {
+    const src = u32 || cryptoU32;
+    for (;;) {
+      const seq = [];
+      while (seq.length < length) {
+        const t = uniformInt(0, TILES - 1, src);
+        const n = seq.length;
+        if (n >= MAX_SAME_IN_ROW && seq.slice(n - MAX_SAME_IN_ROW).every((x) => x === t)) continue;
+        seq.push(t);
+      }
+      if (!used || !used.has(seqKey(seq))) { if (used) used.add(seqKey(seq)); return seq; }
+    }
+  }
+  const checkTap = (seq, pos, tile) => seq[pos] === tile;
+  // Score: tiles recalled correctly in order across all attempts (a solved attempt counts its length).
+  const scoreOf = (attempts) => attempts.reduce((t, a) => t + a.tapped, 0);
+  function computeStats(attempts, heartsLeft, completedAll, elapsedMs, inputs) {
+    const used = new Set(inputs);
+    return {
+      score: scoreOf(attempts),
+      longestSolved: attempts.filter((a) => a.solved).reduce((m, a) => Math.max(m, a.length), 0),
+      heartsLeft,
+      completedAll,
+      attemptCount: attempts.length,
+      tilesShown: attempts.reduce((t, a) => t + a.length, 0),
+      elapsedMs: Math.round(elapsedMs),
+      input: used.size === 0 ? null : used.size > 1 ? "mixed" : [...used][0],
+      attempts: attempts.map((a) => ({ length: a.length, seq: a.seq, tapped: a.tapped, solved: a.solved, missedAt: a.missedAt })),
+    };
+  }
+  const heartsText = (n) => `${n} ${n === 1 ? "heart" : "hearts"} left`;
+
+  // ---- drawing ----
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  function heartSvg() {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 22"); svg.setAttribute("class", "mt-heart"); svg.setAttribute("aria-hidden", "true");
+    const p = document.createElementNS(SVG_NS, "path");
+    p.setAttribute("d", "M12 20.5 C 5 15, 1.5 11.5, 1.5 7 C 1.5 3.8, 4 1.5, 7 1.5 C 9.2 1.5, 11 2.8, 12 4.6 C 13 2.8, 14.8 1.5, 17 1.5 C 20 1.5, 22.5 3.8, 22.5 7 C 22.5 11.5, 19 15, 12 20.5 Z");
+    p.setAttribute("stroke-width", "2"); p.setAttribute("stroke-linejoin", "round");
+    svg.append(p);
+    return svg;
+  }
+  function setHeart(svg, kept) {
+    const p = svg.firstChild;
+    p.setAttribute("fill", kept ? "#8B6B49" : "none");
+    p.setAttribute("stroke", kept ? "#8B6B49" : "#7C818B");
+    svg.dataset.kept = kept ? "1" : "0";
+  }
+
+  // ---- the run ----
+  function createRun(ctx) {
+    const clock = ctx.clock;
+    const used = new Set();
+    let length = START_LENGTH, hearts = HEARTS, banked = 0, done = false, raf = 0, completedAll = false, endedAt = null;
+    let phase = "idle", seq = null, pos = 0, t0 = 0, pauseEnd = 0, needFresh = false, after = null, litNow = -1;
+    let attemptInputs = [];
+    const attempts = [], inputs = [], flashUntil = new Array(TILES).fill(-1);
+
+    const status = mtEl("div", { class: "mt-status", role: "status" });
+    const heartIcons = Array.from({ length: HEARTS }, heartSvg);
+    const heartsTextEl = mtEl("span", { class: "mt-hearts-text", "aria-live": "polite" });
+    const heartsRow = mtEl("div", { class: "mt-hearts" }, heartIcons, heartsTextEl);
+    const tiles = Array.from({ length: TILES }, (_, i) => {
+      const b = mtEl("button", { type: "button", class: "mt-tile", "aria-label": `Tile ${i + 1}`, "data-tile": i + 1 });
+      // Act on pointerdown; the click that follows (or a click from a focused tile) is ignored.
+      b.addEventListener("pointerdown", (e) => { if (!e.isPrimary || e.button !== 0) return; e.preventDefault(); tap(i, "touch"); });
+      b.addEventListener("click", (e) => e.preventDefault());
+      return b;
+    });
+    const grid = mtEl("div", { class: "mt-grid inert" }, tiles);
+    const feedback = mtEl("div", { class: "mt-feedback", role: "status" });
+    ctx.stage.replaceChildren(status, heartsRow, grid, feedback);
+    ctx.pad.replaceChildren();
+
+    function drawHearts(shake) {
+      heartIcons.forEach((h, i) => setHeart(h, i < hearts));
+      heartsTextEl.textContent = heartsText(hearts);
+      if (shake) { heartsRow.classList.remove("shake"); void heartsRow.offsetWidth; heartsRow.classList.add("shake"); }
+    }
+    function clearTiles() { tiles.forEach((t) => { t.classList.remove("lit", "tap"); t.textContent = ""; }); litNow = -1; flashUntil.fill(-1); }
+    const score = () => banked + (phase === "recall" ? pos : 0);
+    function showScore() { ctx.setScore(String(score())); }
+    function startAttempt() {
+      seq = makeSequence(length, used);
+      pos = 0; attemptInputs = [];
+      clearTiles();
+      t0 = clock.elapsedMs();
+      phase = "showing";
+      grid.classList.add("inert");
+      status.textContent = "Watch";
+      feedback.textContent = "";
+      ctx.setTimer(`${length} tiles`, length / MAX_LENGTH);
+      showScore();
+    }
+    function tap(i, via) {
+      if (done || !clock.running || phase !== "recall") return; // inert outside recall
+      const now = clock.elapsedMs();
+      attemptInputs.push(via);
+      if (checkTap(seq, pos, i)) {
+        pos++;
+        tiles[i].classList.add("tap"); flashUntil[i] = now + TAP_FLASH_MS;
+        if (pos === length) {
+          attempts.push({ length, seq: seqKey(seq), tapped: length, solved: true, missedAt: null });
+          inputs.push(...attemptInputs);
+          banked += length;
+          phase = "round"; pauseEnd = now + ROUND_PAUSE_MS; grid.classList.add("inert");
+          status.textContent = "Round solved";
+          if (length === MAX_LENGTH) { completedAll = true; endedAt = now; after = "finish"; } else after = "longer";
+        } else {
+          status.textContent = `Your turn · tile ${pos + 1} of ${length}`;
+        }
+        showScore();
+        return;
+      }
+      // a wrong tap: the heart goes now, and the correct taps before it count
+      hearts--;
+      attempts.push({ length, seq: seqKey(seq), tapped: pos, solved: false, missedAt: pos + 1 });
+      inputs.push(...attemptInputs);
+      banked += pos;
+      tiles[i].textContent = "✗";
+      drawHearts(true);
+      status.textContent = hearts > 0 ? `Missed tile ${pos + 1} of ${length}. ${heartsText(hearts)}.` : `Missed tile ${pos + 1} of ${length}. Last heart lost.`;
+      phase = "miss"; pauseEnd = now + MISS_PAUSE_MS; grid.classList.add("inert");
+      if (hearts === 0) { endedAt = now; after = "finish"; } else after = "same";
+      showScore();
+    }
+    function frame() {
+      if (done) return;
+      raf = requestAnimationFrame(frame);
+      if (!clock.running) {
+        // Paused: an attempt being shown or recalled is discarded (no heart, no score);
+        // a miss or round pause keeps its recorded result and just waits.
+        if (phase === "showing" || phase === "recall") { phase = "discarded"; needFresh = true; clearTiles(); grid.classList.add("inert"); }
+        return;
+      }
+      const now = clock.elapsedMs();
+      if (needFresh) { needFresh = false; startAttempt(); return; }
+      if (phase === "showing") {
+        const rel = now - t0 - SHOW_DELAY_MS, step = LIT_MS + GAP_MS;
+        let lit = -1;
+        if (rel >= 0) { const k = Math.floor(rel / step); if (k < length && rel - k * step < LIT_MS) lit = seq[k]; }
+        if (lit !== litNow) { if (litNow >= 0) tiles[litNow].classList.remove("lit"); if (lit >= 0) tiles[lit].classList.add("lit"); litNow = lit; }
+        if (rel >= length * step - GAP_MS) {
+          phase = "recall"; grid.classList.remove("inert");
+          status.textContent = `Your turn · tile 1 of ${length}`;
+        }
+        return;
+      }
+      if (phase === "recall") {
+        for (let i = 0; i < TILES; i++) if (flashUntil[i] >= 0 && now >= flashUntil[i]) { tiles[i].classList.remove("tap"); flashUntil[i] = -1; }
+        return;
+      }
+      if (phase === "round" || phase === "miss") {
+        for (let i = 0; i < TILES; i++) if (flashUntil[i] >= 0 && now >= flashUntil[i]) { tiles[i].classList.remove("tap"); flashUntil[i] = -1; }
+        if (now >= pauseEnd) {
+          if (after === "finish") { finish(); return; }
+          if (after === "longer") length++;
+          startAttempt();
+        }
+      }
+    }
+    function finish() {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", onDocKey);
+      const stats = computeStats(attempts, hearts, completedAll, endedAt !== null ? endedAt : clock.elapsedMs(), inputs);
+      ctx.finish({ score: stats.score, stats });
+    }
+    // The shell passes only e.key to onKey, so the game listens for keydown itself to
+    // skip auto-repeat (as Balloon does); onKey claims 1 to 9 so the shell prevents the default.
+    function onDocKey(e) {
+      if (done || !clock.running || !ctx.stage.isConnected || e.repeat) return;
+      if (e.key.length === 1 && e.key >= "1" && e.key <= "9") tap(Number(e.key) - 1, "keys");
+    }
+    document.addEventListener("keydown", onDocKey);
+    const onKey = (key) => key.length === 1 && key >= "1" && key <= "9";
+
+    drawHearts(false);
+    startAttempt();
+    raf = requestAnimationFrame(frame);
+    return {
+      onKey, tick() {},
+      destroy() { done = true; cancelAnimationFrame(raf); document.removeEventListener("keydown", onDocKey); },
+      debug: { get phase() { return phase; }, get length() { return length; }, get hearts() { return hearts; }, get pos() { return pos; },
+        get score() { return score(); }, get attempts() { return attempts.map((a) => ({ ...a })); }, get t0() { return t0; }, get pauseEnd() { return pauseEnd; } },
+    };
+  }
+
+  // ---- result card ----
+  function roundLine(a) {
+    return a.solved ? `${a.length} ✓` : `${a.length} ✗ at tile ${a.missedAt} (${a.tapped} right)`;
+  }
+  function renderResult(box, summary) {
+    const { score, stats } = summary;
+    const fact = (label, value) => mtEl("div", { class: "mt-fact" }, mtEl("div", { class: "mt-fact-label", text: label }), mtEl("div", { class: "mt-fact-num", text: value }));
+    // Element.append turns null into the text "null", so optional parts are filtered out first.
+    box.append(...[
+      mtEl("div", { class: "mt-score", text: String(score) }),
+      mtEl("div", { class: "mt-score-label", text: score === 1 ? "tile" : "tiles" }),
+      summary.rankEl, summary.bestEl,
+      mtEl("div", { class: "mt-facts" },
+        fact("Longest solved", stats.longestSolved ? `${stats.longestSolved} tiles` : "–"),
+        fact("Hearts left", String(stats.heartsLeft))),
+      stats.completedAll ? mtEl("p", { class: "mt-complete", text: `You completed all ${MAX_LENGTH} tiles.` }) : null,
+      mtEl("details", { class: "mt-rounds", open: true },
+        mtEl("summary", { text: "Your rounds" }),
+        mtEl("ul", { class: "mt-list" }, stats.attempts.map((a) => mtEl("li", { class: "mt-item", text: roundLine(a) })))),
+    ].filter((x) => x !== null && x !== undefined));
+  }
+
+  window.MemoryTiles = { uniformInt, makeSequence, seqKey, checkTap, scoreOf, computeStats, roundLine, renderResult, heartsText,
+    GAME: MT_GAME, START_LENGTH, MAX_LENGTH, HEARTS, LIT_MS, GAP_MS, SHOW_DELAY_MS, TAP_FLASH_MS, ROUND_PAUSE_MS, MISS_PAUSE_MS, MAX_SAME_IN_ROW };
+
+  // --- Auth gate: locked when signed out; the shell mounts once per session ---
+  let mounted = false;
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session && !mounted) {
+      mounted = true;
+      GameShell.mount({
+        sb, userId: session.user.id, game: MT_GAME, title: "Memory tiles",
+        els: {
+          stats: document.getElementById("stats"),
+          leaderboard: document.getElementById("leaderboard"),
+          playCard: document.getElementById("play-card"),
+          resultCard: document.getElementById("result-card"),
+          startButton: document.getElementById("start-btn"),
+        },
+        createRun: (ctx) => createRun(ctx), renderResult,
+      });
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  // --- nav dropdowns (identical on every page) ---
+  // On phones (640px and under) .top-nav scrolls sideways, and iOS WebKit clips or
+  // misplaces anything left inside it, so an open menu is moved into <body> and fixed
+  // under its trigger. There, the trigger label opens the menu instead of navigating
+  // (the label's page is the menu's first item). Outside taps use pointerdown, because
+  // iOS doesn't dispatch click to the document for taps on non-interactive elements.
+  (function () {
+    var nav = document.querySelector('.top-nav');
+    var dropdowns = Array.prototype.map.call(document.querySelectorAll('.nav-dropdown'), function (dd) {
+      return {
+        dd: dd,
+        label: dd.querySelector('a.nav-link'),
+        caret: dd.querySelector('.nav-caret'),
+        menu: dd.querySelector('.nav-dropdown-menu'),
+        scrollStart: 0
+      };
+    });
+    function isPhone() { return window.innerWidth <= 640; }
+    function close(d) {
+      d.menu.classList.remove('open');
+      if (d.menu.parentNode !== d.dd) {
+        d.menu.style.position = '';
+        d.menu.style.zIndex = '';
+        d.menu.style.top = '';
+        d.menu.style.left = '';
+        d.dd.appendChild(d.menu);
+      }
+    }
+    function closeAll(except) {
+      dropdowns.forEach(function (d) { if (d !== except) close(d); });
+    }
+    function open(d) {
+      closeAll(d);
+      d.scrollStart = nav.scrollLeft;
+      if (isPhone()) {
+        document.body.appendChild(d.menu);
+        d.menu.style.position = 'fixed';
+        d.menu.style.zIndex = '300';
+        d.menu.classList.add('open');
+        var maxLeft = window.innerWidth - Math.max(190, d.menu.offsetWidth) - 12;
+        d.menu.style.top = (nav.getBoundingClientRect().bottom + 6) + 'px';
+        d.menu.style.left = Math.max(12, Math.min(d.dd.getBoundingClientRect().left, maxLeft)) + 'px';
+      } else {
+        d.menu.classList.add('open');
+      }
+    }
+    function toggle(d) {
+      if (d.menu.classList.contains('open')) close(d); else open(d);
+    }
+    dropdowns.forEach(function (d) {
+      d.caret.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggle(d);
+      });
+      d.label.addEventListener('click', function (e) {
+        if (!isPhone()) return; // desktop: the label is an ordinary link
+        e.preventDefault();
+        e.stopPropagation();
+        toggle(d);
+      });
+    });
+    document.addEventListener('click', function () { closeAll(); });
+    document.addEventListener('pointerdown', function (e) {
+      if (!isPhone()) return;
+      if (e.target.closest && e.target.closest('.nav-dropdown, .nav-dropdown-menu')) return;
+      closeAll();
+    });
+    nav.addEventListener('scroll', function () {
+      dropdowns.forEach(function (d) {
+        if (d.menu.classList.contains('open') && Math.abs(nav.scrollLeft - d.scrollStart) > 4) close(d);
+      });
+    });
+    // iOS fires resize when its toolbars show or hide, so only a width change counts.
+    var lastWidth = window.innerWidth;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      closeAll();
+    });
+    window.addEventListener('orientationchange', function () { closeAll(); });
+  })();
+  // --- end nav dropdowns ---
+</script>
+</body>
+</html>
