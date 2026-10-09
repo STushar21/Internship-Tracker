@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Balloon — STK</title>
+<link rel="stylesheet" href="game-shell.css?v=4">
+<style>
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --ink-faint: #948E7A;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+    --gold-soft: rgba(139,107,73,0.10);
+    --green: #2F6B4F;
+    --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B;
+    --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A;
+    --steel-soft: rgba(79,107,138,0.10);
+  }
+
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; }
+  .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
+  /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
+  #logout-btn { min-height: 44px; }
+
+  /* --- balloon: run layer --- */
+  .bl-count { font-size: 14px; font-weight: 600; color: #5A5650; text-align: center; font-variant-numeric: tabular-nums; }
+  .bl-box { width: 100%; height: clamp(150px, 34dvh, 280px); margin-top: 8px; display: flex; align-items: flex-end; justify-content: center; }
+  .bl-svg { height: 100%; width: auto; display: block; transform-origin: 50% 100%; transition: transform 120ms ease-out; }
+  @media (prefers-reduced-motion: reduce) { .bl-svg { transition: none; } }
+  .bl-pot { margin-top: 8px; font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(40px, 11vw, 52px); line-height: 1.05; color: #1A1A18; text-align: center; font-variant-numeric: tabular-nums; }
+  .bl-feedback { min-height: 26px; margin-top: 6px; font-size: 18px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+  .bl-feedback.burst { color: #A6453B; }
+  .bl-feedback.collected { color: #2F6B4F; }
+  .bl-buttons { display: grid; grid-template-columns: 1fr 1.6fr; gap: 12px; max-width: 560px; margin: 0 auto; }
+  .bl-btn { min-height: 56px; border: none; border-radius: 12px; background: #8B6B49; color: #FFFFFF; font-family: inherit; font-size: 18px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .bl-btn:active { background: #6F5439; }
+  @media (pointer: coarse) { .bl-btn { min-height: 72px; font-size: 20px; } }
+
+  /* --- balloon: result --- */
+  .bl-score { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .bl-score-label { font-size: 14px; color: #5A5650; margin-top: 4px; }
+  .bl-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .bl-fact { background: #F6EFDE; border-radius: 8px; padding: 8px 10px; }
+  .bl-fact-label { font-size: 11px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.05em; }
+  .bl-fact-num { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .bl-note { margin: 14px 0 0; font-size: 14px; line-height: 1.55; color: #1A1A18; }
+  .bl-reveal { margin-top: 14px; }
+  .bl-reveal summary { cursor: pointer; font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 17px; min-height: 44px; display: flex; align-items: center; }
+  .bl-list { list-style: none; margin: 0; padding: 0; }
+  .bl-item { padding: 7px 0; border-top: 1px solid #EFE8DA; font-size: 14px; color: #1A1A18; font-variant-numeric: tabular-nums; }
+  .bl-item:first-child { border-top: none; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    /* balloon page */
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html" class="active">Games</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to track your scores and streak.</div>
+</div>
+
+<div id="app-content" class="gs-page" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Balloon</h1>
+<p class="sub">Fifteen balloons. Each pump adds 50p to the balloon's pot, and you can collect it whenever you like, but every balloon has a hidden burst point, and a burst loses that balloon's pot. It measures how much risk you take for a reward, a task type used in some personality and behavioural assessments. It doesn't build finance knowledge.</p>
+
+<div class="gs-stats" id="stats" aria-label="Your stats"></div>
+
+<div class="gs-grid">
+  <section class="gs-card" id="play-card" aria-labelledby="play-title">
+    <h2 class="gs-card-title" id="play-title">Play</h2>
+    <button type="button" class="gs-btn gs-btn-wide" id="start-btn">Start</button>
+    <h3>How to play</h3>
+    <p>Press Pump to add 50p to the balloon. Press Collect to bank the pot and move to the next balloon. If the balloon bursts, you lose that balloon's pot but nothing you've already banked. Each balloon bursts at its own random point, and nothing tells you where.</p>
+    <h3>Scoring</h3>
+    <p>Your score is the total you bank across the balloons. The run ends after the fifteenth balloon or at two minutes, whichever comes first, and the balloon in play when time runs out is lost.</p>
+    <h3>Best practice</h3>
+    <ul>
+      <li>There's no right level of risk, only a trade-off: each extra pump adds 50p, but raises the chance of losing everything in that balloon.</li>
+      <li>Pick a stopping habit and test it over several balloons, instead of deciding afresh each time. One burst or one lucky balloon tells you very little.</li>
+      <li>After each run, look at the burst points in the results. They show how the risk is spread, and whether a low score was a cautious style or just bad luck.</li>
+      <li>Don't chase. A burst doesn't make the next balloon safer: every balloon is independent.</li>
+    </ul>
+  </section>
+  <section class="gs-card" id="result-card" hidden aria-live="polite"></section>
+  <section class="gs-card" id="leaderboard" aria-label="Leaderboard"></section>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-shell.js?v=4"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Balloon. Everything generic (layer, clock, pause, saving, leaderboard) lives in
+  // game-shell.js. The rules are plain functions with no DOM; createRun only wires
+  // them to the layer. All timing uses the shell's run clock (pause-aware), never
+  // Date.now(). Burst points stay in the run's closure until the Result card.
+  // ---------------------------------------------------------------------------
+  const BL_GAME = "balloon_v1";
+  // Tuning: each value is one line.
+  const BALLOONS = 15;              // balloons per run
+  const PUMP_PENCE = 50;            // each pump adds this to the balloon's pot
+  const BURST_MIN = 1;              // lowest burst point: the balloon bursts on this pump
+  const BURST_MAX = 16;             // highest burst point; drawn uniformly from BURST_MIN..BURST_MAX
+  const RUN_CAP_MS = 120000;        // the run ends here even with balloons left
+  const COLLECT_PAUSE_MS = 400;     // "Collected £X" shows this long; presses ignored
+  const POP_PAUSE_MS = 700;         // the burst shape and "Burst! −£X lost" show this long; presses ignored
+  const NEW_BALLOON_LOCK_MS = 250;  // presses ignored this long after a new balloon appears
+  const TYPICAL_BURST = (() => { let t = 0; for (let k = BURST_MIN; k <= BURST_MAX; k++) t += k; return t / (BURST_MAX - BURST_MIN + 1); })(); // mean burst point (8.5 by default)
+  const LUCK_THRESHOLD = 1.2;       // about one typical swing of the 15-balloon average
+
+  const money = (p) => "£" + (Math.round(p) / 100).toFixed(2);
+
+  function blEl(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+
+  // ---- rules (no DOM) ----
+  const cryptoU32 = () => crypto.getRandomValues(new Uint32Array(1))[0];
+  // Uniform integer in lo..hi from 32-bit draws, by rejection sampling (no modulo bias).
+  function uniformInt(lo, hi, u32) {
+    const range = hi - lo + 1, limit = Math.floor(4294967296 / range) * range;
+    let u;
+    do { u = u32(); } while (u >= limit);
+    return lo + (u % range);
+  }
+  function drawBurstPoints(n, u32) {
+    const src = u32 || cryptoU32;
+    return Array.from({ length: n }, () => uniformInt(BURST_MIN, BURST_MAX, src));
+  }
+  const newBalloon = (burstAt) => ({ burstAt, pumps: 0, outcome: "not_played", gainPence: 0 });
+  // A pump: pumps + 1; on the burst point the pot ((pumps - 1) x PUMP_PENCE) is lost.
+  function applyPump(b) {
+    const pumps = b.pumps + 1;
+    if (pumps === b.burstAt) return { balloon: { ...b, pumps, outcome: "burst", gainPence: 0 }, burst: true, lostPence: (pumps - 1) * PUMP_PENCE, potPence: 0 };
+    return { balloon: { ...b, pumps }, burst: false, lostPence: 0, potPence: pumps * PUMP_PENCE };
+  }
+  // A collect banks the pot (allowed at 0 pumps: banks nothing and uses up the balloon).
+  function applyCollect(b) {
+    const gainPence = b.pumps * PUMP_PENCE;
+    return { balloon: { ...b, outcome: "collected", gainPence }, gainPence };
+  }
+  const scoreOf = (balloons) => balloons.reduce((t, b) => t + b.gainPence, 0);
+  const expectedPence = (k) => (k * PUMP_PENCE * (BURST_MAX - k)) / BURST_MAX;
+  // The range of collect points whose expected money is within 2% of the best (7 to 9 by default).
+  function bestCollectRange() {
+    let best = 0;
+    for (let k = 0; k <= BURST_MAX; k++) best = Math.max(best, expectedPence(k));
+    const ks = [];
+    for (let k = 0; k <= BURST_MAX; k++) if (expectedPence(k) >= 0.98 * best) ks.push(k);
+    return { lo: Math.min(...ks), hi: Math.max(...ks) };
+  }
+  const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+  function computeStats(balloons, elapsedMs, inputs) {
+    const started = balloons.filter((b) => b.outcome !== "not_played");
+    const collected = balloons.filter((b) => b.outcome === "collected");
+    const avgBurstPointFaced = mean(started.map((b) => b.burstAt));
+    const used = new Set(inputs);
+    return {
+      collected: collected.length,
+      burst: balloons.filter((b) => b.outcome === "burst").length,
+      cutOff: balloons.some((b) => b.outcome === "cut_off"),
+      played: started.length,
+      totalPumps: balloons.reduce((t, b) => t + b.pumps, 0),
+      avgCollectPumps: mean(collected.map((b) => b.pumps)),
+      avgBurstPointFaced,
+      luckDelta: avgBurstPointFaced === null ? null : avgBurstPointFaced - TYPICAL_BURST,
+      elapsedMs: Math.round(elapsedMs),
+      input: used.size === 0 ? null : used.size > 1 ? "mixed" : [...used][0],
+      balloons: balloons.map((b) => ({ burstAt: b.burstAt, pumps: b.pumps, outcome: b.outcome, gainPence: b.gainPence })),
+    };
+  }
+
+  // ---- drawing ----
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) { const n = document.createElementNS(SVG_NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v)); return n; }
+  function balloonSvg() {
+    const svg = svgEl("svg", { viewBox: "0 0 100 150", class: "bl-svg", "aria-hidden": "true" });
+    svg.append(
+      svgEl("path", { d: "M50 118 C 49 126, 53 132, 49 140 S 52 148, 50 150", fill: "none", stroke: "#8B6B49", "stroke-width": 1.5 }),
+      svgEl("ellipse", { cx: 50, cy: 54, rx: 42, ry: 52, fill: "#8B6B49" }),
+      svgEl("path", { d: "M44 104 L56 104 L50 116 Z", fill: "#8B6B49" }),
+      svgEl("ellipse", { cx: 34, cy: 34, rx: 9, ry: 15, fill: "#C9956A", transform: "rotate(-25 34 34)" }));
+    return svg;
+  }
+  function burstSvg() {
+    const pts = [];
+    for (let i = 0; i < 16; i++) { const r = i % 2 ? 22 : 46, a = (Math.PI * 2 * i) / 16; pts.push(`${(50 + r * Math.sin(a)).toFixed(1)},${(60 - r * Math.cos(a)).toFixed(1)}`); }
+    const svg = svgEl("svg", { viewBox: "0 0 100 150", class: "bl-svg", "aria-hidden": "true" });
+    svg.append(svgEl("polygon", { points: pts.join(" "), fill: "#8B6B49" }));
+    return svg;
+  }
+  const scaleFor = (pumps) => 0.5 + Math.min(pumps, 15) / 15; // 0.5 at 0 pumps, 1.5 at 15
+
+  // ---- the run ----
+  function createRun(ctx) {
+    const clock = ctx.clock;
+    const balloons = drawBurstPoints(BALLOONS).map(newBalloon); // secret until the Result card
+    let idx = 0, phase = "ready", lockUntil = 0, pauseEnd = 0, done = false, raf = 0, banked = 0;
+    const inputs = [];
+
+    const countEl = blEl("div", { class: "bl-count" });
+    const box = blEl("div", { class: "bl-box" });
+    const potEl = blEl("div", { class: "bl-pot", "aria-live": "polite" });
+    const feedback = blEl("div", { class: "bl-feedback", role: "status" });
+    ctx.stage.replaceChildren(countEl, box, potEl, feedback);
+    let shape = balloonSvg();
+
+    function button(action, label) {
+      const b = blEl("button", { type: "button", class: "bl-btn", "data-action": action, "aria-label": label, text: label.toUpperCase() });
+      // Act on pointerdown; the click that follows (and any click from a focused button) is ignored.
+      b.addEventListener("pointerdown", (e) => { if (!e.isPrimary || e.button !== 0) return; e.preventDefault(); act(action, "touch"); });
+      b.addEventListener("click", (e) => e.preventDefault());
+      return b;
+    }
+    ctx.pad.replaceChildren(blEl("div", { class: "bl-buttons" }, button("collect", "Collect"), button("pump", "Pump")));
+
+    function showBalloon() {
+      shape = balloonSvg();
+      shape.style.transform = `scale(${scaleFor(0) / 1.5})`;
+      box.replaceChildren(shape);
+      countEl.textContent = `Balloon ${idx + 1} of ${BALLOONS}`;
+      potEl.textContent = money(0);
+      feedback.textContent = ""; feedback.className = "bl-feedback";
+      balloons[idx].started = true;
+      phase = "ready";
+      lockUntil = clock.elapsedMs() + NEW_BALLOON_LOCK_MS;
+    }
+    function act(action, via) {
+      if (done || !clock.running || phase !== "ready") return;
+      const now = clock.elapsedMs();
+      if (now >= RUN_CAP_MS) { finish(); return; }
+      if (now < lockUntil) return;
+      inputs.push(via);
+      const b = balloons[idx];
+      if (action === "pump") {
+        const r = applyPump(b);
+        balloons[idx] = { ...r.balloon, started: true };
+        if (r.burst) {
+          box.replaceChildren(burstSvg());
+          potEl.textContent = money(0);
+          feedback.textContent = `Burst! −${money(r.lostPence)} lost`; feedback.className = "bl-feedback burst";
+          phase = "pop"; pauseEnd = now + POP_PAUSE_MS;
+        } else {
+          shape.style.transform = `scale(${scaleFor(r.balloon.pumps) / 1.5})`;
+          potEl.textContent = money(r.potPence);
+        }
+      } else if (action === "collect") {
+        const r = applyCollect(b);
+        balloons[idx] = { ...r.balloon, started: true };
+        banked += r.gainPence;
+        ctx.setScore(money(banked));
+        feedback.textContent = `Collected ${money(r.gainPence)}`; feedback.className = "bl-feedback collected";
+        phase = "collect"; pauseEnd = now + COLLECT_PAUSE_MS;
+      }
+    }
+    function frame() {
+      if (done) return;
+      raf = requestAnimationFrame(frame);
+      if (!clock.running) return; // paused: everything stays exactly as it is
+      const now = clock.elapsedMs();
+      if (now >= RUN_CAP_MS) { finish(); return; }
+      if ((phase === "pop" || phase === "collect") && now >= pauseEnd) {
+        if (idx === BALLOONS - 1) { finish(); return; }
+        idx++; showBalloon();
+      }
+    }
+    function finish() {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", onDocKey);
+      // the balloon in play at the cap is lost; balloons never shown stay 'not_played'
+      const final = balloons.map((b) => {
+        const { started, ...rest } = b;
+        if (started && rest.outcome === "not_played") return { ...rest, outcome: "cut_off", gainPence: 0 };
+        return rest;
+      });
+      const elapsed = Math.min(clock.elapsedMs(), RUN_CAP_MS);
+      const stats = computeStats(final, elapsed, inputs);
+      ctx.finish({ score: scoreOf(final), stats });
+    }
+    function tick() {
+      if (done) return;
+      const rem = Math.max(0, RUN_CAP_MS - clock.elapsedMs());
+      const s = Math.ceil(rem / 1000);
+      ctx.setTimer(`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`, rem / RUN_CAP_MS);
+      if (rem <= 0) finish();
+    }
+    // The shell passes only e.key to onKey, so auto-repeat can't be seen there: the game
+    // listens for keydown itself (while the layer is open and the clock runs) and skips
+    // repeats. onKey still claims Space and Enter so the shell calls preventDefault
+    // (no page scroll, no activation of a focused button).
+    function onDocKey(e) {
+      if (done || !clock.running || !ctx.stage.isConnected || e.repeat) return;
+      if (e.key === " ") act("pump", "keys");
+      else if (e.key === "Enter") act("collect", "keys");
+    }
+    document.addEventListener("keydown", onDocKey);
+    function onKey(key) { return key === " " || key === "Enter"; }
+
+    ctx.setScore(money(0));
+    showBalloon();
+    tick();
+    raf = requestAnimationFrame(frame);
+    return {
+      onKey, tick,
+      destroy() { done = true; cancelAnimationFrame(raf); document.removeEventListener("keydown", onDocKey); },
+      // test hook: no burst points here (they stay secret until the Result card)
+      debug: { get idx() { return idx; }, get phase() { return phase; }, get pumps() { return balloons[idx].pumps; }, get banked() { return banked; }, get lockUntil() { return lockUntil; }, get pauseEnd() { return pauseEnd; }, get inputs() { return inputs.slice(); } },
+    };
+  }
+
+  // ---- result card ----
+  const one = (x) => x.toFixed(1);
+  function luckLine(stats) {
+    if (stats.luckDelta === null) return null;
+    const head = `Your balloons burst at pump ${one(stats.avgBurstPointFaced)} on average (typical ${one(TYPICAL_BURST)}): `;
+    if (stats.luckDelta >= LUCK_THRESHOLD) return head + "an easier set than usual.";
+    if (stats.luckDelta <= -LUCK_THRESHOLD) return head + "a tougher set than usual.";
+    return head + "about a typical set.";
+  }
+  function styleNote(stats) {
+    if (stats.avgCollectPumps === null) return "You didn't collect any balloons this run.";
+    const r = bestCollectRange();
+    return `You collected at ${one(stats.avgCollectPumps)} pumps on average. When bursts are spread evenly, collecting at ${r.lo} to ${r.hi} pumps earns the most on average. Lower is cautious and higher is aggressive; neither is a verdict on you.`;
+  }
+  function revealLine(b, i) {
+    if (b.outcome === "collected") return `${i + 1} · collected at ${b.pumps} · would have burst at ${b.burstAt}`;
+    if (b.outcome === "burst") return `${i + 1} · burst at ${b.burstAt}`;
+    if (b.outcome === "cut_off") return `${i + 1} · cut off at ${b.pumps} pumps · would have burst at ${b.burstAt}`;
+    return null;
+  }
+  function renderResult(box, summary) {
+    const { score, stats } = summary;
+    const fact = (label, value) => blEl("div", { class: "bl-fact" }, blEl("div", { class: "bl-fact-label", text: label }), blEl("div", { class: "bl-fact-num", text: value }));
+    const items = stats.balloons.map(revealLine).filter((t) => t !== null);
+    const luck = luckLine(stats);
+    box.append(
+      blEl("div", { class: "bl-score", text: money(score) }),
+      blEl("div", { class: "bl-score-label", text: "banked" }),
+      summary.rankEl, summary.bestEl,
+      blEl("div", { class: "bl-facts" },
+        fact("Collected", String(stats.collected)),
+        fact("Burst", String(stats.burst)),
+        fact("Avg collect", stats.avgCollectPumps !== null ? `${one(stats.avgCollectPumps)} pumps` : "–")),
+      blEl("p", { class: "bl-note bl-style", text: styleNote(stats) }),
+      luck ? blEl("p", { class: "bl-note bl-luck", text: luck }) : null,
+      blEl("details", { class: "bl-reveal", open: true },
+        blEl("summary", { text: "Your balloons" }),
+        blEl("ul", { class: "bl-list" }, items.map((t) => blEl("li", { class: "bl-item", text: t })))));
+  }
+
+  window.Balloon = { uniformInt, drawBurstPoints, newBalloon, applyPump, applyCollect, scoreOf, expectedPence, bestCollectRange, computeStats, luckLine, styleNote, revealLine, renderResult, money, scaleFor,
+    GAME: BL_GAME, BALLOONS, PUMP_PENCE, BURST_MIN, BURST_MAX, RUN_CAP_MS, COLLECT_PAUSE_MS, POP_PAUSE_MS, NEW_BALLOON_LOCK_MS, TYPICAL_BURST, LUCK_THRESHOLD };
+
+  // --- Auth gate: locked when signed out; the shell mounts once per session ---
+  let mounted = false;
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session && !mounted) {
+      mounted = true;
+      GameShell.mount({
+        sb, userId: session.user.id, game: BL_GAME, title: "Balloon",
+        els: {
+          stats: document.getElementById("stats"),
+          leaderboard: document.getElementById("leaderboard"),
+          playCard: document.getElementById("play-card"),
+          resultCard: document.getElementById("result-card"),
+          startButton: document.getElementById("start-btn"),
+        },
+        createRun: (ctx) => createRun(ctx), renderResult,
+        formatScore: (p) => "£" + (Math.round(p) / 100).toFixed(2),
+      });
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  // --- nav dropdowns (identical on every page) ---
+  // On phones (640px and under) .top-nav scrolls sideways, and iOS WebKit clips or
+  // misplaces anything left inside it, so an open menu is moved into <body> and fixed
+  // under its trigger. There, the trigger label opens the menu instead of navigating
+  // (the label's page is the menu's first item). Outside taps use pointerdown, because
+  // iOS doesn't dispatch click to the document for taps on non-interactive elements.
+  (function () {
+    var nav = document.querySelector('.top-nav');
+    var dropdowns = Array.prototype.map.call(document.querySelectorAll('.nav-dropdown'), function (dd) {
+      return {
+        dd: dd,
+        label: dd.querySelector('a.nav-link'),
+        caret: dd.querySelector('.nav-caret'),
+        menu: dd.querySelector('.nav-dropdown-menu'),
+        scrollStart: 0
+      };
+    });
+    function isPhone() { return window.innerWidth <= 640; }
+    function close(d) {
+      d.menu.classList.remove('open');
+      if (d.menu.parentNode !== d.dd) {
+        d.menu.style.position = '';
+        d.menu.style.zIndex = '';
+        d.menu.style.top = '';
+        d.menu.style.left = '';
+        d.dd.appendChild(d.menu);
+      }
+    }
+    function closeAll(except) {
+      dropdowns.forEach(function (d) { if (d !== except) close(d); });
+    }
+    function open(d) {
+      closeAll(d);
+      d.scrollStart = nav.scrollLeft;
+      if (isPhone()) {
+        document.body.appendChild(d.menu);
+        d.menu.style.position = 'fixed';
+        d.menu.style.zIndex = '300';
+        d.menu.classList.add('open');
+        var maxLeft = window.innerWidth - Math.max(190, d.menu.offsetWidth) - 12;
+        d.menu.style.top = (nav.getBoundingClientRect().bottom + 6) + 'px';
+        d.menu.style.left = Math.max(12, Math.min(d.dd.getBoundingClientRect().left, maxLeft)) + 'px';
+      } else {
+        d.menu.classList.add('open');
+      }
+    }
+    function toggle(d) {
+      if (d.menu.classList.contains('open')) close(d); else open(d);
+    }
+    dropdowns.forEach(function (d) {
+      d.caret.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggle(d);
+      });
+      d.label.addEventListener('click', function (e) {
+        if (!isPhone()) return; // desktop: the label is an ordinary link
+        e.preventDefault();
+        e.stopPropagation();
+        toggle(d);
+      });
+    });
+    document.addEventListener('click', function () { closeAll(); });
+    document.addEventListener('pointerdown', function (e) {
+      if (!isPhone()) return;
+      if (e.target.closest && e.target.closest('.nav-dropdown, .nav-dropdown-menu')) return;
+      closeAll();
+    });
+    nav.addEventListener('scroll', function () {
+      dropdowns.forEach(function (d) {
+        if (d.menu.classList.contains('open') && Math.abs(nav.scrollLeft - d.scrollStart) > 4) close(d);
+      });
+    });
+    // iOS fires resize when its toolbars show or hide, so only a width change counts.
+    var lastWidth = window.innerWidth;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      closeAll();
+    });
+    window.addEventListener('orientationchange', function () { closeAll(); });
+  })();
+  // --- end nav dropdowns ---
+</script>
+</body>
+</html>
