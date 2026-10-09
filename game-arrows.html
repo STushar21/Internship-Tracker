@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Arrows — STK</title>
+<link rel="stylesheet" href="game-shell.css?v=3">
+<style>
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --ink-faint: #948E7A;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+    --gold-soft: rgba(139,107,73,0.10);
+    --green: #2F6B4F;
+    --green-soft: rgba(47,107,79,0.10);
+    --red: #A6453B;
+    --red-soft: rgba(166,69,59,0.10);
+    --steel: #4F6B8A;
+    --steel-soft: rgba(79,107,138,0.10);
+  }
+
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; }
+  .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
+  /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
+  #logout-btn { min-height: 44px; }
+
+  /* --- arrows: the arrow graphic (page example and run layer) --- */
+  .ar-arrow { display: block; flex: 0 0 auto; }
+  .ar-example { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; }
+  .ar-example-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #E3DAC4; border-radius: 10px; background: #F2ECDF; }
+  .ar-example-item .ar-arrow { width: 40px; height: 40px; }
+  .ar-example-label { font-size: 14px; font-weight: 600; color: #1A1A18; }
+
+  /* --- arrows: run layer --- */
+  .ar-legend { font-size: 13px; color: #5A5650; text-align: center; margin: 0 0 18px; }
+  .ar-row { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 16px); height: clamp(48px, 16vw, 96px); }
+  .ar-row .ar-arrow { width: clamp(48px, 16vw, 96px); height: clamp(48px, 16vw, 96px); }
+  .ar-feedback { min-height: 28px; margin-top: 14px; font-size: 20px; font-weight: 700; color: #A6453B; text-align: center; font-variant-numeric: tabular-nums; }
+  .ar-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 560px; margin: 0 auto; }
+  .ar-btn { min-height: 56px; border: none; border-radius: 12px; background: #8B6B49; color: #FFFFFF; font-family: inherit; font-size: 18px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .ar-btn:active { background: #6F5439; }
+  @media (pointer: coarse) { .ar-btn { min-height: 72px; font-size: 20px; } }
+
+  /* --- arrows: result --- */
+  .ar-score { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ar-score-label { font-size: 14px; color: #5A5650; margin-top: 4px; }
+  .ar-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .ar-fact { background: #F6EFDE; border-radius: 8px; padding: 8px 10px; }
+  .ar-fact-label { font-size: 11px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ar-fact-num { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .ar-lines { list-style: none; margin: 14px 0 0; padding: 0; }
+  .ar-line { padding: 8px 0; border-top: 1px solid #EFE8DA; font-size: 14px; color: #1A1A18; font-variant-numeric: tabular-nums; }
+  .ar-line:first-child { border-top: none; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    /* arrows page */
+    h1 { font-size: 26px; }
+    .ar-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html" class="active">Games</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to track your scores and streak.</div>
+</div>
+
+<div id="app-content" class="gs-page" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Arrows</h1>
+<p class="sub">Sixty seconds of left-or-right decisions. You follow the centre arrow and ignore the others, and its colour tells you whether to go with it or against it. It measures reaction speed and accuracy under a switching rule, a task type used in some attention and reaction-time assessments. It doesn't build finance knowledge.</p>
+
+<div class="gs-stats" id="stats" aria-label="Your stats"></div>
+
+<div class="gs-grid">
+  <section class="gs-card" id="play-card" aria-labelledby="play-title">
+    <h2 class="gs-card-title" id="play-title">Play</h2>
+    <button type="button" class="gs-btn gs-btn-wide" id="start-btn">Start</button>
+    <h3>How to play</h3>
+    <div class="ar-example" id="rule-example" aria-label="Examples of the two rules"></div>
+    <p>Five arrows appear. Look only at the centre one. If it's black, press the way it points. If it's red, press the opposite way. The four arrows around it are always black and only there to distract you. The next arrows appear as soon as you answer.</p>
+    <h3>Scoring</h3>
+    <p>Each correct answer scores 1 and each wrong answer costs 2, so guessing never pays. You get as many answers as you can fit into 60 seconds, so speed matters too. After a wrong answer there's a 0.4-second pause before the next arrows.</p>
+    <h3>Best practice</h3>
+    <ul>
+      <li>Decide from the centre arrow's colour first, then its direction. Say 'same' or 'opposite' to yourself.</li>
+      <li>Ignore the outer arrows. They pull you towards their own direction, which is the wrong way on half the trials.</li>
+      <li>Aim for 90% accuracy or better. Each mistake costs two answers' worth of points, so slowing slightly to avoid errors usually pays.</li>
+      <li>On a phone, rest your thumbs over the two buttons. On a Mac, keep your fingers on ← and →.</li>
+    </ul>
+  </section>
+  <section class="gs-card" id="result-card" hidden aria-live="polite"></section>
+  <section class="gs-card" id="leaderboard" aria-label="Leaderboard"></section>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-shell.js?v=3"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Arrows. Everything generic (layer, clock, pause, saving, leaderboard) lives in
+  // game-shell.js. This file only generates trials, times them, scores answers and
+  // builds the result. All timing uses the shell's run clock (pause-aware), never
+  // Date.now(); onsets and gaps are checked against it in requestAnimationFrame.
+  // ---------------------------------------------------------------------------
+  const AR_GAME = "arrows_v1";
+  // Tuning: each value is one line.
+  const RUN_MS = 60000;           // length of a run
+  const GAP_MS = 150;             // blank time between a correct answer and the next arrows
+  const ERROR_GAP_MS = 400;       // blank time after a wrong answer, with "✗ −2" shown
+  const PENALTY = 2;              // points lost per wrong answer
+  const LOCK_MS = 150;            // presses this soon after the arrows appear are ignored
+  const MAX_SAME_ANSWER = 3;      // most identical correct answers in a row
+  const MAX_SAME_COLOUR = 4;      // most identical centre colours in a row
+  const SHOW_RULE_LEGEND = true;  // the "Black arrow: same way · Red arrow: opposite" line in the run
+  const COSTS_MIN_N = 5;          // fewer correct answers than this in a group gives a null cost
+
+  const INK = "#1A1A18", RED = "#E03131"; // red: bright, not the site's brick red
+  const flip = (d) => (d === "left" ? "right" : "left");
+
+  function arEl(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const ARROW_PATH = { right: "M8 40 H56 V20 L94 50 L56 80 V60 H8 Z", left: "M92 40 H44 V20 L6 50 L44 80 V60 H92 Z" };
+  function arrowSvg(dir, colour) {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("class", "ar-arrow");
+    svg.setAttribute("aria-hidden", "true");
+    svg.dataset.dir = dir;
+    svg.dataset.colour = colour;
+    const p = document.createElementNS(SVG_NS, "path");
+    p.setAttribute("d", ARROW_PATH[dir]);
+    p.setAttribute("fill", colour === "red" ? RED : INK);
+    svg.append(p);
+    return svg;
+  }
+
+  // ---- generation ----
+  // First the correct answer (50/50, at most MAX_SAME_ANSWER alike in a row), then the
+  // centre colour (50/50, at most MAX_SAME_COLOUR alike in a row); the centre points the
+  // answer's way if black and the opposite way if red. The outer arrows then agree with
+  // the correct answer or not, 50/50, independently (black arrows mean "go this way").
+  function makeGenerator(rnd) {
+    rnd = rnd || Math.random;
+    let s = { ans: null, ansRun: 0, col: null, colRun: 0 }, saved = null;
+    return {
+      next() {
+        saved = { ...s };
+        let answer = rnd() < 0.5 ? "left" : "right";
+        if (answer === s.ans && s.ansRun >= MAX_SAME_ANSWER) answer = flip(answer);
+        let colour = rnd() < 0.5 ? "black" : "red";
+        if (colour === s.col && s.colRun >= MAX_SAME_COLOUR) colour = colour === "black" ? "red" : "black";
+        s.ansRun = answer === s.ans ? s.ansRun + 1 : 1; s.ans = answer;
+        s.colRun = colour === s.col ? s.colRun + 1 : 1; s.col = colour;
+        const centre = colour === "black" ? answer : flip(answer);
+        const agree = rnd() < 0.5;
+        return { answer, colour, centre, agree, outer: agree ? answer : flip(answer) };
+      },
+      // a discarded trial (paused mid-trial) is taken back, so the limits hold for trials shown
+      undo() { if (saved) { s = saved; saved = null; } },
+    };
+  }
+
+  // ---- stats ----
+  function median(xs) {
+    if (!xs.length) return null;
+    const a = [...xs].sort((x, y) => x - y), m = a.length >> 1;
+    return Math.round(a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2);
+  }
+  function group(list) {
+    const ok = list.filter((t) => t.ok).map((t) => t.ms);
+    return { n: list.length, wrong: list.length - ok.length, medianMs: median(ok), _ok: ok.length };
+  }
+  function computeStats(trials) {
+    const correct = trials.filter((t) => t.ok).length, wrong = trials.length - correct;
+    const g = {
+      black: group(trials.filter((t) => t.colour === "black")), red: group(trials.filter((t) => t.colour === "red")),
+      agree: group(trials.filter((t) => t.agree)), disagree: group(trials.filter((t) => !t.agree)),
+    };
+    const cost = (a, b) => (a._ok >= COSTS_MIN_N && b._ok >= COSTS_MIN_N ? b.medianMs - a.medianMs : null);
+    const strip = ({ n, wrong, medianMs }) => ({ n, wrong, medianMs });
+    const inputs = new Set(trials.map((t) => t.input));
+    return {
+      correct, wrong,
+      rawScore: correct - PENALTY * wrong,
+      accuracy: trials.length ? correct / trials.length : 0,
+      trials: trials.length,
+      medianMs: median(trials.filter((t) => t.ok).map((t) => t.ms)),
+      black: strip(g.black), red: strip(g.red), agree: strip(g.agree), disagree: strip(g.disagree),
+      redCostMs: cost(g.black, g.red),
+      disagreeCostMs: cost(g.agree, g.disagree),
+      input: inputs.size === 0 ? null : inputs.size > 1 ? "mixed" : [...inputs][0],
+    };
+  }
+  const fmtSigned = (n) => (n < 0 ? "−" + Math.abs(n) : String(n)); // true minus sign (U+2212)
+
+  // ---- the run ----
+  function createRun(ctx, rnd) {
+    const gen = makeGenerator(rnd);
+    const clock = ctx.clock;
+    let done = false, raf = 0;
+    let phase = "blank";  // "blank" (gap), "pending" (arrows in the DOM, onset not yet taken), "shown"
+    let gapEnd = 0, trial = null, onset = 0, insertedAt = 0, wasPaused = false;
+    let correct = 0, wrong = 0, discarded = 0;
+    const trials = [];
+
+    const legend = SHOW_RULE_LEGEND ? arEl("p", { class: "ar-legend", text: "Black arrow: same way · Red arrow: opposite" }) : null;
+    const row = arEl("div", { class: "ar-row", role: "img", "aria-label": "" });
+    const feedback = arEl("div", { class: "ar-feedback", role: "status" });
+    ctx.stage.replaceChildren(...[legend, row, feedback].filter(Boolean));
+
+    function button(dir, label) {
+      const b = arEl("button", { type: "button", class: "ar-btn", "data-answer": dir, "aria-label": label, text: label.toUpperCase() });
+      // Answer on pointerdown (no wait for the click); the click that follows is ignored,
+      // so a tap never counts twice. Keys come through onKey.
+      b.addEventListener("pointerdown", (e) => { if (!e.isPrimary || e.button !== 0) return; e.preventDefault(); press(dir, "touch"); });
+      b.addEventListener("click", (e) => e.preventDefault());
+      return b;
+    }
+    ctx.pad.replaceChildren(arEl("div", { class: "ar-buttons" }, button("left", "Left"), button("right", "Right")));
+
+    const raw = () => correct - PENALTY * wrong;
+    function present() {
+      trial = gen.next();
+      row.replaceChildren(...[0, 1, 2, 3, 4].map((i) => (i === 2 ? arrowSvg(trial.centre, trial.colour) : arrowSvg(trial.outer, "black"))));
+      row.setAttribute("aria-label", `Centre arrow ${trial.colour}, pointing ${trial.centre}`);
+      feedback.textContent = "";
+      insertedAt = clock.elapsedMs();
+      phase = "pending"; // the onset is taken in the next frame callback
+    }
+    function blank(ms, text) {
+      row.replaceChildren(); row.setAttribute("aria-label", "");
+      feedback.textContent = text;
+      trial = null; phase = "blank"; gapEnd = clock.elapsedMs() + ms;
+    }
+    function press(dir, via) {
+      if (done || !clock.running || phase !== "shown" || !trial) return; // blank stage, or not yet taken
+      const now = clock.elapsedMs();
+      if (now >= RUN_MS) { finish(); return; }
+      if (now - onset < LOCK_MS) return;
+      const ok = dir === trial.answer;
+      trials.push({ answer: trial.answer, colour: trial.colour, agree: trial.agree, given: dir, ok, ms: Math.round(now - onset), input: via });
+      if (ok) correct++; else wrong++;
+      ctx.setScore(fmtSigned(raw()));
+      if (ok) blank(GAP_MS, ""); else blank(ERROR_GAP_MS, `✗ −${PENALTY}`);
+    }
+    function frame() {
+      if (done) return;
+      raf = requestAnimationFrame(frame);
+      if (!clock.running) {
+        // The shell paused (Paused overlay, quit dialog or the resume countdown): the trial
+        // in play counts for nothing, and a fresh one starts once the clock runs again.
+        if (trial) { gen.undo(); discarded++; row.replaceChildren(); trial = null; }
+        wasPaused = true; phase = "blank";
+        return;
+      }
+      const now = clock.elapsedMs();
+      if (now >= RUN_MS) { finish(); return; }
+      if (wasPaused) { wasPaused = false; feedback.textContent = ""; gapEnd = now; }
+      if (phase === "pending") { onset = now; phase = "shown"; return; }
+      if (phase === "blank" && now >= gapEnd) present();
+    }
+    function finish() {
+      if (done) return;
+      done = true; // a trial in play is discarded and not scored
+      cancelAnimationFrame(raf);
+      const stats = computeStats(trials);
+      ctx.finish({ score: Math.max(0, stats.rawScore), stats });
+    }
+    function tick() {
+      if (done) return;
+      const rem = RUN_MS - clock.elapsedMs();
+      ctx.setTimer(String(Math.max(0, Math.ceil(rem / 1000))), Math.max(0, rem) / RUN_MS);
+      if (rem <= 0) finish();
+    }
+    function onKey(key) {
+      if (key === "ArrowLeft") { press("left", "keys"); return true; }
+      if (key === "ArrowRight") { press("right", "keys"); return true; }
+      return false;
+    }
+    ctx.setScore("0");
+    tick();
+    raf = requestAnimationFrame(frame);
+    return {
+      onKey, tick, destroy() { done = true; cancelAnimationFrame(raf); },
+      debug: {
+        get phase() { return phase; }, get trial() { return trial; }, get onset() { return onset; }, get insertedAt() { return insertedAt; },
+        get gapEnd() { return gapEnd; }, get raw() { return raw(); }, get trials() { return trials; }, get discarded() { return discarded; },
+        press,
+      },
+    };
+  }
+
+  // ---- result card ----
+  function costLine(label, ms, than) {
+    if (ms === null) return `${label}: not enough trials`;
+    return `${label}: ${Math.abs(ms)} ms ${ms < 0 ? "faster" : "slower"}${than}`;
+  }
+  function renderResult(box, summary) {
+    const { score, stats } = summary;
+    const fact = (label, value) => arEl("div", { class: "ar-fact" }, arEl("div", { class: "ar-fact-label", text: label }), arEl("div", { class: "ar-fact-num", text: value }));
+    const lost = PENALTY * stats.wrong;
+    box.append(
+      arEl("div", { class: "ar-score", text: String(score) }),
+      arEl("div", { class: "ar-score-label", text: score === 1 ? "point" : "points" }),
+      summary.rankEl, summary.bestEl,
+      arEl("div", { class: "ar-facts" },
+        fact("Correct", String(stats.correct)),
+        fact("Wrong", String(stats.wrong)),
+        fact("Accuracy", `${Math.round(stats.accuracy * 100)}%`),
+        fact("Median time", stats.medianMs !== null ? `${stats.medianMs} ms` : "–")),
+      arEl("ul", { class: "ar-lines" },
+        arEl("li", { class: "ar-line", text: costLine("Red arrows", stats.redCostMs, " than black") }),
+        arEl("li", { class: "ar-line", text: costLine("Disagreeing outer arrows", stats.disagreeCostMs, "") }),
+        arEl("li", { class: "ar-line", text: `Errors cost you ${lost} ${lost === 1 ? "point" : "points"}` })));
+  }
+
+  // ---- the static rule example above Start ----
+  document.getElementById("rule-example").append(
+    arEl("div", { class: "ar-example-item" }, arrowSvg("left", "black"), arEl("span", { class: "ar-example-label", text: "press LEFT" })),
+    arEl("div", { class: "ar-example-item" }, arrowSvg("left", "red"), arEl("span", { class: "ar-example-label", text: "press RIGHT" })));
+
+  window.Arrows = { makeGenerator, computeStats, median, createRun, renderResult, arrowSvg,
+    GAME: AR_GAME, RUN_MS, GAP_MS, ERROR_GAP_MS, PENALTY, LOCK_MS, MAX_SAME_ANSWER, MAX_SAME_COLOUR, SHOW_RULE_LEGEND, COSTS_MIN_N, RED, INK };
+
+  // --- Auth gate: locked when signed out; the shell mounts once per session ---
+  let mounted = false;
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session && !mounted) {
+      mounted = true;
+      GameShell.mount({
+        sb, userId: session.user.id, game: AR_GAME, title: "Arrows",
+        els: {
+          stats: document.getElementById("stats"),
+          leaderboard: document.getElementById("leaderboard"),
+          playCard: document.getElementById("play-card"),
+          resultCard: document.getElementById("result-card"),
+          startButton: document.getElementById("start-btn"),
+        },
+        createRun: (ctx) => createRun(ctx), renderResult,
+      });
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+  // --- nav dropdowns (identical on every page) ---
+  // On phones (640px and under) .top-nav scrolls sideways, and iOS WebKit clips or
+  // misplaces anything left inside it, so an open menu is moved into <body> and fixed
+  // under its trigger. There, the trigger label opens the menu instead of navigating
+  // (the label's page is the menu's first item). Outside taps use pointerdown, because
+  // iOS doesn't dispatch click to the document for taps on non-interactive elements.
+  (function () {
+    var nav = document.querySelector('.top-nav');
+    var dropdowns = Array.prototype.map.call(document.querySelectorAll('.nav-dropdown'), function (dd) {
+      return {
+        dd: dd,
+        label: dd.querySelector('a.nav-link'),
+        caret: dd.querySelector('.nav-caret'),
+        menu: dd.querySelector('.nav-dropdown-menu'),
+        scrollStart: 0
+      };
+    });
+    function isPhone() { return window.innerWidth <= 640; }
+    function close(d) {
+      d.menu.classList.remove('open');
+      if (d.menu.parentNode !== d.dd) {
+        d.menu.style.position = '';
+        d.menu.style.zIndex = '';
+        d.menu.style.top = '';
+        d.menu.style.left = '';
+        d.dd.appendChild(d.menu);
+      }
+    }
+    function closeAll(except) {
+      dropdowns.forEach(function (d) { if (d !== except) close(d); });
+    }
+    function open(d) {
+      closeAll(d);
+      d.scrollStart = nav.scrollLeft;
+      if (isPhone()) {
+        document.body.appendChild(d.menu);
+        d.menu.style.position = 'fixed';
+        d.menu.style.zIndex = '300';
+        d.menu.classList.add('open');
+        var maxLeft = window.innerWidth - Math.max(190, d.menu.offsetWidth) - 12;
+        d.menu.style.top = (nav.getBoundingClientRect().bottom + 6) + 'px';
+        d.menu.style.left = Math.max(12, Math.min(d.dd.getBoundingClientRect().left, maxLeft)) + 'px';
+      } else {
+        d.menu.classList.add('open');
+      }
+    }
+    function toggle(d) {
+      if (d.menu.classList.contains('open')) close(d); else open(d);
+    }
+    dropdowns.forEach(function (d) {
+      d.caret.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggle(d);
+      });
+      d.label.addEventListener('click', function (e) {
+        if (!isPhone()) return; // desktop: the label is an ordinary link
+        e.preventDefault();
+        e.stopPropagation();
+        toggle(d);
+      });
+    });
+    document.addEventListener('click', function () { closeAll(); });
+    document.addEventListener('pointerdown', function (e) {
+      if (!isPhone()) return;
+      if (e.target.closest && e.target.closest('.nav-dropdown, .nav-dropdown-menu')) return;
+      closeAll();
+    });
+    nav.addEventListener('scroll', function () {
+      dropdowns.forEach(function (d) {
+        if (d.menu.classList.contains('open') && Math.abs(nav.scrollLeft - d.scrollStart) > 4) close(d);
+      });
+    });
+    // iOS fires resize when its toolbars show or hide, so only a width change counts.
+    var lastWidth = window.innerWidth;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      closeAll();
+    });
+    window.addEventListener('orientationchange', function () { closeAll(); });
+  })();
+  // --- end nav dropdowns ---
+</script>
+</body>
+</html>
