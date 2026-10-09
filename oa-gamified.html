@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -84,31 +84,9 @@
   .panel p { font-size: 13px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 12px; }
   .firm-note { font-size: 11.5px; color: var(--ink-faint); font-style: italic; margin-top: 10px; }
 
-  .game-panel { text-align: center; }
-  .game-sub { font-size: 12px; color: var(--ink-faint); margin-bottom: 18px; }
-
-  /* --- Balloon game --- */
-  .balloon-stage { display: flex; flex-direction: column; align-items: center; padding: 20px 0; min-height: 220px; justify-content: flex-end; }
-  #balloon-svg-wrap { transition: transform 0.15s ease; margin-bottom: 14px; }
-  .balloon-hud { display: flex; gap: 26px; justify-content: center; margin-bottom: 16px; font-family: 'IBM Plex Mono', monospace; }
-  .balloon-hud .hstat { text-align: center; }
-  .balloon-hud .hstat .l { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; }
-  .balloon-hud .hstat .v { font-size: 20px; font-weight: 700; color: var(--ink); }
-  .balloon-btns button { border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 6px; }
-  #pump-btn { background: var(--gold); color: #FFFFFF; }
-  #cashout-btn { background: transparent; border: 1px solid var(--green); color: var(--green); }
-  #pump-btn:disabled, #cashout-btn:disabled { opacity: 0.4; cursor: default; }
-  .pop-msg { color: var(--red); font-weight: 700; margin-top: 10px; font-size: 13px; }
-  #balloon-replay-btn { display: none; margin: 12px auto 4px; background: var(--gold); color: #FFFFFF; border: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; cursor: pointer; font-size: 13px; }
-
-  /* --- Memory game --- */
-  .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 220px; margin: 0 auto 18px; }
-  .memory-tile { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; height: 62px; cursor: pointer; transition: background 0.15s ease; }
-  .memory-tile.lit { background: var(--gold); }
-  .memory-tile.correct { background: var(--green-soft); border-color: var(--green); }
-  .memory-tile.wrong { background: var(--red-soft); border-color: var(--red); }
-  .memory-status { font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; min-height: 18px; }
-  #memory-start-btn { background: var(--gold); color: #FFFFFF; border: none; border-radius: 999px; padding: 12px 24px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  .practise-links { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .practise-links a { display: flex; align-items: center; min-height: 44px; padding: 0 2px; font-size: 14px; font-weight: 600; color: var(--gold-dim); }
+  .practise-links a:focus-visible { outline: 2px solid var(--gold-dim); outline-offset: 2px; }
 
   /* --- mobile --- */
   @media (max-width: 640px) {
@@ -121,7 +99,6 @@
     .nav-dropdown-menu { position: fixed; }
     .nav-caret { padding: 11px 14px 11px 6px; }
     .panel { padding: 16px 18px; }
-    .balloon-btns button { padding: 11px 16px; font-size: 12.5px; }
   }
 </style>
 </head>
@@ -168,7 +145,7 @@
 
 <div class="kicker">Gamified / Cognitive</div>
 <h1>What to expect, not what to study</h1>
-<div class="sub">This category can't be drilled like the others — it's testing attention, memory, and decision-making patterns, not finance knowledge. This page is a briefing, plus two illustrative mini-games to show the format.</div>
+<div class="sub">This category can't be drilled like the others — it's testing attention, memory, and decision-making patterns, not finance knowledge. This page is a briefing on what to expect. You can practise three of the formats on the Games page.</div>
 
 <div class="panel">
   <h2>What these actually are</h2>
@@ -188,35 +165,14 @@
   </ul>
 </div>
 
-<div class="panel game-panel">
-  <h2>Example: Risk-tolerance game (Balloon)</h2>
-  <div class="game-sub">Each pump adds points but raises the chance the balloon pops and you lose them. Cash out anytime to bank what you've got. This mimics the format — there's no "good" score here.</div>
-
-  <div class="balloon-hud">
-    <div class="hstat"><div class="l">Balloon</div><div class="v" id="balloon-num">1 / 5</div></div>
-    <div class="hstat"><div class="l">Pending</div><div class="v" id="balloon-pending">0</div></div>
-    <div class="hstat"><div class="l">Total</div><div class="v" id="balloon-total">0</div></div>
-  </div>
-
-  <div class="balloon-stage">
-    <div id="balloon-svg-wrap"></div>
-  </div>
-  <div class="pop-msg" id="balloon-msg"></div>
-  <button type="button" id="balloon-replay-btn">Play Again</button>
-
-  <div class="balloon-btns">
-    <button type="button" id="pump-btn">Pump</button>
-    <button type="button" id="cashout-btn">Cash Out</button>
-  </div>
-</div>
-
-<div class="panel game-panel">
-  <h2>Example: Memory sequence game</h2>
-  <div class="game-sub">A sequence of tiles lights up, one at a time. Repeat it back in the same order. Each round adds one more tile.</div>
-
-  <div class="memory-status" id="memory-status">Click Start to begin.</div>
-  <div class="memory-grid" id="memory-grid"></div>
-  <button type="button" id="memory-start-btn">Start</button>
+<div class="panel">
+  <h2>Practise the formats</h2>
+  <p>These are practice versions of formats that some firms use. They don't build finance knowledge, and no score here predicts how you'd do in a real assessment.</p>
+  <ul class="practise-links">
+    <li><a href="game-arrows.html">Arrows: a reaction and attention task</a></li>
+    <li><a href="game-balloon.html">Balloon: a risk-taking task</a></li>
+    <li><a href="game-memory-tiles.html">Memory tiles: a short-term memory task</a></li>
+  </ul>
 </div>
 
 </div>
@@ -319,164 +275,6 @@
     window.addEventListener('orientationchange', function () { closeAll(); });
   })();
   // --- end nav dropdowns ---
-
-  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-  // =====================================================================
-  // Balloon Risk game — illustrative only, no scoring persisted anywhere.
-  // =====================================================================
-  const MAX_BALLOONS = 5;
-  let balloonIndex = 0, pumps = 0, pending = 0, total = 0, balloonLocked = false;
-
-  function balloonSvg(size) {
-    const w = 60 + size * 8, h = 76 + size * 10;
-    return `<svg width="${w}" height="${h}" viewBox="0 0 100 130">
-      <ellipse cx="50" cy="50" rx="42" ry="48" fill="var(--gold)"/>
-      <path d="M50 98 L44 108 L56 108 Z" fill="var(--gold-dim)"/>
-      <line x1="50" y1="108" x2="50" y2="122" stroke="var(--ink-faint)" stroke-width="2"/>
-    </svg>`;
-  }
-
-  function renderBalloon() {
-    document.getElementById("balloon-svg-wrap").innerHTML = balloonSvg(pumps);
-    document.getElementById("balloon-num").textContent = `${balloonIndex+1} / ${MAX_BALLOONS}`;
-    document.getElementById("balloon-pending").textContent = String(pending);
-    document.getElementById("balloon-total").textContent = String(total);
-  }
-
-  function popChance() { return Math.min(0.5, pumps * 0.035); }
-
-  function pumpBalloon() {
-    if (balloonLocked) return;
-    const popped = Math.random() < popChance();
-    if (popped) {
-      balloonLocked = true;
-      document.getElementById("balloon-msg").textContent = `Pop! Lost ${pending} pending points on this balloon.`;
-      pending = 0;
-      renderBalloon();
-      setTimeout(nextBalloon, 1100);
-      return;
-    }
-    pumps += 1;
-    pending += 1;
-    document.getElementById("balloon-msg").textContent = "";
-    renderBalloon();
-  }
-
-  function cashOut() {
-    if (balloonLocked) return;
-    total += pending;
-    document.getElementById("balloon-msg").textContent = pending > 0 ? `Cashed out ${pending} points.` : "";
-    pending = 0;
-    balloonLocked = true;
-    renderBalloon();
-    setTimeout(nextBalloon, 900);
-  }
-
-  function nextBalloon() {
-    balloonIndex += 1;
-    pumps = 0;
-    pending = 0;
-    balloonLocked = false;
-    document.getElementById("balloon-msg").textContent = "";
-    if (balloonIndex >= MAX_BALLOONS) {
-      document.getElementById("pump-btn").disabled = true;
-      document.getElementById("cashout-btn").disabled = true;
-      document.getElementById("balloon-msg").textContent = `Done — final total: ${total}. There's no "good" score here, this was just to show the format.`;
-      document.getElementById("balloon-replay-btn").style.display = "block";
-      renderBalloon();
-      return;
-    }
-    renderBalloon();
-  }
-
-  function resetBalloonGame() {
-    balloonIndex = 0;
-    pumps = 0;
-    pending = 0;
-    total = 0;
-    balloonLocked = false;
-    document.getElementById("pump-btn").disabled = false;
-    document.getElementById("cashout-btn").disabled = false;
-    document.getElementById("balloon-msg").textContent = "";
-    document.getElementById("balloon-replay-btn").style.display = "none";
-    renderBalloon();
-  }
-
-  document.getElementById("pump-btn").addEventListener("click", pumpBalloon);
-  document.getElementById("cashout-btn").addEventListener("click", cashOut);
-  document.getElementById("balloon-replay-btn").addEventListener("click", resetBalloonGame);
-  renderBalloon();
-
-  // =====================================================================
-  // Memory sequence game — illustrative only, no scoring persisted anywhere.
-  // =====================================================================
-  const memoryGrid = document.getElementById("memory-grid");
-  const memoryStatus = document.getElementById("memory-status");
-  let memSequence = [], memPlayerIndex = 0, memAccepting = false, memRound = 0;
-
-  for (let i = 0; i < 9; i++) {
-    const tile = document.createElement("div");
-    tile.className = "memory-tile";
-    tile.dataset.i = i;
-    tile.addEventListener("click", () => handleTileClick(i, tile));
-    memoryGrid.appendChild(tile);
-  }
-
-  function startMemoryGame() {
-    memSequence = [randInt(0, 8)];
-    memRound = 1;
-    document.getElementById("memory-start-btn").style.display = "none";
-    playSequence();
-  }
-
-  function playSequence() {
-    memAccepting = false;
-    memPlayerIndex = 0;
-    memoryStatus.textContent = `Round ${memRound} — watch closely...`;
-    document.querySelectorAll(".memory-tile").forEach(t => t.classList.remove("correct", "wrong"));
-    // Every step turns all tiles off, pauses, then lights — so a tile repeated
-    // back-to-back still shows as two separate flashes.
-    const OFF_MS = 150, ON_MS = 400;
-    function step(i) {
-      document.querySelectorAll(".memory-tile").forEach(t => t.classList.remove("lit"));
-      if (i >= memSequence.length) {
-        memAccepting = true;
-        memoryStatus.textContent = "Your turn — repeat the sequence.";
-        return;
-      }
-      setTimeout(() => {
-        memoryGrid.querySelector(`[data-i="${memSequence[i]}"]`).classList.add("lit");
-        setTimeout(() => step(i + 1), ON_MS);
-      }, OFF_MS);
-    }
-    step(0);
-  }
-
-  function handleTileClick(i, tileEl) {
-    if (!memAccepting) return;
-    const expected = memSequence[memPlayerIndex];
-    if (i === expected) {
-      tileEl.classList.add("correct");
-      setTimeout(() => tileEl.classList.remove("correct"), 250);
-      memPlayerIndex += 1;
-      if (memPlayerIndex === memSequence.length) {
-        memAccepting = false;
-        memRound += 1;
-        memoryStatus.textContent = "Correct! Next round...";
-        memSequence.push(randInt(0, 8));
-        setTimeout(playSequence, 900);
-      }
-    } else {
-      tileEl.classList.add("wrong");
-      memAccepting = false;
-      memoryStatus.textContent = `Game over — you reached a sequence of ${memSequence.length - 1}. This is just to show the format, not a real score.`;
-      document.getElementById("memory-start-btn").textContent = "Try again";
-      document.getElementById("memory-start-btn").style.display = "inline-block";
-    }
-  }
-
-  document.getElementById("memory-start-btn").addEventListener("click", startMemoryGame);
 </script>
 </body>
 </html>
