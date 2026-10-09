@@ -26,6 +26,12 @@
                                    // bestEl }: rankEl ("4th of 37 runs, all-time") and
                                    // bestEl are filled by the shell after saving; place
                                    // them where they belong (appended after `el` if not).
+       formatScore(n),     // optional: how a score is shown in the stat strip (Best and
+                           // 7-day average), the leaderboard rows (pinned row included)
+                           // and the Result card's best line. Receives the raw stored
+                           // score; for the 7-day average, the unrounded mean. Default
+                           // String(n), and n.toFixed(1) for the 7-day average. Display
+                           // only: sorting and ranking always use the raw number.
      })
 
    RUN CONTEXT (argument to createRun)
@@ -192,6 +198,7 @@ const USE_SYSTEM_KEYBOARD = false;
     renderLeaderboardFrame();
     loadLeaderboard();
   }
+  const fmtScore = (n) => (opts.formatScore ? opts.formatScore(n) : String(n));
 
   // ---- stat strip ----
   async function refreshStats() {
@@ -214,11 +221,12 @@ const USE_SYSTEM_KEYBOARD = false;
         sb.from("game_scores").select("score").eq("game", game).eq("user_id", userId).gte("created_at", weekStart),
       ]);
       if (best.error || plays.error || today.error || week.error) throw best.error || plays.error || today.error || week.error;
-      set("best", best.data && best.data.length ? String(best.data[0].score) : "–");
+      set("best", best.data && best.data.length ? fmtScore(best.data[0].score) : "–");
       set("plays", String(plays.count ?? 0));
       set("today", String(today.count ?? 0));
       const scores = (week.data || []).map((r) => r.score);
-      set("avg7", scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "–");
+      const mean = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+      set("avg7", mean !== null ? (opts.formatScore ? opts.formatScore(mean) : mean.toFixed(1)) : "–");
       return { best: best.data && best.data.length ? best.data[0].score : null };
     } catch (err) {
       console.error("[game-shell] stats failed", err);
@@ -279,7 +287,7 @@ const USE_SYSTEM_KEYBOARD = false;
     return el("li", { class: "gs-row" + (isLatest ? " gs-row-latest" : "") },
       el("div", { class: "gs-row-line" }, badge, el("span", { class: "gs-name", text: r.player_name || "Anonymous" }),
         isLatest ? el("span", { class: "gs-latest-tag", text: "latest" }) : null,
-        el("span", { class: "gs-score", text: String(r.score) })),
+        el("span", { class: "gs-score", text: fmtScore(r.score) })),
       el("div", { class: "gs-row-when", text: whenLabel(r.created_at, wallNow()) }));
   }
   function renderBoard(body, rows, latestId, pinned) {
@@ -295,7 +303,7 @@ const USE_SYSTEM_KEYBOARD = false;
         el("div", { class: "gs-pinned-label", text: "Your latest run" }),
         el("div", { class: "gs-row gs-row-latest" },
           el("div", { class: "gs-row-line" }, el("span", { class: "gs-rank", text: ordinal(pinned.rank) }), el("span", { class: "gs-name", text: pinned.player_name || "Anonymous" }),
-            el("span", { class: "gs-score", text: String(pinned.score) })),
+            el("span", { class: "gs-score", text: fmtScore(pinned.score) })),
           el("div", { class: "gs-row-when", text: whenLabel(pinned.created_at, wallNow()) }))));
     }
   }
@@ -649,7 +657,7 @@ const USE_SYSTEM_KEYBOARD = false;
       rankLine.textContent = `${ordinal((higher.count || 0) + 1)} of ${total.count || 0} runs, all-time`;
     } catch (err) { console.error("[game-shell] rank failed", err); rankLine.textContent = ""; }
     const s = await refreshStats();
-    bestLine.textContent = s.best !== null ? `Your best: ${s.best}` : "";
+    bestLine.textContent = s.best !== null ? `Your best: ${fmtScore(s.best)}` : "";
     loadLeaderboard();
   }
 
