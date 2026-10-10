@@ -107,6 +107,14 @@
   .after-bar { height: 16px; }
 
   .panel { background: #FFFFFF; border: 1px solid #8B6B49; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .last-line { margin: 4px 0 0; font-size: 13px; line-height: 1.4; color: #5A5650; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .note { margin: 8px 0 0; font-size: 13px; color: #5A5650; }
+  .best-label { display: inline-block; margin: 0 auto 0 8px; padding: 1px 8px; border: 1px solid #2F6B4F; border-radius: 10px; font-size: 12px; font-weight: 700; color: #2F6B4F; background: #FFFFFF; white-space: nowrap; }
+  .ex-top > :first-child { flex: 1 1 auto; min-width: 0; } /* the name and the Last time line wrap; the Remove button keeps its width */
+  .ex-top > .btn { flex: 0 0 auto; }
+  .fin-bests { margin: 4px 0 12px; }
+  .fin-bests h3 { font-size: 14px; margin: 0 0 4px; }
+  .fin-bests ul { margin: 0; padding-left: 18px; font-size: 14px; overflow-wrap: anywhere; }
   .ex-card { scroll-margin-bottom: 96px; } /* a new card scrolls into view clear of the sticky bar */
   .add-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
   .add-fields.cardio { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -235,6 +243,8 @@
     <h2>Add exercise</h2>
     <label class="field" for="add-select">Exercise</label>
     <select class="input" id="add-select"></select>
+    <p class="last-line" id="add-last" hidden></p>
+    <p class="note" id="add-prefilled" hidden>Prefilled from last time</p>
     <p class="msg err" id="add-load-err" hidden>Couldn't load your exercises. <button type="button" class="btn small" id="add-load-retry">Retry</button></p>
     <div class="add-fields" id="add-strength" hidden>
       <div><label class="field" for="add-sets">Sets</label><input class="input" id="add-sets" type="text" inputmode="numeric" autocomplete="off"></div>
@@ -280,6 +290,7 @@
     <p class="err" id="fin-name-err" hidden>Give the workout a name.</p>
     <div class="sum" id="fin-sum"></div>
     <p class="msg" id="fin-skipped" hidden></p>
+    <div class="fin-bests" id="fin-bests"><h3>New bests</h3><ul id="fin-bests-list"></ul><p class="msg" id="fin-bests-msg" hidden></p></div>
     <label class="field" for="fin-city">City</label>
     <input class="input" id="fin-city" type="text" maxlength="60" autocomplete="off">
     <div class="chips" id="fin-chips" aria-label="Recent cities"></div>
@@ -331,6 +342,10 @@
   const WEIGHT_STEP = 2.5;
   const DRAFT_KEY = "stk_gym_draft";
   const STALE_DRAFT_HOURS = 24;
+  const CACHE_KEY = "stk_gym_cache";   // this device's copy of past workouts, for "Last time" and "New best"
+  const CACHE_MAX_AGE_MS = 600000;     // rebuild the copy when it's older than this (10 minutes)
+  const PAGE_SIZE = 1000;              // the API returns at most 1000 rows per request, so reads page in steps of this
+  const LAST_ROWS_SHOWN = 8;           // rows in a "Last time" line before "+N more"
   const DEFAULT_SETS = 3;   // the Sets field's starting value when a strength exercise is chosen
   const SETS_MAX = 20;      // most sets one "Add to workout" can create
   const NAME_MAX = 60, CITY_MAX = 60, NOTES_MAX = 2000, HISTORY_PAGE = 20;
@@ -579,6 +594,7 @@
         const r = await sb.from("workouts").delete().eq("id", w.id);
         if (r.error) throw r.error;
       } catch (e) { delErr.textContent = "Couldn't delete this workout. Try again."; show(delErr, true); del.disabled = false; return; }
+      dropCacheAndRebuild();
       reloadHome();
     });
     kids.push(el("div", { class: "row-actions" }, del), delErr);
@@ -700,16 +716,17 @@
     const list = $("ex-list");
     list.replaceChildren(...draft.exercises.map((ex, ei) => exerciseCard(ex, ei)));
     renderAddSelect(); // an exercise in the workout shows as "(added)"; a removed one becomes available again
+    updateFlags();
   }
   function exerciseCard(ex, ei) {
     const strength = ex.kind === "strength", unit = strength ? "set" : "block";
     const rows = ex.rows.map((row, ri) => {
       const of = `${unit} ${ri + 1} of ${ex.name}`;
       const fields = strength
-        ? [stepper("reps", row, `Reps, ${of}`, draftChanged), stepper("weight", row, `Weight in kg, ${of}`, draftChanged)]
-        : [stepper("minutes", row, `Minutes, ${of}`, draftChanged), stepper("level", row, `Level, ${of}`, draftChanged)];
-      return el("div", { class: "set-row" },
-        el("div", { class: "set-head" }, el("span", { text: `${strength ? "Set" : "Block"} ${ri + 1}` }),
+        ? [stepper("reps", row, `Reps, ${of}`, rowChanged), stepper("weight", row, `Weight in kg, ${of}`, rowChanged)]
+        : [stepper("minutes", row, `Minutes, ${of}`, rowChanged), stepper("level", row, `Level, ${of}`, rowChanged)];
+      return el("div", { class: "set-row", role: "group", "aria-label": `${strength ? "Set" : "Block"} ${ri + 1} of ${ex.name}` },
+        el("div", { class: "set-head" }, el("span", { text: `${strength ? "Set" : "Block"} ${ri + 1}` }), el("strong", { class: "best-label", hidden: true, text: "New best" }),
           el("button", { type: "button", class: "btn small danger", "aria-label": `Remove ${of}`, text: "Remove", onclick: () => { ex.rows.splice(ri, 1); draftChanged(); renderExercises(); } })),
         el("div", { class: "set-fields" },
           el("div", null, el("div", { class: "field", text: strength ? "Reps" : "Minutes" }), fields[0]),
@@ -724,11 +741,200 @@
       draft.exercises.splice(ei, 1); draftChanged(); renderExercises();
     } });
     return el("div", { class: "ex-card" },
-      el("div", { class: "ex-top" }, el("div", null, el("div", { class: "ex-name", text: ex.name }), el("div", { class: "ex-kind", text: strength ? "Strength" : "Cardio" })), remove),
+      el("div", { class: "ex-top" }, el("div", null, el("div", { class: "ex-name", text: ex.name }),
+        el("p", { class: "last-line", "data-ex": ex.exercise_id, text: lastText(entryFor(ex.exercise_id), cacheState, Date.now()) }),
+        el("div", { class: "ex-kind", text: strength ? "Strength" : "Cardio" })), remove),
       rows, el("div", { class: "row-actions" }, add));
   }
   $("wk-name").addEventListener("input", () => { draft.name = $("wk-name").value; nameError($("wk-name"), $("wk-name-err"), true); draftChanged(); });
   $("wk-notes").addEventListener("input", () => { draft.notes = $("wk-notes").value; draftChanged(); });
+
+  // ---- past workouts: top set, best, last session (pure) ----
+  const numOrNull = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+  // a beats b: heavier, or the same weight with more reps (no weight counts as 0). Equal sets don't beat each other.
+  function beats(a, b) {
+    const wa = a.weight_kg ?? 0, wb = b.weight_kg ?? 0;
+    return wa > wb || (wa === wb && (a.reps ?? 0) > (b.reps ?? 0));
+  }
+  // The top set of rows in order: the maximum under beats(); ties go to the earliest.
+  function topSet(rows) { let top = null; for (const r of rows) if (!top || beats(r, top)) top = r; return top; }
+  const savedValid = (r) => (r.minutes !== null ? r.minutes > 0 : r.reps !== null && r.reps >= 1);
+  const cleanRow = (r) => ({ reps: r.reps, weight_kg: r.weight_kg, minutes: r.minutes, level: r.level });
+  // Build the copy from raw rows: last session = the newest workout (started_at, then id) with a valid row for the
+  // exercise, its valid rows by set number; best = the top set over all valid rows, oldest first (strength only).
+  function buildCache(workouts, sets, userId, fetchedAt) {
+    const ws = workouts.map((w) => ({ id: Number(w.id), started_at: w.started_at }))
+      .sort((a, b) => (a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : b.id - a.id));
+    const rank = new Map(ws.map((w, i) => [w.id, i])); // 0 is the newest
+    const byEx = new Map();
+    for (const s of sets) {
+      if (s.exercise_id === null || s.exercise_id === undefined) continue;
+      const wid = Number(s.workout_id);
+      if (!rank.has(wid)) continue;
+      const row = { reps: numOrNull(s.reps), weight_kg: numOrNull(s.weight_kg), minutes: numOrNull(s.minutes), level: numOrNull(s.level), set_number: Number(s.set_number), w: wid };
+      if (!savedValid(row)) continue;
+      const k = String(Number(s.exercise_id));
+      if (!byEx.has(k)) byEx.set(k, []);
+      byEx.get(k).push(row);
+    }
+    const exercises = {};
+    for (const [k, rows] of byEx) {
+      let lastW = rows[0].w;
+      for (const r of rows) if (rank.get(r.w) < rank.get(lastW)) lastW = r.w;
+      const lastRows = rows.filter((r) => r.w === lastW).sort((a, b) => a.set_number - b.set_number);
+      const cardio = rows.some((r) => r.minutes !== null);
+      const oldestFirst = rows.slice().sort((a, b) => rank.get(b.w) - rank.get(a.w) || a.set_number - b.set_number);
+      const top = cardio ? null : topSet(oldestFirst);
+      exercises[k] = { last: { started_at: ws[rank.get(lastW)].started_at, rows: lastRows.map(cleanRow) },
+        best: top ? { reps: top.reps, weight_kg: top.weight_kg, started_at: ws[rank.get(top.w)].started_at } : null };
+    }
+    return { v: 1, user_id: userId, fetched_at: fetchedAt, exercises };
+  }
+  const validCache = (c, uid) => !!c && typeof c === "object" && c.v === 1 && c.user_id === uid && isIso(c.fetched_at) && !!c.exercises && typeof c.exercises === "object" && !Array.isArray(c.exercises);
+  // Text for "Last time" lines and the New bests section.
+  const n0 = (v) => String(Number(v)); // 60.00 → "60", 62.50 → "62.5"
+  function lastRowText(r) {
+    if (r.minutes !== null) return `${n0(r.minutes)} min` + (r.level !== null ? ` · level ${n0(r.level)}` : "");
+    return r.weight_kg !== null ? `${r.reps} × ${n0(r.weight_kg)} kg` : `${r.reps} reps`;
+  }
+  function lastText(entry, state, nowMs) {
+    if (state !== "ready") return "Last time not available yet";
+    if (!entry || !entry.last || !entry.last.rows.length) return "First time logged";
+    const rows = entry.last.rows, cardio = rows.some((r) => r.minutes !== null);
+    let body = rows.slice(0, LAST_ROWS_SHOWN).map(lastRowText).join(cardio ? " + " : ", ");
+    if (rows.length > LAST_ROWS_SHOWN) body += `, +${rows.length - LAST_ROWS_SHOWN} more`;
+    return `Last time · ${fmtDay(entry.last.started_at, nowMs)} · ${body}`;
+  }
+  const bestText = (b) => (b.weight_kg !== null && b.weight_kg !== undefined ? `${n0(b.weight_kg)} kg × ${b.reps}` : `${b.reps} reps`);
+  // Prefill from the last session: strength = its number of sets (1..SETS_MAX) and its top set; cardio = its first block.
+  function prefillValues(entry, kind) {
+    if (!entry || !entry.last || !entry.last.rows.length) return null;
+    const rows = entry.last.rows;
+    if (kind === "cardio") { const r = rows[0]; return { minutes: r.minutes === null ? "" : n0(r.minutes), level: r.level === null ? "" : n0(r.level) }; }
+    const top = topSet(rows);
+    return { sets: String(Math.min(SETS_MAX, Math.max(1, rows.length))), reps: top.reps === null ? "" : String(top.reps), weight: top.weight_kg === null ? "" : n0(top.weight_kg) };
+  }
+  // One flag per row: a valid row is a new best if it beats the running best, which starts at the saved best.
+  // No saved best (never saved, or history unknown) flags nothing.
+  function flagRows(previousBest, rows) {
+    if (!previousBest) return rows.map(() => false);
+    let run = { reps: previousBest.reps, weight_kg: previousBest.weight_kg };
+    return rows.map((row) => {
+      const v = rowValues("strength", row);
+      if (!v.valid) return false;
+      const set = { reps: v.reps, weight_kg: v.weight };
+      if (beats(set, run)) { run = set; return true; }
+      return false;
+    });
+  }
+
+  // ---- the local copy of past workouts ----
+  let cache = null, cacheState = "unknown", cacheBuilding = null;
+  const entryFor = (id) => (cacheState === "ready" && cache ? cache.exercises[String(id)] || null : null);
+  const bestFor = (id) => { const e = entryFor(id); return e ? e.best : null; };
+  function readCache(uid) {
+    let text = null;
+    try { text = localStorage.getItem(CACHE_KEY); } catch (e) { return null; }
+    if (text === null) return null;
+    let c = null;
+    try { c = JSON.parse(text); } catch (e) { c = null; }
+    if (!validCache(c, uid)) { try { localStorage.removeItem(CACHE_KEY); } catch (e) {} return null; }
+    return c;
+  }
+  function writeCache() {
+    if (!cache) return;
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) { /* storage unavailable: keep the copy in memory for this page load */ }
+  }
+  // Every row, a page of PAGE_SIZE at a time, in a stable order.
+  async function pageAll(table, cols, orders) {
+    const out = [];
+    for (let from = 0; ; from += PAGE_SIZE) {
+      let q = sb.from(table).select(cols);
+      for (const [c, asc] of orders) q = q.order(c, { ascending: asc });
+      const r = await q.range(from, from + PAGE_SIZE - 1);
+      if (r.error) throw r.error;
+      const rows = r.data || [];
+      out.push(...rows);
+      if (rows.length < PAGE_SIZE) return out;
+    }
+  }
+  function rebuildCache() {
+    if (cacheBuilding) return cacheBuilding;
+    cacheBuilding = (async () => {
+      try {
+        const uid = await getUserId();
+        const [ws, ss] = await Promise.all([
+          pageAll("workouts", "id, started_at", [["started_at", false], ["id", false]]),
+          pageAll("workout_sets", "id, workout_id, exercise_id, set_number, reps, weight_kg, minutes, level", [["id", true]]),
+        ]);
+        cache = buildCache(ws, ss, uid, new Date(Date.now()).toISOString());
+        cacheState = "ready";
+        writeCache();
+        cacheChanged();
+        return true;
+      } catch (e) {
+        console.error("[gym] couldn't build the local copy of past workouts", e); // the page keeps working without it
+        return false;
+      } finally { cacheBuilding = null; }
+    })();
+    return cacheBuilding;
+  }
+  async function initCache() {
+    try {
+      const uid = await getUserId();
+      const c = readCache(uid);
+      if (c) { cache = c; cacheState = "ready"; cacheChanged(); }
+      const stale = !c || Date.now() - Date.parse(c.fetched_at) > CACHE_MAX_AGE_MS;
+      if (stale && navigator.onLine !== false) rebuildCache();
+    } catch (e) { console.error("[gym] couldn't read the local copy of past workouts", e); }
+  }
+  // After a save: fold the saved workout into the copy (only when the copy is complete).
+  function applySaveToCache(d) {
+    if (cacheState !== "ready" || !cache) return;
+    for (const ex of d.exercises) {
+      if (ex.exercise_id === null || ex.exercise_id === undefined) continue;
+      const rows = ex.rows.map((r) => rowValues(ex.kind, r)).filter((v) => v.valid).map((v) => ({ reps: v.reps, weight_kg: v.weight, minutes: v.minutes, level: v.level }));
+      if (!rows.length) continue;
+      const k = String(ex.exercise_id);
+      const e = cache.exercises[k] || (cache.exercises[k] = { last: null, best: null });
+      if (!e.last || Date.parse(d.started_at) >= Date.parse(e.last.started_at)) e.last = { started_at: d.started_at, rows };
+      if (ex.kind === "strength") {
+        const top = topSet(rows);
+        if (!e.best || beats(top, e.best)) e.best = { reps: top.reps, weight_kg: top.weight_kg, started_at: d.started_at };
+      }
+    }
+    writeCache();
+  }
+  function dropCacheAndRebuild() {
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    cache = null; cacheState = "unknown"; cacheChanged();
+    rebuildCache();
+  }
+  // The copy changed (loaded, built or dropped): refresh what's on screen.
+  function cacheChanged() {
+    if (screen !== "active" || !draft) return;
+    updateLastLines();
+    updateFlags();
+    const x = chosenExercise();
+    if (x) { $("add-last").textContent = lastText(entryFor(x.id), cacheState, Date.now()); if (!addTouched) applyPrefill(x); }
+  }
+  function updateLastLines() {
+    for (const line of document.querySelectorAll("#ex-list .last-line")) line.textContent = lastText(entryFor(line.dataset.ex), cacheState, Date.now());
+  }
+  function updateFlags() {
+    if (!draft) return;
+    const cards = document.querySelectorAll("#ex-list .ex-card");
+    draft.exercises.forEach((ex, i) => {
+      const card = cards[i]; if (!card) return;
+      const flags = ex.kind === "strength" ? flagRows(bestFor(ex.exercise_id), ex.rows) : ex.rows.map(() => false);
+      card.querySelectorAll(".set-row").forEach((row, ri) => {
+        const label = row.querySelector(".best-label");
+        show(label, !!flags[ri]);
+        row.setAttribute("aria-label", `${ex.kind === "strength" ? "Set" : "Block"} ${ri + 1} of ${ex.name}${flags[ri] ? ", New best" : ""}`);
+      });
+    });
+  }
+  function rowChanged() { draftChanged(); updateFlags(); }
 
   // ---- the Add exercise card ----
   const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
@@ -765,7 +971,18 @@
   function resetAddFields() {
     for (const id of ["add-sets", "add-reps", "add-weight", "add-minutes", "add-level"]) { $(id).value = ""; $(id).setAttribute("aria-invalid", "false"); }
     show($("add-strength"), false); show($("add-cardio"), false); addError([]);
+    show($("add-last"), false); show($("add-prefilled"), false); addTouched = false;
     $("add-btn").disabled = true;
+  }
+  let addTouched = false; // the fields were edited since the exercise was chosen: a late prefill must not overwrite them
+  for (const id of ["add-sets", "add-reps", "add-weight", "add-minutes", "add-level"]) $(id).addEventListener("input", () => { addTouched = true; });
+  function applyPrefill(x) {
+    const p = prefillValues(entryFor(x.id), x.kind);
+    if (!p) { show($("add-prefilled"), false); return false; }
+    if (x.kind === "strength") { $("add-sets").value = p.sets; $("add-reps").value = p.reps; $("add-weight").value = p.weight; }
+    else { $("add-minutes").value = p.minutes; $("add-level").value = p.level; }
+    show($("add-prefilled"), true);
+    return true;
   }
   function onChoose() {
     const x = chosenExercise();
@@ -773,6 +990,9 @@
     addError([]);
     show($("add-strength"), !!x && x.kind === "strength"); show($("add-cardio"), !!x && x.kind === "cardio");
     if (x && x.kind === "strength") $("add-sets").value = String(DEFAULT_SETS);
+    addTouched = false; show($("add-prefilled"), false);
+    $("add-last").textContent = x ? lastText(entryFor(x.id), cacheState, Date.now()) : ""; show($("add-last"), !!x);
+    if (x) applyPrefill(x);
     $("add-btn").disabled = !x;
   }
   // Sets: a whole number from 1 to SETS_MAX.
@@ -856,10 +1076,32 @@
       el("div", { text: `${s.exercises} ${s.exercises === 1 ? "exercise" : "exercises"} · ${s.sets} valid ${s.sets === 1 ? "set" : "sets"} · ${kg(s.volume)} kg volume` }));
     $("fin-skipped").textContent = `${s.skipped} incomplete ${s.skipped === 1 ? "row" : "rows"} will be skipped`;
     show($("fin-skipped"), s.skipped > 0);
+    renderNewBests();
     $("fin-chips").replaceChildren(...recentCities.map((c) => el("button", { type: "button", class: "chip", text: c, onclick: () => { $("fin-city").value = c; draft.city = c; draftChanged(); } })));
     $("save-btn").textContent = errorText || resumedFinished ? "Retry save" : "Save";
     $("fin-err").textContent = errorText || ""; show($("fin-err"), !!errorText);
     updateSaveState();
+  }
+  // Each exercise with a flagged row: its best flagged row against the saved best, computed now from the copy.
+  function newBestLines(d) {
+    if (cacheState !== "ready") return null;
+    const out = [];
+    for (const ex of d.exercises) {
+      if (ex.kind !== "strength") continue;
+      const prev = bestFor(ex.exercise_id);
+      if (!prev) continue;
+      const flags = flagRows(prev, ex.rows);
+      const flagged = ex.rows.filter((r, i) => flags[i]).map((r) => { const v = rowValues("strength", r); return { reps: v.reps, weight_kg: v.weight }; });
+      if (flagged.length) out.push(`${ex.name}: ${bestText(topSet(flagged))} (previous best ${bestText(prev)})`);
+    }
+    return out;
+  }
+  function renderNewBests() {
+    const lines = newBestLines(draft);
+    $("fin-bests-list").replaceChildren(...(lines || []).map((t) => el("li", { text: t })));
+    show($("fin-bests-list"), !!(lines && lines.length));
+    $("fin-bests-msg").textContent = lines === null ? "New bests aren't available because your history hasn't loaded." : lines.length ? "" : "No new bests this time.";
+    show($("fin-bests-msg"), !(lines && lines.length));
   }
   function updateSaveState() {
     const s = summarise(draft), blank = !draft.name.trim();
@@ -892,6 +1134,7 @@
         if (r.error) throw r.error;
       }
       const done = draft, end = endedAt(done);
+      applySaveToCache(done);
       draft = null; writeDraftNow();
       saving = false;
       $("saved-msg").textContent = `Saved · ${fmtDay(done.started_at, Date.now())} · ${fmtTime(done.started_at)}–${fmtTime(end)}`;
@@ -980,10 +1223,13 @@
     reloadHome();
     if (draft && Date.now() - Date.parse(draft.started_at) < STALE_DRAFT_HOURS * 3600000) { resumedFinished = !!draft.finished_at; go(draft.finished_at ? "finish" : "active"); }
     else go("home");
+    requestAnimationFrame(() => setTimeout(initCache, 0)); // after first paint: never delays the page or the Start button
   }
 
   window.Gym = { parseField, rowValues, rowHasData, summarise, endedAt, workoutPayload, setsPayload, fmtDay, fmtTime, fmtDuration, fmtClock, weekStartIso, londonMidnight,
     validDraft, parseDraft, kg, parseSets, addToWorkout, get draft() { return draft; }, get screen() { return screen; }, DEFAULT_SETS, SETS_MAX,
+    beats, topSet, buildCache, validCache, lastRowText, lastText, bestText, prefillValues, flagRows, newBestLines, rebuildCache,
+    get cache() { return cache; }, get cacheState() { return cacheState; }, CACHE_KEY, CACHE_MAX_AGE_MS, PAGE_SIZE, LAST_ROWS_SHOWN,
     REPS_MAX, WEIGHT_MAX, MINUTES_MAX, LEVEL_MAX, WEIGHT_STEP, DRAFT_KEY, STALE_DRAFT_HOURS };
 
   // --- nav dropdowns (identical on every page) ---
