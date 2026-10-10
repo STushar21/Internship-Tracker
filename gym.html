@@ -88,7 +88,7 @@
   .stat { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 10px; padding: 10px 12px; }
   .stat-label { font-size: 11px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.05em; }
   .stat-num { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
-  .start-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #start-btn { width: 100%; }
 
   .wk-head { display: grid; gap: 6px; }
   .wk-meta { font-size: 14px; color: #5A5650; font-variant-numeric: tabular-nums; }
@@ -107,11 +107,11 @@
   .after-bar { height: 16px; }
 
   .panel { background: #FFFFFF; border: 1px solid #8B6B49; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-  .pick-group { margin-top: 12px; }
-  .pick-group h3 { font-size: 12px; color: #5A5650; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .pick-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .pick-item { width: 100%; min-height: 44px; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #E3DAC4; border-radius: 8px; background: #FFFFFF; color: #1A1A18; font-family: inherit; font-size: 15px; text-align: left; cursor: pointer; }
-  .pick-item:disabled { cursor: default; background: #F1EBDC; color: #1A1A18; }
+  .ex-card { scroll-margin-bottom: 96px; } /* a new card scrolls into view clear of the sticky bar */
+  .add-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+  .add-fields.cardio { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .add-fields .input { text-align: center; }
+  .add-card .row-actions .btn { flex: 1 1 auto; }
   .tag { font-size: 12px; font-weight: 600; color: #5A5650; white-space: nowrap; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .chip { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid #8B6B49; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; }
@@ -166,6 +166,7 @@
       <a href="journal.html">Journal</a>
       <a href="games.html">Games</a>
       <a href="gym.html" class="active">Gym</a>
+      <a href="gym.html">Gym</a>
     </div>
   </div>
   <a href="oa-prep.html" class="nav-link">OA Prep</a>
@@ -209,15 +210,8 @@
   </div>
 
   <div class="card" id="start-card">
-    <h2>Start workout</h2>
-    <div class="start-grid">
-      <button type="button" class="btn primary" data-template="push">Push</button>
-      <button type="button" class="btn primary" data-template="pull">Pull</button>
-      <button type="button" class="btn primary" data-template="legs">Legs</button>
-      <button type="button" class="btn" data-template="empty">Empty</button>
-    </div>
+    <button type="button" class="btn primary" id="start-btn">Start workout</button>
     <p class="msg" id="start-blocked" hidden>Finish or discard your workout in progress first</p>
-    <p class="msg err" id="start-msg" hidden></p>
   </div>
 
   <h2>History</h2>
@@ -236,21 +230,34 @@
     <div class="wk-meta"><span id="wk-started"></span> · <span id="wk-elapsed" aria-live="off"></span></div>
   </div>
   <div id="ex-list"></div>
-  <div class="row-actions"><button type="button" class="btn" id="add-ex">Add exercise</button></div>
 
-  <div class="panel" id="picker" hidden>
+  <div class="card add-card" id="add-card">
     <h2>Add exercise</h2>
-    <label class="field" for="pick-search">Search</label>
-    <input class="input" id="pick-search" type="text" autocomplete="off" maxlength="60">
-    <div id="pick-groups"></div>
-    <div class="inline-form">
+    <label class="field" for="add-select">Exercise</label>
+    <select class="input" id="add-select"></select>
+    <p class="msg err" id="add-load-err" hidden>Couldn't load your exercises. <button type="button" class="btn small" id="add-load-retry">Retry</button></p>
+    <div class="add-fields" id="add-strength" hidden>
+      <div><label class="field" for="add-sets">Sets</label><input class="input" id="add-sets" type="text" inputmode="numeric" autocomplete="off"></div>
+      <div><label class="field" for="add-reps">Reps</label><input class="input" id="add-reps" type="text" inputmode="numeric" autocomplete="off"></div>
+      <div><label class="field" for="add-weight">Weight (kg)</label><input class="input" id="add-weight" type="text" inputmode="decimal" autocomplete="off"></div>
+    </div>
+    <div class="add-fields cardio" id="add-cardio" hidden>
+      <div><label class="field" for="add-minutes">Minutes</label><input class="input" id="add-minutes" type="text" inputmode="decimal" autocomplete="off"></div>
+      <div><label class="field" for="add-level">Level</label><input class="input" id="add-level" type="text" inputmode="decimal" autocomplete="off"></div>
+    </div>
+    <div id="add-errs"></div>
+    <div class="row-actions">
+      <button type="button" class="btn primary" id="add-btn" disabled>Add to workout</button>
+      <button type="button" class="btn" id="new-ex-open">Create a new exercise</button>
+    </div>
+    <div class="inline-form" id="new-ex-form" hidden>
       <h3>Create a new exercise</h3>
       <label class="field" for="new-ex-name">Name</label>
       <input class="input" id="new-ex-name" type="text" maxlength="60" autocomplete="off">
       <label class="field" for="new-ex-kind">Type</label>
       <select class="input" id="new-ex-kind"><option value="strength">Strength</option><option value="cardio">Cardio</option></select>
       <p class="err" id="new-ex-err" hidden></p>
-      <div class="row-actions"><button type="button" class="btn primary" id="new-ex-add">Create and add</button><button type="button" class="btn" id="pick-close">Close</button></div>
+      <div class="row-actions"><button type="button" class="btn primary" id="new-ex-add">Create</button><button type="button" class="btn" id="new-ex-cancel">Cancel</button></div>
     </div>
   </div>
 
@@ -324,8 +331,9 @@
   const WEIGHT_STEP = 2.5;
   const DRAFT_KEY = "stk_gym_draft";
   const STALE_DRAFT_HOURS = 24;
+  const DEFAULT_SETS = 3;   // the Sets field's starting value when a strength exercise is chosen
+  const SETS_MAX = 20;      // most sets one "Add to workout" can create
   const NAME_MAX = 60, CITY_MAX = 60, NOTES_MAX = 2000, HISTORY_PAGE = 20;
-  const TEMPLATES = { push: "Push", pull: "Pull", legs: "Legs" };
   const FIELDS = {
     reps:    { max: REPS_MAX,    decimals: 0, step: 1,           label: "Reps",         help: "Whole number of reps, 0 to 1000" },
     weight:  { max: WEIGHT_MAX,  decimals: 2, step: WEIGHT_STEP, label: "Weight in kg", help: "Weight in kg, 0 to 1000, at most 2 decimals" },
@@ -499,7 +507,7 @@
     return userId;
   }
   async function loadExercises() {
-    const r = await sb.from("exercises").select("id, name, kind, template_day, sort_order, archived").order("name", { ascending: true });
+    const r = await sb.from("exercises").select("id, name, kind, archived").order("name", { ascending: true });
     if (r.error) throw r.error;
     exercises = r.data || [];
   }
@@ -627,24 +635,17 @@
   }
   function renderHome() {
     const has = !!draft;
-    for (const b of document.querySelectorAll("[data-template]")) b.disabled = has;
+    $("start-btn").disabled = has;
     show($("start-blocked"), has);
     show($("draft-banner"), has);
     if (has) $("draft-banner-text").textContent = `This workout was started ${fmtDay(draft.started_at, Date.now())} at ${fmtTime(draft.started_at)}`;
   }
 
-  // Start a workout from a template (or empty).
-  async function start(template) {
-    show($("start-msg"), false); show($("saved-msg"), false);
+  // Start an empty workout named "Workout"; exercises are added from the Add exercise card.
+  function start() {
+    show($("saved-msg"), false);
     if (draft) return;
-    try { await loadExercises(); } catch (e) { $("start-msg").textContent = "Couldn't load your exercises. Try again."; show($("start-msg"), true); return; }
-    const chosen = template === "empty" ? [] : exercises.filter((x) => !x.archived && x.template_day === template).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name));
-    if (template !== "empty" && !chosen.length) {
-      $("start-msg").textContent = "No exercises are set for this day. Add some in Manage exercises, or start an Empty workout.";
-      show($("start-msg"), true); return;
-    }
-    draft = { v: 1, client_id: crypto.randomUUID(), name: TEMPLATES[template] || "Workout", started_at: new Date(Date.now()).toISOString(), finished_at: null, notes: "", city: "",
-      exercises: chosen.map((x) => ({ exercise_id: x.id, name: x.name, kind: x.kind, rows: [emptyRow()] })) };
+    draft = { v: 1, client_id: crypto.randomUUID(), name: "Workout", started_at: new Date(Date.now()).toISOString(), finished_at: null, notes: "", city: "", exercises: [] };
     writeDraftNow();
     go("active");
   }
@@ -667,7 +668,7 @@
     $("wk-started").textContent = `Started ${fmtTime(draft.started_at)}`;
     $("wk-notes").value = draft.notes;
     renderExercises();
-    show($("picker"), false);
+    prepareAddCard();
   }
   function fmtStep(v, decimals) { return String(Number(v.toFixed(decimals))); }
   function stepper(field, row, label, onChange) {
@@ -698,6 +699,7 @@
   function renderExercises() {
     const list = $("ex-list");
     list.replaceChildren(...draft.exercises.map((ex, ei) => exerciseCard(ex, ei)));
+    renderAddSelect(); // an exercise in the workout shows as "(added)"; a removed one becomes available again
   }
   function exerciseCard(ex, ei) {
     const strength = ex.kind === "strength", unit = strength ? "set" : "block";
@@ -728,52 +730,106 @@
   $("wk-name").addEventListener("input", () => { draft.name = $("wk-name").value; nameError($("wk-name"), $("wk-name-err"), true); draftChanged(); });
   $("wk-notes").addEventListener("input", () => { draft.notes = $("wk-notes").value; draftChanged(); });
 
-  // ---- picker ----
-  async function openPicker() {
-    show($("picker"), true); $("pick-search").value = ""; show($("new-ex-err"), false);
-    $("pick-groups").replaceChildren(el("p", { class: "msg", text: "Loading…" }));
-    try { await loadExercises(); } catch (e) { $("pick-groups").replaceChildren(el("p", { class: "msg err", text: "Couldn't load your exercises. Close and try again." })); return; }
-    renderPicker();
+  // ---- the Add exercise card ----
+  const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  let exercisesLoaded = false;
+  async function prepareAddCard() {
+    resetAddFields(); show($("new-ex-form"), false);
+    if (!exercisesLoaded) {
+      show($("add-load-err"), false); $("add-select").disabled = true;
+      try { await loadExercises(); exercisesLoaded = true; } catch (e) { show($("add-load-err"), true); return; }
+      $("add-select").disabled = false;
+    }
+    renderAddSelect();
   }
-  function renderPicker() {
-    const q = $("pick-search").value.trim().toLowerCase();
-    const inWorkout = new Set(draft.exercises.map((x) => x.exercise_id));
-    const groups = KINDS.map((kind) => {
-      const items = exercises.filter((x) => !x.archived && x.kind === kind && x.name.toLowerCase().includes(q));
+  function renderAddSelect() {
+    const sel = $("add-select"), keep = sel.value;
+    const inWorkout = new Set(draft ? draft.exercises.map((x) => x.exercise_id) : []);
+    const groups = [["strength", "Strength"], ["cardio", "Cardio"]].map(([kind, label]) => {
+      const items = exercises.filter((x) => !x.archived && x.kind === kind).sort(byName);
       if (!items.length) return null;
-      return el("div", { class: "pick-group" }, el("h3", { text: kind === "strength" ? "Strength" : "Cardio" }),
-        el("ul", { class: "pick-list" }, items.map((x) => {
-          const added = inWorkout.has(x.id);
-          return el("li", null, el("button", { type: "button", class: "pick-item", disabled: added, "data-ex": x.id, onclick: () => addToWorkout(x) },
-            el("span", { text: x.name }), added ? el("span", { class: "tag", text: "Added" }) : null));
-        })));
+      return el("optgroup", { label }, items.map((x) => {
+        const added = inWorkout.has(x.id);
+        return el("option", { value: x.id, disabled: added, text: added ? `${x.name} (added)` : x.name });
+      }));
     }).filter(Boolean);
-    $("pick-groups").replaceChildren(...(groups.length ? groups : [el("p", { class: "msg", text: "No exercises match." })]));
+    sel.replaceChildren(el("option", { value: "", text: "Choose an exercise…" }), ...groups);
+    const still = Array.from(sel.options).find((o) => o.value === keep && !o.disabled);
+    sel.value = still ? keep : "";
+    if (!still && keep) resetAddFields();
   }
-  function addToWorkout(x) {
-    if (draft.exercises.some((e) => e.exercise_id === x.id)) return;
-    draft.exercises.push({ exercise_id: x.id, name: x.name, kind: x.kind, rows: [emptyRow()] });
-    draftChanged(); renderExercises(); show($("picker"), false);
+  const chosenExercise = () => exercises.find((x) => String(x.id) === $("add-select").value) || null;
+  function addError(text) {
+    $("add-errs").replaceChildren(...text.map((t) => el("p", { class: "err", text: t })));
   }
-  // Insert an exercise; returns the row, or throws { message } for the user.
+  function resetAddFields() {
+    for (const id of ["add-sets", "add-reps", "add-weight", "add-minutes", "add-level"]) { $(id).value = ""; $(id).setAttribute("aria-invalid", "false"); }
+    show($("add-strength"), false); show($("add-cardio"), false); addError([]);
+    $("add-btn").disabled = true;
+  }
+  function onChoose() {
+    const x = chosenExercise();
+    for (const id of ["add-sets", "add-reps", "add-weight", "add-minutes", "add-level"]) { $(id).value = ""; $(id).setAttribute("aria-invalid", "false"); }
+    addError([]);
+    show($("add-strength"), !!x && x.kind === "strength"); show($("add-cardio"), !!x && x.kind === "cardio");
+    if (x && x.kind === "strength") $("add-sets").value = String(DEFAULT_SETS);
+    $("add-btn").disabled = !x;
+  }
+  // Sets: a whole number from 1 to SETS_MAX.
+  function parseSets(raw) {
+    const t = String(raw == null ? "" : raw).trim();
+    return /^\d+$/.test(t) && Number(t) >= 1 && Number(t) <= SETS_MAX ? Number(t) : null;
+  }
+  function addToWorkout() {
+    const x = chosenExercise();
+    if (!x || !draft || draft.exercises.some((e) => e.exercise_id === x.id)) return;
+    const errors = [], fields = x.kind === "strength" ? ["reps", "weight"] : ["minutes", "level"];
+    let sets = 1;
+    if (x.kind === "strength") {
+      sets = parseSets($("add-sets").value);
+      $("add-sets").setAttribute("aria-invalid", sets === null ? "true" : "false");
+      if (sets === null) errors.push(`Sets must be a whole number from 1 to ${SETS_MAX}`);
+    }
+    const row = emptyRow();
+    for (const f of fields) {
+      const input = $(`add-${f}`), parsed = parseField(input.value, f);
+      input.setAttribute("aria-invalid", parsed.ok ? "false" : "true");
+      if (!parsed.ok) errors.push(FIELDS[f].help); else row[f] = input.value.trim();
+    }
+    if (errors.length) { addError(errors); return; }
+    draft.exercises.push({ exercise_id: x.id, name: x.name, kind: x.kind, rows: Array.from({ length: sets }, () => ({ ...row })) });
+    draftChanged();
+    $("add-select").value = "";
+    resetAddFields();
+    renderExercises();
+    const cards = document.querySelectorAll(".ex-card"), card = cards[cards.length - 1];
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (card) card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" }); // scroll-margin keeps it clear of the bar
+  }
+  // Insert an exercise; returns the row, or throws { user } with the message for the person.
   async function createExercise(name, kind) {
     const n = name.trim();
     if (!n) throw { user: "Enter a name." };
     if (exercises.some((x) => exName(x.name) === n.toLowerCase())) throw { user: "That exercise already exists" };
     let r;
-    try { r = await sb.from("exercises").insert({ user_id: await getUserId(), name: n, kind, template_day: null, sort_order: null, archived: false }).select().single(); }
+    try { r = await sb.from("exercises").insert({ user_id: await getUserId(), name: n, kind }).select().single(); } // other columns take their defaults
     catch (e) { throw { user: "Couldn't add that exercise. Try again." }; }
     if (r.error) throw { user: r.error.code === "23505" ? "That exercise already exists" : "Couldn't add that exercise. Try again." };
     exercises.push(r.data);
     return r.data;
   }
-  $("add-ex").addEventListener("click", openPicker);
-  $("pick-close").addEventListener("click", () => show($("picker"), false));
-  $("pick-search").addEventListener("input", renderPicker);
+  $("add-select").addEventListener("change", onChoose);
+  $("add-btn").addEventListener("click", addToWorkout);
+  $("add-load-retry").addEventListener("click", prepareAddCard);
+  $("new-ex-open").addEventListener("click", () => { show($("new-ex-form"), true); show($("new-ex-err"), false); });
+  $("new-ex-cancel").addEventListener("click", () => { show($("new-ex-form"), false); $("new-ex-name").value = ""; show($("new-ex-err"), false); });
   $("new-ex-add").addEventListener("click", async () => {
     const btn = $("new-ex-add"); btn.disabled = true; show($("new-ex-err"), false);
-    try { const x = await createExercise($("new-ex-name").value, $("new-ex-kind").value); $("new-ex-name").value = ""; addToWorkout(x); }
-    catch (e) { $("new-ex-err").textContent = e.user || "Couldn't add that exercise. Try again."; show($("new-ex-err"), true); }
+    try {
+      const x = await createExercise($("new-ex-name").value, $("new-ex-kind").value);
+      $("new-ex-name").value = ""; show($("new-ex-form"), false);
+      renderAddSelect(); $("add-select").value = String(x.id); onChoose();
+    } catch (e) { $("new-ex-err").textContent = e.user || "Couldn't add that exercise. Try again."; show($("new-ex-err"), true); }
     finally { btn.disabled = false; }
   });
 
@@ -849,7 +905,6 @@
   }
 
   // ---- manage exercises ----
-  function sortedForDay(day) { return exercises.filter((x) => x.template_day === day).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name)); }
   function mgError(text) { $("mg-err").textContent = text; show($("mg-err"), !!text); }
   async function mgUpdate(id, patch, what) {
     try {
@@ -867,37 +922,18 @@
   }
   function drawManage() {
     const groups = KINDS.map((kind) => {
-      const items = exercises.filter((x) => x.kind === kind).sort((a, b) => a.name.localeCompare(b.name));
+      const items = exercises.filter((x) => x.kind === kind).sort(byName);
       return el("div", { class: "mg-group" }, el("h3", { text: kind === "strength" ? "Strength" : "Cardio" }), items.map(manageItem));
     });
     $("mg-list").replaceChildren(...groups);
   }
   function manageItem(x) {
-    const day = el("select", { class: "input", "aria-label": `Template day for ${x.name}` },
-      [["", "None"], ["push", "Push"], ["pull", "Pull"], ["legs", "Legs"]].map(([v, t]) => el("option", { value: v, text: t })));
-    day.value = x.template_day || "";
-    day.addEventListener("change", async () => {
-      const d = day.value || null;
-      const order = d ? Math.max(0, ...sortedForDay(d).map((e) => e.sort_order ?? 0)) + 1 : null;
-      if (await mgUpdate(x.id, { template_day: d, sort_order: order }, "change the template day")) drawManage(); else day.value = x.template_day || "";
-    });
-    const peers = x.template_day ? sortedForDay(x.template_day) : [], i = peers.indexOf(x);
-    async function move(dir) {
-      const other = peers[i + dir];
-      if (!other) return;
-      const a = x.sort_order ?? i + 1, b = other.sort_order ?? i + dir + 1;
-      const swapA = a === b ? b + dir : b;
-      if (await mgUpdate(x.id, { sort_order: swapA }, "reorder") && await mgUpdate(other.id, { sort_order: a }, "reorder")) drawManage();
-    }
     const nameRow = el("div", { class: "mg-name" }, el("span", { text: x.name }), x.archived ? el("span", { class: "tag", text: " · Hidden" }) : null);
     const renameBtn = el("button", { type: "button", class: "btn small", text: "Rename", "aria-label": `Rename ${x.name}` });
     const item = el("div", { class: "mg-item", "data-ex": x.id }, nameRow,
       el("div", { class: "mg-controls" },
         renameBtn,
-        el("button", { type: "button", class: "btn small", text: x.archived ? "Unhide" : "Hide", "aria-label": `${x.archived ? "Unhide" : "Hide"} ${x.name}`, onclick: async () => { if (await mgUpdate(x.id, { archived: !x.archived }, x.archived ? "unhide it" : "hide it")) drawManage(); } }),
-        day,
-        el("button", { type: "button", class: "btn small", text: "Up", "aria-label": `Move ${x.name} up`, disabled: !x.template_day || i <= 0, onclick: () => move(-1) }),
-        el("button", { type: "button", class: "btn small", text: "Down", "aria-label": `Move ${x.name} down`, disabled: !x.template_day || i < 0 || i >= peers.length - 1, onclick: () => move(1) })));
+        el("button", { type: "button", class: "btn small", text: x.archived ? "Unhide" : "Hide", "aria-label": `${x.archived ? "Unhide" : "Hide"} ${x.name}`, onclick: async () => { if (await mgUpdate(x.id, { archived: !x.archived }, x.archived ? "unhide it" : "hide it")) drawManage(); } })));
     renameBtn.addEventListener("click", () => {
       const input = el("input", { class: "input", type: "text", maxlength: NAME_MAX, autocomplete: "off", "aria-label": `New name for ${x.name}` });
       input.value = x.name;
@@ -916,7 +952,7 @@
     return item;
   }
   $("manage-open").addEventListener("click", () => go("manage"));
-  $("manage-close").addEventListener("click", () => go("home"));
+  $("manage-close").addEventListener("click", () => { exercisesLoaded = false; go("home"); });
   $("mg-add").addEventListener("click", async () => {
     const btn = $("mg-add"); btn.disabled = true; show($("mg-new-err"), false);
     try { await createExercise($("mg-new-name").value, $("mg-new-kind").value); $("mg-new-name").value = ""; drawManage(); }
@@ -925,7 +961,7 @@
   });
 
   // ---- home wiring ----
-  for (const b of document.querySelectorAll("[data-template]")) b.addEventListener("click", () => start(b.dataset.template));
+  $("start-btn").addEventListener("click", start);
   $("stats-retry").addEventListener("click", loadStats);
   $("history-retry").addEventListener("click", () => loadHistory(historyOffset > 0));
   $("history-more").addEventListener("click", () => loadHistory(true));
@@ -947,7 +983,7 @@
   }
 
   window.Gym = { parseField, rowValues, rowHasData, summarise, endedAt, workoutPayload, setsPayload, fmtDay, fmtTime, fmtDuration, fmtClock, weekStartIso, londonMidnight,
-    validDraft, parseDraft, kg, get draft() { return draft; }, get screen() { return screen; },
+    validDraft, parseDraft, kg, parseSets, addToWorkout, get draft() { return draft; }, get screen() { return screen; }, DEFAULT_SETS, SETS_MAX,
     REPS_MAX, WEIGHT_MAX, MINUTES_MAX, LEVEL_MAX, WEIGHT_STEP, DRAFT_KEY, STALE_DRAFT_HOURS };
 
   // --- nav dropdowns (identical on every page) ---
