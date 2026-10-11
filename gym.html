@@ -144,8 +144,51 @@
   .mg-controls select.input { width: auto; min-width: 120px; }
   .inline-form { display: grid; gap: 8px; margin-top: 10px; }
 
+  /* --- body weight --- */
+  .bw-figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .bw-fig { border: 1px solid #E3DAC4; border-radius: 10px; padding: 8px 10px; min-width: 0; }
+  .bw-fig .stat-label { overflow-wrap: anywhere; }
+  .bw-val { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 20px; color: #1A1A18; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .bw-sub { font-size: 12px; color: #5A5650; overflow-wrap: anywhere; }
+  .bw-form-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .bw-form { display: grid; gap: 10px; margin-top: 8px; }
+  .bw-form > * { min-width: 0; }
+  .bw-form .btn { width: 100%; }
+  #bw-card .btn { font-size: 16px; }
+  .bw-text { font-size: 14px; color: #1A1A18; margin: 8px 0 0; overflow-wrap: anywhere; }
+  .bw-text.muted { color: #5A5650; }
+  .bw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 8px; }
+  .bw-chip { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid #8B6B49; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .bw-chip[aria-pressed="true"] { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
+  .bw-chart { width: 100%; min-width: 0; overflow: hidden; border-radius: 8px; touch-action: manipulation; }
+  .bw-chart svg { display: block; }
+  .bw-chart:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .bw-list { list-style: none; margin: 8px 0 0; padding: 0; }
+  .bw-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #EFE8DA; padding: 8px 0; }
+  .bw-item-text { flex: 1 1 140px; min-width: 0; font-size: 15px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .bw-item .btn { flex: 0 0 auto; }
+  @media (min-width: 640px) {
+    .bw-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; align-items: end; }
+    .bw-form .btn { width: auto; }
+  }
+
   @media (max-width: 640px) {
     body { margin: 16px auto; padding: 0 12px 80px; }
+    /* Native date inputs carry their own minimum width on iOS Safari and push past their column;
+       min-width: 0 alone isn't enough on a real iPhone, so the native appearance is dropped too, and
+       min-height stops iOS collapsing an empty date input (rules from tracker.html and outreach.html). */
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      min-height: 44px;
+    }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+    input[type="date"]::-webkit-datetime-edit,
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper { padding: 0; }
     .top-nav { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .top-nav::-webkit-scrollbar { display: none; }
     .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
@@ -155,6 +198,7 @@
     .stats { gap: 6px; }
     .stat { padding: 8px; }
     .stat-num { font-size: 19px; }
+    .bw-val { font-size: 18px; }
   }
 </style>
 </head>
@@ -220,6 +264,43 @@
   <div class="card" id="start-card">
     <button type="button" class="btn primary" id="start-btn">Start workout</button>
     <p class="msg" id="start-blocked" hidden>Finish or discard your workout in progress first</p>
+  </div>
+
+  <div class="card" id="bw-card">
+    <h2>Body weight</h2>
+    <div class="bw-figs">
+      <div class="bw-fig"><div class="stat-label">Latest</div><div class="bw-val" id="bw-latest">—</div><div class="bw-sub" id="bw-latest-date"></div></div>
+      <div class="bw-fig"><div class="stat-label">7-day average</div><div class="bw-val" id="bw-avg">—</div></div>
+      <div class="bw-fig"><div class="stat-label">30-day change</div><div class="bw-val" id="bw-change">—</div><div class="bw-sub">vs 30 days ago</div></div>
+    </div>
+    <div class="bw-form-top"><h3 id="bw-form-head">Log your weight</h3><button type="button" class="btn small" id="bw-cancel" hidden>Cancel</button></div>
+    <div class="bw-form">
+      <div><label class="field" for="bw-weight">Weight (kg)</label><input class="input" id="bw-weight" type="text" inputmode="decimal" autocomplete="off"></div>
+      <div><label class="field" for="bw-date">Date</label><input class="input" id="bw-date" type="date"></div>
+      <button type="button" class="btn" id="bw-yesterday">Yesterday</button>
+      <button type="button" class="btn primary" id="bw-save">Save</button>
+    </div>
+    <p class="err" id="bw-weight-err" hidden>Enter a weight between 20 and 400 kg (up to 2 decimals)</p>
+    <p class="err" id="bw-date-err" hidden>Choose a date from 1 Jan 2000 up to today</p>
+    <p class="bw-text muted" id="bw-hint" hidden></p>
+    <p class="bw-text" id="bw-saved" role="status" hidden></p>
+    <p class="msg err" id="bw-save-err" hidden>Couldn't save your weight. Your entry is still here. <button type="button" class="btn small" id="bw-save-retry">Retry</button></p>
+    <p class="bw-text muted" id="bw-state" role="status"></p>
+    <p class="msg err" id="bw-load-err" hidden>Couldn't load your body weight entries. <button type="button" class="btn small" id="bw-load-retry">Retry</button></p>
+    <div id="bw-main" hidden>
+      <div class="bw-chips" role="group" aria-label="Chart range">
+        <button type="button" class="bw-chip" data-range="30" aria-pressed="true">30 days</button>
+        <button type="button" class="bw-chip" data-range="90" aria-pressed="false">90 days</button>
+        <button type="button" class="bw-chip" data-range="all" aria-pressed="false">All</button>
+      </div>
+      <p class="bw-text muted" id="bw-range-empty" hidden></p>
+      <div class="bw-chart" id="bw-chart" tabindex="0" role="img"></div>
+      <p class="bw-text" id="bw-readout"></p>
+      <h3 style="margin-top:16px">Recent entries</h3>
+      <ul class="bw-list" id="bw-list"></ul>
+      <p class="msg err" id="bw-del-err" hidden>Couldn't delete that entry. <button type="button" class="btn small" id="bw-del-retry">Retry</button></p>
+      <div class="row-actions"><button type="button" class="btn" id="bw-more" hidden>Show more</button></div>
+    </div>
   </div>
 
   <h2>History</h2>
@@ -346,6 +427,13 @@
   const CACHE_MAX_AGE_MS = 600000;     // rebuild the copy when it's older than this (10 minutes)
   const PAGE_SIZE = 1000;              // the API returns at most 1000 rows per request, so reads page in steps of this
   const LAST_ROWS_SHOWN = 8;           // rows in a "Last time" line before "+N more"
+  const BW_WEIGHT_MIN = 20;            // body weight limits in kg (WEIGHT_MAX above is the per-set limit)
+  const BW_WEIGHT_MAX = 400;
+  const AVG_WINDOW_DAYS = 7;           // the average ending on D covers D-6..D
+  const CHANGE_DAYS = 30;              // the change compares the average ending today with the one ending 30 days before
+  const RECENT_SHOWN = 14;             // recent entries shown, and added by each "Show more"
+  const RANGE_DEFAULT = 30;            // the chart's starting range in days
+  const DATE_MIN = "2000-01-01";
   const DEFAULT_SETS = 3;   // the Sets field's starting value when a strength exercise is chosen
   const SETS_MAX = 20;      // most sets one "Add to workout" can create
   const NAME_MAX = 60, CITY_MAX = 60, NOTES_MAX = 2000, HISTORY_PAGE = 20;
@@ -1203,6 +1291,248 @@
     finally { btn.disabled = false; }
   });
 
+  // ---- body weight: pure logic ----
+  // Dates are London calendar dates as "YYYY-MM-DD"; arithmetic steps whole calendar days with Date.UTC, never 24-hour steps.
+  const ymdRe = /^(\d{4})-(\d{2})-(\d{2})$/;
+  const pad2 = (n) => String(n).padStart(2, "0");
+  function londonToday(nowMs) { const p = londonParts(nowMs); return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`; }
+  function ymdUtc(ymd) { const m = ymdRe.exec(ymd); return m ? Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : NaN; }
+  function addDays(ymd, n) { const m = ymdRe.exec(ymd); return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + n)).toISOString().slice(0, 10); }
+  const dayDiff = (a, b) => Math.round((ymdUtc(a) - ymdUtc(b)) / 86400000); // whole days from b to a
+  function realDate(ymd) { const t = ymdUtc(ymd); return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === ymd; }
+  function validBwDate(ymd, nowMs) { return typeof ymd === "string" && realDate(ymd) && ymd >= DATE_MIN && ymd <= londonToday(nowMs); }
+  function parseBodyWeight(raw) {
+    const t = String(raw == null ? "" : raw).trim().replace(",", ".");
+    if (!/^\d+(\.\d{1,2})?$/.test(t)) return null;
+    const v = Number(t);
+    return v >= BW_WEIGHT_MIN && v <= BW_WEIGHT_MAX ? v : null;
+  }
+  const fmtKgBw = (v) => String(Math.round(v * 100) / 100);          // 72.40 shows as 72.4
+  const fmtAvgBw = (v) => (Math.round(v * 10) / 10).toFixed(1);      // averages to one decimal
+  function fmtBwDate(ymd, nowMs) { const m = ymdRe.exec(ymd); return fmtDay(new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12)).toISOString(), nowMs); }
+  function fmtSigned(v) {
+    const r = Math.round(Math.abs(v) * 10) / 10;
+    if (r === 0) return "0.0 kg";
+    return `${v > 0 ? "+" : "−"}${r.toFixed(1)} kg`;
+  }
+  // Mean of the entries dated D-6..D inclusive, or null when there are none.
+  function avgEnding(entries, d) {
+    let n = 0, sum = 0;
+    for (const e of entries) { const k = dayDiff(d, e.measured_on); if (k >= 0 && k <= AVG_WINDOW_DAYS - 1) { n++; sum += e.weight_kg; } }
+    return n ? sum / n : null;
+  }
+  function latestEntry(entries) { let best = null; for (const e of entries) if (!best || e.measured_on > best.measured_on) best = e; return best; }
+  function change30(entries, today) {
+    const a = avgEnding(entries, today), b = avgEnding(entries, addDays(today, -CHANGE_DAYS));
+    return a === null || b === null ? null : a - b;
+  }
+  // Entries in the last N calendar days (today-(N-1)..today), oldest first; "all" keeps everything.
+  function inRange(entries, today, range) {
+    const out = entries.filter((e) => range === "all" || (dayDiff(today, e.measured_on) >= 0 && dayDiff(today, e.measured_on) <= range - 1));
+    return out.sort((a, b) => (a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0));
+  }
+  // 4 to 5 evenly spaced round values covering min-0.5..max+0.5, never including zero.
+  const NICE_STEPS = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100];
+  function niceTicks(min, max) {
+    const lo = min - 0.5, hi = max + 0.5;
+    let pick = null;
+    for (const step of NICE_STEPS) {
+      let a = Math.floor(lo / step + 1e-9), b = Math.ceil(hi / step - 1e-9);
+      if (a <= 0) a = 1;
+      const n = b - a + 1;
+      if (n >= 4 && n <= 5) { pick = { step, a, b }; break; }
+      if (n <= 5 && !pick) pick = { step, a, b };
+    }
+    const ticks = [];
+    for (let i = pick.a; i <= pick.b; i++) ticks.push(Math.round(i * pick.step * 100) / 100);
+    return { step: pick.step, ticks, lo: ticks[0], hi: ticks[ticks.length - 1] };
+  }
+  // Index of the x nearest to x (ties go to the earlier point).
+  function nearestIndex(xs, x) { let bi = -1, bd = Infinity; xs.forEach((v, i) => { const d = Math.abs(v - x); if (d < bd) { bd = d; bi = i; } }); return bi; }
+  // Rows from several pages, in page order, each id once.
+  function mergePages(pages) { const seen = new Set(), out = []; for (const pg of pages) for (const r of pg) if (!seen.has(r.id)) { seen.add(r.id); out.push(r); } return out; }
+  const bwRow = (r) => ({ id: Number(r.id), measured_on: String(r.measured_on).slice(0, 10), weight_kg: Number(r.weight_kg) });
+
+  // ---- body weight: data ----
+  let bwEntries = [], bwState = "loading", bwRange = RANGE_DEFAULT, bwShown = RECENT_SHOWN, bwSel = -1, bwSaving = false, bwEditing = null, bwPrevDate = "", bwDelPending = null;
+  const sortDesc = (list) => list.sort((a, b) => (a.measured_on < b.measured_on ? 1 : a.measured_on > b.measured_on ? -1 : b.id - a.id));
+  async function bwLoad() {
+    bwState = "loading"; renderBw();
+    try {
+      const uid = await getUserId(), pages = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const r = await sb.from("body_weights").select("id, measured_on, weight_kg").eq("user_id", uid)
+          .order("measured_on", { ascending: false }).order("id", { ascending: false }).range(from, from + PAGE_SIZE - 1);
+        if (r.error) throw r.error;
+        const page = r.data || [];
+        pages.push(page);
+        if (page.length < PAGE_SIZE) break;
+      }
+      bwEntries = sortDesc(mergePages(pages).map(bwRow));
+      bwState = "ready"; bwSel = -1;
+    } catch (e) { bwState = "error"; }
+    renderBw();
+  }
+  function bwToday() { return londonToday(Date.now()); }
+  function bwChosenDate() { return bwEditing ? bwEditing.measured_on : $("bw-date").value; }
+  async function bwSave() {
+    if (bwSaving) return;
+    const w = parseBodyWeight($("bw-weight").value), d = bwChosenDate(), okDate = validBwDate(d, Date.now());
+    show($("bw-weight-err"), w === null); show($("bw-date-err"), !okDate);
+    if (w === null || !okDate) return;
+    bwSaving = true; $("bw-save").disabled = true; $("bw-save-retry").disabled = true;
+    show($("bw-save-err"), false); show($("bw-saved"), false);
+    try {
+      const existed = bwEntries.some((e) => e.measured_on === d);
+      const r = await sb.from("body_weights").upsert({ user_id: await getUserId(), measured_on: d, weight_kg: w }, { onConflict: "user_id,measured_on" }).select("id, measured_on, weight_kg").single();
+      if (r.error) throw r.error;
+      const row = bwRow(r.data);
+      bwEntries = sortDesc(bwEntries.filter((e) => e.measured_on !== row.measured_on).concat([row]));
+      $("bw-saved").textContent = `${existed ? "Updated" : "Saved"} ${fmtKgBw(row.weight_kg)} kg for ${fmtBwDate(row.measured_on, Date.now())}`;
+      show($("bw-saved"), true);
+      $("bw-weight").value = "";
+      if (bwEditing) bwEndEdit(false);
+      if (bwState !== "ready") bwState = "ready";
+      bwSel = -1; renderBw();
+    } catch (e) { show($("bw-save-err"), true); }
+    finally { bwSaving = false; $("bw-save").disabled = false; $("bw-save-retry").disabled = false; }
+  }
+  async function bwDelete(entry) {
+    show($("bw-del-err"), false);
+    const r = await sb.from("body_weights").delete().eq("id", entry.id);
+    if (r.error) { bwDelPending = entry; show($("bw-del-err"), true); return; }
+    bwDelPending = null;
+    bwEntries = bwEntries.filter((e) => e.id !== entry.id);
+    if (bwEditing && bwEditing.id === entry.id) bwEndEdit(true);
+    bwSel = -1; renderBw();
+  }
+  function bwStartEdit(entry) {
+    if (!bwEditing) bwPrevDate = $("bw-date").value;
+    bwEditing = entry;
+    $("bw-weight").value = fmtKgBw(entry.weight_kg); $("bw-date").value = entry.measured_on; $("bw-date").readOnly = true;
+    $("bw-form-head").textContent = `Editing ${fmtBwDate(entry.measured_on, Date.now())}`;
+    show($("bw-cancel"), true); $("bw-yesterday").disabled = true;
+    show($("bw-weight-err"), false); show($("bw-date-err"), false); show($("bw-saved"), false); show($("bw-save-err"), false);
+    bwHint();
+    $("bw-card").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  function bwEndEdit(restore) {
+    bwEditing = null;
+    if (restore) $("bw-weight").value = "";
+    $("bw-date").value = bwPrevDate || bwToday(); $("bw-date").readOnly = false;
+    $("bw-form-head").textContent = "Log your weight";
+    show($("bw-cancel"), false); $("bw-yesterday").disabled = false;
+    show($("bw-weight-err"), false); show($("bw-date-err"), false);
+    bwHint();
+  }
+  function bwHint() {
+    const d = bwChosenDate(), e = bwEditing ? null : bwEntries.find((x) => x.measured_on === d);
+    $("bw-hint").textContent = e ? `You already logged ${fmtKgBw(e.weight_kg)} kg for this day. Saving replaces it.` : "";
+    show($("bw-hint"), !!e);
+  }
+
+  // ---- body weight: rendering ----
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function sv(tag, attrs, text) { const n = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v)); if (text !== undefined) n.textContent = text; return n; }
+  const rangeWords = (r) => (r === "all" ? "all entries" : `last ${r} days`);
+  function renderBw() {
+    const now = Date.now(), today = londonToday(now), dateIn = $("bw-date");
+    dateIn.min = DATE_MIN; dateIn.max = today;
+    if (!dateIn.value && !bwEditing) dateIn.value = today;
+    const L = latestEntry(bwEntries), avg = avgEnding(bwEntries, today), ch = change30(bwEntries, today);
+    $("bw-latest").textContent = L ? `${fmtKgBw(L.weight_kg)} kg` : "—";
+    $("bw-latest-date").textContent = L ? fmtBwDate(L.measured_on, now) : "";
+    $("bw-avg").textContent = avg === null ? "—" : `${fmtAvgBw(avg)} kg`;
+    $("bw-change").textContent = ch === null ? "—" : fmtSigned(ch);
+    $("bw-state").textContent = bwState === "loading" ? "Loading…" : bwState === "ready" && !bwEntries.length ? "No entries yet. Log your first weight above." : "";
+    show($("bw-state"), !!$("bw-state").textContent);
+    show($("bw-load-err"), bwState === "error");
+    show($("bw-main"), bwState === "ready" && bwEntries.length > 0);
+    for (const c of document.querySelectorAll("#bw-card .bw-chip")) c.setAttribute("aria-pressed", String(c.dataset.range === String(bwRange)));
+    bwHint();
+    renderBwChart();
+    renderBwList();
+  }
+  function bwPoints() { return inRange(bwEntries, londonToday(Date.now()), bwRange); }
+  let bwGeom = null, bwLastWidth = 0;
+  function renderBwChart() {
+    const box = $("bw-chart"), pts = bwPoints(), today = londonToday(Date.now());
+    const none = bwState === "ready" && bwEntries.length > 0 && pts.length === 0;
+    $("bw-range-empty").textContent = none ? `No entries in the ${rangeWords(bwRange)}. Choose a longer range.` : "";
+    show($("bw-range-empty"), none); show(box, pts.length > 0); show($("bw-readout"), pts.length > 0);
+    bwGeom = null;
+    if (!pts.length) { box.replaceChildren(); return; }
+    if (bwSel < 0 || bwSel >= pts.length) bwSel = pts.length - 1;
+    const W = box.clientWidth; bwLastWidth = W;
+    const first = pts[0], last = pts[pts.length - 1];
+    box.setAttribute("aria-label", pts.length === 1 ? `Body weight, ${rangeWords(bwRange)}: ${fmtKgBw(first.weight_kg)} kg, 1 entry`
+      : `Body weight, ${rangeWords(bwRange)}: from ${fmtKgBw(first.weight_kg)} to ${fmtKgBw(last.weight_kg)} kg, ${pts.length} entries`);
+    const s = pts[bwSel], sa = avgEnding(bwEntries, s.measured_on);
+    $("bw-readout").textContent = `${fmtBwDate(s.measured_on, Date.now())} · ${fmtKgBw(s.weight_kg)} kg · 7-day average ${fmtAvgBw(sa)} kg`;
+    if (!W) { box.replaceChildren(); return; } // not on screen: drawn when it gets a width
+    const H = 240, ml = 44, mr = 14, mt = 12, mb = 30, pw = Math.max(10, W - ml - mr), ph = H - mt - mb;
+    const startDay = bwRange === "all" ? first.measured_on : addDays(today, -(bwRange - 1));
+    const span = Math.max(1, dayDiff(today, startDay));
+    const xOf = (d) => ml + (dayDiff(d, startDay) / span) * pw;
+    let lo = Infinity, hi = -Infinity;
+    for (const p of pts) { lo = Math.min(lo, p.weight_kg); hi = Math.max(hi, p.weight_kg); }
+    const avgs = pts.map((p) => avgEnding(bwEntries, p.measured_on));
+    if (pts.length >= 2) for (const a of avgs) { lo = Math.min(lo, a); hi = Math.max(hi, a); }
+    const ax = niceTicks(lo, hi), yOf = (v) => mt + (1 - (v - ax.lo) / (ax.hi - ax.lo)) * ph;
+    const svg = sv("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, "aria-hidden": "true", focusable: "false" });
+    for (const t of ax.ticks) {
+      svg.append(sv("line", { x1: ml, x2: ml + pw, y1: yOf(t), y2: yOf(t), stroke: "#EFE8DA", "stroke-width": 1 }));
+      svg.append(sv("text", { x: ml - 6, y: yOf(t) + 4, "text-anchor": "end", "font-size": 12, fill: "#5A5650" }, fmtKgBw(t)));
+    }
+    const mid = addDays(startDay, Math.round(span / 2)), short = (d) => fmtBwDate(d, Date.now()).replace(/^\S+ /, "");
+    [[startDay, "start"], [mid, "middle"], [today, "end"]].forEach(([d, anchor]) => svg.append(sv("text", { x: xOf(d), y: H - 8, "text-anchor": anchor, "font-size": 12, fill: "#5A5650" }, short(d))));
+    if (pts.length >= 2) svg.append(sv("polyline", { points: pts.map((p, i) => `${xOf(p.measured_on).toFixed(1)},${yOf(avgs[i]).toFixed(1)}`).join(" "), fill: "none", stroke: "#1A1A18", "stroke-width": 2, "stroke-linejoin": "round", class: "bw-avg-line" }));
+    const xs = pts.map((p) => xOf(p.measured_on));
+    pts.forEach((p, i) => svg.append(sv("circle", { cx: xs[i], cy: yOf(p.weight_kg), r: 4, fill: "#8B6B49", class: "bw-dot" })));
+    svg.append(sv("circle", { cx: xs[bwSel], cy: yOf(s.weight_kg), r: 9, fill: "none", stroke: "#1A1A18", "stroke-width": 2, class: "bw-sel-ring" }));
+    svg.append(sv("circle", { cx: xs[bwSel], cy: yOf(s.weight_kg), r: 6, fill: "#8B6B49", class: "bw-sel-dot" }));
+    box.replaceChildren(svg);
+    bwGeom = { xs };
+  }
+  function renderBwList() {
+    const list = $("bw-list"), now = Date.now();
+    list.replaceChildren(...bwEntries.slice(0, bwShown).map((e) => {
+      const edit = el("button", { type: "button", class: "btn small", text: "Edit", "aria-label": `Edit ${fmtBwDate(e.measured_on, now)}`, onclick: () => bwStartEdit(e) });
+      const del = el("button", { type: "button", class: "btn small", text: "Delete", "aria-label": `Delete ${fmtBwDate(e.measured_on, now)}`, onclick: () => {
+        if (confirm(`Delete the entry for ${fmtBwDate(e.measured_on, Date.now())} (${fmtKgBw(e.weight_kg)} kg)?`)) bwDelete(e);
+      } });
+      return el("li", { class: "bw-item" }, el("span", { class: "bw-item-text", text: `${fmtBwDate(e.measured_on, now)} — ${fmtKgBw(e.weight_kg)} kg` }), edit, del);
+    }));
+    show($("bw-more"), bwEntries.length > bwShown);
+  }
+  function bwSelect(i) { const n = bwPoints().length; if (!n) return; bwSel = Math.max(0, Math.min(n - 1, i)); renderBwChart(); }
+
+  // ---- body weight: wiring ----
+  $("bw-save").addEventListener("click", bwSave);
+  $("bw-save-retry").addEventListener("click", bwSave);
+  $("bw-load-retry").addEventListener("click", bwLoad);
+  $("bw-del-retry").addEventListener("click", () => { if (bwDelPending) bwDelete(bwDelPending); });
+  $("bw-cancel").addEventListener("click", () => bwEndEdit(true));
+  $("bw-yesterday").addEventListener("click", () => { if (bwEditing) return; $("bw-date").value = addDays(bwToday(), -1); show($("bw-date-err"), false); bwHint(); });
+  $("bw-date").addEventListener("input", () => { show($("bw-date-err"), false); bwHint(); });
+  $("bw-date").addEventListener("change", bwHint);
+  $("bw-weight").addEventListener("input", () => { if (!$("bw-weight-err").hidden && parseBodyWeight($("bw-weight").value) !== null) show($("bw-weight-err"), false); });
+  $("bw-more").addEventListener("click", () => { bwShown += RECENT_SHOWN; renderBwList(); });
+  for (const c of document.querySelectorAll("#bw-card .bw-chip")) c.addEventListener("click", () => { bwRange = c.dataset.range === "all" ? "all" : Number(c.dataset.range); bwSel = -1; renderBw(); });
+  $("bw-chart").addEventListener("pointerdown", (e) => {
+    if (!bwGeom) return;
+    const r = $("bw-chart").getBoundingClientRect();
+    bwSelect(nearestIndex(bwGeom.xs, e.clientX - r.left));
+  });
+  $("bw-chart").addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); bwSelect(bwSel + (e.key === "ArrowLeft" ? -1 : 1)); }
+  });
+  let bwResizeTimer = 0;
+  if (window.ResizeObserver) new ResizeObserver(() => {
+    clearTimeout(bwResizeTimer);
+    bwResizeTimer = setTimeout(() => { if ($("bw-chart").clientWidth !== bwLastWidth) renderBwChart(); }, 100);
+  }).observe($("bw-chart"));
+
   // ---- home wiring ----
   $("start-btn").addEventListener("click", start);
   $("stats-retry").addEventListener("click", loadStats);
@@ -1221,6 +1551,7 @@
     started = true;
     draft = readStoredDraft();
     reloadHome();
+    bwLoad();
     if (draft && Date.now() - Date.parse(draft.started_at) < STALE_DRAFT_HOURS * 3600000) { resumedFinished = !!draft.finished_at; go(draft.finished_at ? "finish" : "active"); }
     else go("home");
     requestAnimationFrame(() => setTimeout(initCache, 0)); // after first paint: never delays the page or the Start button
@@ -1230,7 +1561,10 @@
     validDraft, parseDraft, kg, parseSets, addToWorkout, get draft() { return draft; }, get screen() { return screen; }, DEFAULT_SETS, SETS_MAX,
     beats, topSet, buildCache, validCache, lastRowText, lastText, bestText, prefillValues, flagRows, newBestLines, rebuildCache,
     get cache() { return cache; }, get cacheState() { return cacheState; }, CACHE_KEY, CACHE_MAX_AGE_MS, PAGE_SIZE, LAST_ROWS_SHOWN,
-    REPS_MAX, WEIGHT_MAX, MINUTES_MAX, LEVEL_MAX, WEIGHT_STEP, DRAFT_KEY, STALE_DRAFT_HOURS };
+    REPS_MAX, WEIGHT_MAX, MINUTES_MAX, LEVEL_MAX, WEIGHT_STEP, DRAFT_KEY, STALE_DRAFT_HOURS,
+    bw: { londonToday, addDays, dayDiff, validBwDate, parseBodyWeight, fmtKgBw, fmtAvgBw, fmtBwDate, fmtSigned, avgEnding, latestEntry, change30, inRange, niceTicks, nearestIndex, mergePages, bwLoad,
+      get entries() { return bwEntries; }, get state() { return bwState; }, get selected() { return bwSel; }, get range() { return bwRange; },
+      BW_WEIGHT_MIN, BW_WEIGHT_MAX, AVG_WINDOW_DAYS, CHANGE_DAYS, RECENT_SHOWN, PAGE_SIZE, RANGE_DEFAULT, DATE_MIN } };
 
   // --- nav dropdowns (identical on every page) ---
   // On phones (640px and under) .top-nav scrolls sideways, and iOS WebKit clips or
