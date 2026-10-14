@@ -1553,7 +1553,7 @@
     bwLoad();
     if (draft && Date.now() - Date.parse(draft.started_at) < STALE_DRAFT_HOURS * 3600000) { resumedFinished = !!draft.finished_at; go(draft.finished_at ? "finish" : "active"); }
     else go("home");
-    requestAnimationFrame(() => setTimeout(initCache, 0)); // after first paint: never delays the page or the Start button
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(initCache, 0))); // after the first paint: two frames, because one frame alone can race it; never delays the page or the Start button
   }
 
   window.Gym = { parseField, rowValues, rowHasData, summarise, endedAt, workoutPayload, setsPayload, fmtDay, fmtTime, fmtDuration, fmtClock, weekStartIso, londonMidnight,
