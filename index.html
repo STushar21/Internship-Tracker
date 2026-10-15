@@ -382,6 +382,42 @@
     color: #6F5439; font-family: inherit; font-size: 12.5px; font-weight: 600; text-decoration: none; cursor: pointer;
   }
 
+  /* --- signed-in home: Next up, Today, check-in tiles, quick actions, compact section grid --- */
+  #home-signed-in[hidden], .tile-retry[hidden], .next-more[hidden] { display: none; }
+  .home-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+  .home-row > * { min-width: 0; }
+  .home-row #today-wrap { margin-bottom: 0; }
+  .home-h { font-family: 'EB Garamond', Georgia, serif; font-size: 18px; font-weight: 700; margin: 0 0 12px; color: #1A1A18; }
+  .next-title { font-size: 16px; font-weight: 600; color: #1A1A18; overflow-wrap: anywhere; }
+  .next-sub { font-size: 13px; color: #5A5650; margin: 4px 0 12px; overflow-wrap: anywhere; }
+  .home-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 8px; background: #8B6B49; color: #FFFFFF; font-size: 13.5px; font-weight: 600; text-decoration: none; }
+  .next-list { list-style: none; margin: 12px 0 0; padding: 0; }
+  .next-list li { border-top: 1px solid #ECEDEE; }
+  .next-link { display: flex; align-items: center; min-height: 44px; font-size: 13px; color: #1A1A18; text-decoration: none; overflow-wrap: anywhere; }
+  .next-link:hover { color: #6F5439; }
+  .next-more { font-size: 13px; color: #5A5650; margin-top: 4px; }
+  .next-more a { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-weight: 600; text-decoration: none; }
+  .next-empty { font-size: 13.5px; color: #1A1A18; padding: 6px 0; }
+  .home-retry { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 14px; margin-top: 8px; border: 1px solid #D8DADD; border-radius: 8px; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .tile { background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 12px; min-width: 0; }
+  .tile-link { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-height: 64px; padding: 12px 14px; color: #1A1A18; text-decoration: none; border-radius: 12px; }
+  .tile-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #5A5650; }
+  .tile-status { font-size: 13.5px; font-weight: 500; color: #1A1A18; overflow-wrap: anywhere; }
+  .tile .tile-retry { margin: 0 14px 12px; }
+  .quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
+  .quick a { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 44px; padding: 6px 8px; border: 1px solid #8B6B49; border-radius: 8px; background: #FFFFFF; color: #6F5439; font-size: 12.5px; font-weight: 600; text-decoration: none; }
+  .tile-link:focus-visible, .quick a:focus-visible, .next-link:focus-visible, .next-more a:focus-visible, .home-btn:focus-visible, .home-retry:focus-visible, body.signed-in .section-card:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  body.signed-in .card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  body.signed-in .section-card { display: flex; align-items: center; min-height: 44px; padding: 10px 14px; }
+  body.signed-in .card-title { margin: 0; }
+  body.signed-in .card-desc, body.signed-in .section-card .badge { display: none; }
+  @media (min-width: 900px) {
+    .home-row { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+    .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .quick { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  }
+
   /* --- mobile (phone-width) overrides --- */
   @media (max-width: 640px) {
     body { margin: 16px auto; padding: 0 12px; }
@@ -401,6 +437,7 @@
     .nav-caret { padding: 11px 14px 11px 6px; }
 
     .card-grid { grid-template-columns: 1fr; }
+    body.signed-in .card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
     .dash-grid { grid-template-columns: 1fr; }
     .hero h1 { font-size: 24px; }
   }
@@ -464,32 +501,44 @@
   <p>Track applications, drill assessment types, and build out your prep — all from here.</p>
 </div>
 
-<div id="today-wrap">
-  <div class="dash-card">
-    <div class="dash-card-head">
-      <div class="dash-title" id="today-heading">Today</div>
-      <button type="button" class="today-btn" id="today-refresh">Refresh</button>
+<div id="home-signed-in" hidden>
+  <div class="home-row">
+    <section class="dash-card" id="next-card" aria-labelledby="next-heading">
+      <div class="dash-card-head"><h2 class="dash-title" id="next-heading" style="margin:0">Next up</h2></div>
+      <div id="next-body" aria-live="polite"><div class="dash-loading">Loading…</div></div>
+    </section>
+    <div class="home-today">
+    <div id="today-wrap">
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <div class="dash-title" id="today-heading">Today</div>
+          <button type="button" class="today-btn" id="today-refresh">Refresh</button>
+        </div>
+        <div id="today-body"><div class="dash-loading">Loading today's events…</div></div>
+      </div>
     </div>
-    <div id="today-body"><div class="dash-loading">Loading today's events…</div></div>
+    </div>
   </div>
-</div>
 
-<div id="dashboard">
-  <div class="section-title" style="font-family:'EB Garamond', Georgia, serif; font-size:18px; margin-bottom:12px;">What's next</div>
-  <div class="dash-grid">
-    <div class="dash-card">
-      <div class="dash-card-head">
-        <div class="dash-title">Closing soon <span class="dash-count" id="dash-deadline-count">–</span></div>
-      </div>
-      <div id="dash-deadlines"><div class="dash-loading">Loading...</div></div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-card-head">
-        <div class="dash-title">Follow-ups due <span class="dash-count" id="dash-followup-count">–</span></div>
-      </div>
-      <div id="dash-followups"><div class="dash-loading">Loading...</div></div>
-    </div>
+  <h2 class="home-h">Daily check-in</h2>
+  <div class="tiles">
+    <div class="tile" data-tile="habits"><a class="tile-link" href="habits.html"><span class="tile-label">Habits</span><span class="tile-status" id="tile-habits">…</span></a><button type="button" class="home-retry tile-retry" hidden>Retry</button></div>
+    <div class="tile" data-tile="gym"><a class="tile-link" href="gym.html"><span class="tile-label">Gym</span><span class="tile-status" id="tile-gym">…</span></a><button type="button" class="home-retry tile-retry" hidden>Retry</button></div>
+    <div class="tile" data-tile="weight"><a class="tile-link" href="gym.html"><span class="tile-label">Weight</span><span class="tile-status" id="tile-weight">…</span></a><button type="button" class="home-retry tile-retry" hidden>Retry</button></div>
+    <div class="tile" data-tile="journal"><a class="tile-link" href="journal.html"><span class="tile-label">Journal</span><span class="tile-status" id="tile-journal">…</span></a><button type="button" class="home-retry tile-retry" hidden>Retry</button></div>
   </div>
+
+  <h2 class="home-h">Quick actions</h2>
+  <div class="quick">
+    <a href="tracker.html#add-form">Add application</a>
+    <a href="outreach.html#add-form">Add contact</a>
+    <a href="oa-prep.html">Practise</a>
+    <a href="gym.html">Start workout</a>
+    <a href="gym.html">Log weight</a>
+    <a href="journal.html">Journal</a>
+  </div>
+
+  <h2 class="home-h">All sections</h2>
 </div>
 
 <div class="card-grid">
@@ -582,105 +631,180 @@
   sb.auth.onAuthStateChange((event, session) => {
     signedOutView.style.display = session ? "none" : "flex";
     signedInView.style.display = session ? "flex" : "none";
-    document.getElementById("dashboard").style.display = session ? "block" : "none";
+    document.getElementById("home-signed-in").hidden = !session;
+    document.body.classList.toggle("signed-in", !!session);
     if (session) {
       formPanel.classList.remove("open");
       document.getElementById("signed-in-email").textContent = session.user.email;
-      loadDashboard();
+      homeUserId = session.user.id;
+      loadHome();
     }
   });
 
-  // Pulls the same "closing soon" and "follow-ups due" data the email
-  // digest uses, but rendered live on the home page for a glance-and-go view.
-  async function loadDashboard() {
+  // --- signed-in home: Next up and the check-in tiles. Every block loads on its own (Promise.allSettled);
+  // a failing block shows "Couldn't load" and a Retry without affecting the others. Dynamic text uses textContent.
+  let homeUserId = null;
+  const TZ = "Europe/London";
+  const partsFmt = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", weekday: "short" });
+  function londonParts(ms) {
+    const p = {};
+    for (const x of partsFmt.formatToParts(new Date(ms))) if (x.type !== "literal") p[x.type] = x.type === "weekday" ? x.value : Number(x.value);
+    return p;
+  }
+  // UTC instant of London midnight on a calendar date (correct either side of a clock change); as in gym.html.
+  function londonMidnight(y, m, d) {
+    let t = Date.UTC(y, m - 1, d);
+    for (let i = 0; i < 2; i++) {
+      const p = londonParts(t);
+      const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+      t = Date.UTC(y, m - 1, d) - (asUtc - t);
+    }
+    return t;
+  }
+  // Monday 00:00 London of the week containing nowMs, as a UTC ISO string; as in gym.html.
+  function weekStartIso(nowMs) {
+    const p = londonParts(nowMs);
+    const dow = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 }[p.weekday];
+    const mon = new Date(Date.UTC(p.year, p.month - 1, p.day - dow));
+    return new Date(londonMidnight(mon.getUTCFullYear(), mon.getUTCMonth() + 1, mon.getUTCDate())).toISOString();
+  }
+  const pad2 = (n) => String(n).padStart(2, "0");
+  function londonDate(ms) { const p = londonParts(ms); return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`; }
+  const ymdUtc = (ymd) => { const [y, m, d] = ymd.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const dayDiff = (a, b) => Math.round((ymdUtc(a) - ymdUtc(b)) / 86400000);   // calendar days from b to a
+  const dayFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  function fmtDay(ymd, nowMs) {
+    const base = dayFmt.format(new Date(ymdUtc(ymd))).replace(",", "");
+    return ymd.slice(0, 4) === londonDate(nowMs).slice(0, 4) ? base : `${base} ${ymd.slice(0, 4)}`;
+  }
+  const fmtKg = (v) => String(Math.round(Number(v) * 100) / 100);
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+  // Next up: the dashboard's items, overdue first, then upcoming, by date; applications before follow-ups on the same date; then by name.
+  function nextItems(apps, contacts) {
+    const items = [
+      ...apps.map((a) => ({ kind: "app", date: a.deadline, title: a.role ? `${a.company} — ${a.role}` : `${a.company}`, page: "tracker.html" })),
+      ...contacts.map((c) => ({ kind: "followup", date: c.next_follow_up, title: c.firm ? `${c.name}, ${c.firm}` : `${c.name}`, page: "outreach.html" })),
+    ];
+    return items.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0) || (x.kind === y.kind ? 0 : x.kind === "app" ? -1 : 1) || (x.title < y.title ? -1 : x.title > y.title ? 1 : 0));
+  }
+  function dueText(item, today) {
+    const n = dayDiff(item.date, today);
+    if (item.kind === "app") return n === 0 ? "Closes today" : n === 1 ? "Closes tomorrow" : n > 1 ? `Closes in ${n} days` : `Overdue by ${plural(-n, "day", "days")}`;
+    return n === 0 ? "Follow-up due today" : n < 0 ? `Follow-up overdue by ${plural(-n, "day", "days")}` : n === 1 ? "Follow-up due tomorrow" : `Follow-up due in ${n} days`;
+  }
+  function moreSplit(rest) {
+    const t = rest.filter((i) => i.page === "tracker.html").length, o = rest.length - t;
+    return [t ? { n: t, text: `+${t} in Tracker`, href: "tracker.html" } : null, o ? { n: o, text: `+${o} in Outreach`, href: "outreach.html" } : null].filter(Boolean);
+  }
+  function habitsText(habits, completions) {
+    if (!habits.length) return "No habits yet";
+    const done = new Set(completions.map((c) => String(c.habit_id)));
+    const n = habits.filter((h) => done.has(String(h.id))).length;
+    return n === habits.length ? "All done today" : `${n} of ${habits.length} done today`;
+  }
+  function gymText(weekCount, lastStartedAt, nowMs) {
+    if (!lastStartedAt) return "No sessions yet";
+    const last = `last ${fmtDay(londonDate(Date.parse(lastStartedAt)), nowMs)}`;
+    return weekCount > 0 ? `${plural(weekCount, "session", "sessions")} this week · ${last}` : `No sessions this week · ${last}`;
+  }
+  function weightText(latest, today, nowMs) {
+    if (!latest) return "No entries yet";
+    const day = String(latest.measured_on).slice(0, 10);
+    return day === today ? `${fmtKg(latest.weight_kg)} kg · today` : `Not logged today · last ${fmtKg(latest.weight_kg)} kg, ${fmtDay(day, nowMs)}`;
+  }
+  const journalText = (hasEntry) => (hasEntry ? "Written today" : "Not written yet");
+
+  // Runs a block's queries together; any failed query (rejected, or an error from Supabase) fails the block.
+  async function settle(queries) {
+    const res = await Promise.allSettled(queries);
+    const bad = res.find((r) => r.status === "rejected" || (r.value && r.value.error));
+    if (bad) throw bad.status === "rejected" ? bad.reason : bad.value.error;
+    return res.map((r) => r.value);
+  }
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+
+  async function loadNextUp() {
+    const body = document.getElementById("next-body");
+    body.replaceChildren(el("div", "dash-loading", "Loading…"));
+    // The same filters as the old "What's next" dashboard and digest.py (kept verbatim).
     const today = new Date().toISOString().slice(0, 10);
     const soonCutoff = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-
-    const [{ data: deadlines, error: dErr }, { data: followups, error: fErr }] = await Promise.all([
-      sb.from("applications")
-        .select("company, role, deadline")
-        .is("closed", null)
-        .not("deadline", "is", null)
-        .lte("deadline", soonCutoff)
-        .order("deadline", { ascending: true }),
-      sb.from("contacts")
-        .select("name, firm, next_follow_up")
-        .is("closed", null)
-        .not("next_follow_up", "is", null)
-        .lte("next_follow_up", today)
-        .order("next_follow_up", { ascending: true }),
-    ]);
-
-    if (dErr || fErr) {
-      console.error(dErr || fErr);
-      document.getElementById("dash-deadlines").innerHTML = '<div class="dash-empty">Couldn\'t load — check console (F12)</div>';
-      document.getElementById("dash-followups").innerHTML = '<div class="dash-empty">Couldn\'t load — check console (F12)</div>';
-      return;
+    try {
+      const [{ data: deadlines }, { data: followups }] = await settle([
+        sb.from("applications")
+          .select("company, role, deadline")
+          .is("closed", null)
+          .not("deadline", "is", null)
+          .lte("deadline", soonCutoff)
+          .order("deadline", { ascending: true }),
+        sb.from("contacts")
+          .select("name, firm, next_follow_up")
+          .is("closed", null)
+          .not("next_follow_up", "is", null)
+          .lte("next_follow_up", today)
+          .order("next_follow_up", { ascending: true }),
+      ]);
+      renderNextUp(nextItems(deadlines || [], followups || []), londonDate(Date.now()));
+    } catch (err) {
+      console.error(err);
+      const retry = el("button", "home-retry", "Retry"); retry.type = "button"; retry.addEventListener("click", loadNextUp);
+      body.replaceChildren(el("div", "dash-empty", "Couldn't load"), retry);
     }
-
-    renderDeadlines(deadlines || [], today);
-    renderFollowups(followups || [], today);
   }
-
-  function daysBetween(a, b) {
-    return Math.round((new Date(a) - new Date(b)) / 86400000);
-  }
-
-  // User-entered text is inserted with innerHTML below, so every interpolated
-  // value is escaped first. String(v) keeps the output identical to before.
-  function esc(v) {
-    return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-
-  function renderDeadlines(items, today) {
-    document.getElementById("dash-deadline-count").textContent = items.length;
-    const el = document.getElementById("dash-deadlines");
-
-    if (items.length === 0) {
-      el.innerHTML = '<div class="dash-empty">Nothing closing in the next 7 days.</div>';
-      return;
+  function renderNextUp(items, today) {
+    const body = document.getElementById("next-body");
+    if (!items.length) { body.replaceChildren(el("div", "next-empty", "Nothing due. You're clear.")); return; }
+    const [first, ...rest] = items;
+    const card = el("div", "next-first");
+    const btn = el("a", "home-btn", first.page === "tracker.html" ? "Open in Tracker" : "Open in Outreach"); btn.href = first.page;
+    card.append(el("div", "next-title", first.title), el("div", "next-sub", `${dueText(first, today)} · ${fmtDay(first.date, Date.now())}`), btn);
+    const list = el("ul", "next-list");
+    for (const it of rest.slice(0, 4)) {
+      const t = dueText(it, today), a = el("a", "next-link", `${it.title} · ${t.charAt(0).toLowerCase()}${t.slice(1)}`); a.href = it.page;
+      const li = el("li"); li.append(a); list.append(li);
     }
-
-    el.innerHTML = items.map(a => {
-      const days = daysBetween(a.deadline, today);
-      let status, cls;
-      if (days < 0) { status = `${Math.abs(days)}d overdue`; cls = "overdue"; }
-      else if (days === 0) { status = "today"; cls = "overdue"; }
-      else if (days <= 2) { status = `${days}d left`; cls = "overdue"; }
-      else { status = `${days}d left`; cls = "soon"; }
-      return `
-        <div class="dash-item">
-          <div>
-            <div class="dash-item-name">${esc(a.company)}</div>
-            <div class="dash-item-sub">${esc(a.role)}</div>
-          </div>
-          <div class="dash-item-status ${esc(cls)}">${esc(status)}</div>
-        </div>`;
-    }).join("");
-  }
-
-  function renderFollowups(items, today) {
-    document.getElementById("dash-followup-count").textContent = items.length;
-    const el = document.getElementById("dash-followups");
-
-    if (items.length === 0) {
-      el.innerHTML = '<div class="dash-empty">All caught up — nothing due.</div>';
-      return;
+    const parts = [card];
+    if (rest.length) parts.push(list);
+    const more = moreSplit(rest.slice(4));
+    if (more.length) {
+      const m = el("div", "next-more");
+      more.forEach((x, i) => { if (i) m.append(document.createTextNode(", ")); const a = el("a", "", x.text); a.href = x.href; m.append(a); });
+      parts.push(m);
     }
-
-    el.innerHTML = items.map(c => {
-      const days = daysBetween(today, c.next_follow_up);
-      const status = days === 0 ? "today" : `${days}d overdue`;
-      return `
-        <div class="dash-item">
-          <div>
-            <div class="dash-item-name">${esc(c.name)}</div>
-            <div class="dash-item-sub">${esc(c.firm)}</div>
-          </div>
-          <div class="dash-item-status overdue">${esc(status)}</div>
-        </div>`;
-    }).join("");
+    body.replaceChildren(...parts);
   }
+
+  const TILES = {
+    habits: async (today) => {
+      const [{ data: habits }, { data: comps }] = await settle([sb.from("habits").select("id").eq("archived", false), sb.from("habit_completions").select("habit_id").eq("completed_date", today)]);
+      return habitsText(habits || [], comps || []);
+    },
+    gym: async (today, now) => {
+      const [week, last] = await settle([sb.from("workouts").select("id", { count: "exact", head: true }).gte("started_at", weekStartIso(now)), sb.from("workouts").select("started_at").order("started_at", { ascending: false }).limit(1)]);
+      return gymText(week.count ?? 0, last.data && last.data[0] ? last.data[0].started_at : null, now);
+    },
+    weight: async (today, now) => {
+      const [{ data }] = await settle([sb.from("body_weights").select("measured_on, weight_kg").eq("user_id", homeUserId).order("measured_on", { ascending: false }).limit(1)]);
+      return weightText(data && data[0] ? data[0] : null, today, now);
+    },
+    journal: async (today) => {
+      const [{ data }] = await settle([sb.from("journal_entries").select("id").eq("entry_date", today).limit(1)]);
+      return journalText(!!(data && data.length));
+    },
+  };
+  async function loadTile(name) {
+    const tile = document.querySelector(`.tile[data-tile="${name}"]`), status = tile.querySelector(".tile-status"), retry = tile.querySelector(".tile-retry");
+    status.textContent = "…"; retry.hidden = true;
+    const now = Date.now();
+    try { status.textContent = await TILES[name](londonDate(now), now); }
+    catch (err) { console.error(err); status.textContent = "Couldn't load"; retry.hidden = false; }
+  }
+  document.querySelectorAll(".tile").forEach((t) => t.querySelector(".tile-retry").addEventListener("click", () => loadTile(t.dataset.tile)));
+  function loadHome() {
+    return Promise.allSettled([loadNextUp(), ...Object.keys(TILES).map(loadTile)]);
+  }
+  window.Home = { londonParts, londonDate, weekStartIso, dayDiff, fmtDay, fmtKg, nextItems, dueText, moreSplit, habitsText, gymText, weightText, journalText, loadHome };
 </script>
 
 <script>
