@@ -189,6 +189,11 @@
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // Escapes text for HTML (content and quoted attributes): & < > " ' become entities; null and undefined become "".
+  function esc(v) {
+    return v === null || v === undefined ? "" : String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
   let allEntries = [];
   let selectedMood = null;
   let openEntryId = null;
@@ -244,7 +249,7 @@
     for (let i = 29; i >= 0; i--) {
       const ds = dateStr(i);
       const mood = byDate[ds];
-      cells.push(`<div class="mood-cell ${mood ? "m" + mood : ""}" title="${ds}${mood ? " — " + MOOD_LABELS[mood] : ""}"></div>`);
+      cells.push(`<div class="mood-cell ${mood ? "m" + esc(mood) : ""}" title="${ds}${mood ? " — " + esc(MOOD_LABELS[mood]) : ""}"></div>`);
     }
     document.getElementById("mood-strip").innerHTML = cells.join("");
   }
@@ -258,15 +263,15 @@
     list.innerHTML = allEntries.map(e => {
       const isOpen = e.id === openEntryId;
       return `
-        <div class="entry-card ${isOpen ? "open" : ""}" data-id="${e.id}">
+        <div class="entry-card ${isOpen ? "open" : ""}" data-id="${esc(e.id)}">
           <div class="entry-head">
             <div class="entry-head-left">
-              <span class="entry-date">${formatDate(e.entry_date)}</span>
-              ${e.mood ? `<span class="entry-mood-tag m${e.mood}">${MOOD_LABELS[e.mood]}</span>` : ""}
+              <span class="entry-date">${esc(formatDate(e.entry_date))}</span>
+              ${e.mood ? `<span class="entry-mood-tag m${esc(e.mood)}">${esc(MOOD_LABELS[e.mood])}</span>` : ""}
             </div>
             <span class="entry-chevron">&#9662;</span>
           </div>
-          <div class="entry-body">${e.entry_text ? e.entry_text.replace(/</g, "&lt;") : "(no text written)"}</div>
+          <div class="entry-body">${e.entry_text ? esc(e.entry_text) : "(no text written)"}</div>
         </div>`;
     }).join("");
   }
