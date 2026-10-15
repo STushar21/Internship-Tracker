@@ -163,6 +163,9 @@
   .bw-chart { width: 100%; min-width: 0; overflow: hidden; border-radius: 8px; touch-action: manipulation; }
   .bw-chart svg { display: block; }
   .bw-chart:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .bw-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 6px 0 0; font-size: 12px; color: #5A5650; }
+  .bw-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .bw-legend svg { display: block; flex: 0 0 auto; }
   .bw-list { list-style: none; margin: 8px 0 0; padding: 0; }
   .bw-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #EFE8DA; padding: 8px 0; }
   .bw-item-text { flex: 1 1 140px; min-width: 0; font-size: 15px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -294,6 +297,10 @@
       </div>
       <p class="bw-text muted" id="bw-range-empty" hidden></p>
       <div class="bw-chart" id="bw-chart" tabindex="0" role="img"></div>
+      <div class="bw-legend" id="bw-legend" hidden>
+        <span class="bw-legend-item"><svg width="24" height="8" viewBox="0 0 24 8" aria-hidden="true" focusable="false"><line x1="1" y1="4" x2="23" y2="4" stroke="#8B6B49" stroke-width="2"/></svg>Your weigh-ins</span>
+        <span class="bw-legend-item"><svg width="24" height="8" viewBox="0 0 24 8" aria-hidden="true" focusable="false"><line x1="1" y1="4" x2="23" y2="4" stroke="#1A1A18" stroke-width="2" stroke-dasharray="7 4"/></svg>7-day average</span>
+      </div>
       <p class="bw-text" id="bw-readout"></p>
       <h3 style="margin-top:16px">Recent entries</h3>
       <ul class="bw-list" id="bw-list"></ul>
@@ -433,6 +440,7 @@
   const RECENT_SHOWN = 14;             // recent entries shown, and added by each "Show more"
   const RANGE_DEFAULT = 30;            // the chart's starting range in days
   const DATE_MIN = "2000-01-01";
+  const GAP_DASH_DAYS = 7;             // the weigh-ins line is dashed between entries more than this many calendar days apart
   const DEFAULT_SETS = 3;   // the Sets field's starting value when a strength exercise is chosen
   const SETS_MAX = 20;      // most sets one "Add to workout" can create
   const NAME_MAX = 60, CITY_MAX = 60, NOTES_MAX = 2000, HISTORY_PAGE = 20;
@@ -1348,6 +1356,21 @@
   }
   // Index of the x nearest to x (ties go to the earlier point).
   function nearestIndex(xs, x) { let bi = -1, bd = Infinity; xs.forEach((v, i) => { const d = Math.abs(v - x); if (d < bd) { bd = d; bi = i; } }); return bi; }
+  // The weigh-ins line, as pieces in date order: a "run" joins consecutive entries at most GAP_DASH_DAYS calendar days
+  // apart (drawn solid); a "gap" joins two entries further apart (drawn dashed). A run of a single entry has no piece.
+  function weighinPieces(points) {
+    const pts = points.slice().sort((a, b) => (a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0));
+    const pieces = []; let run = pts.length ? [pts[0]] : [];
+    for (let i = 1; i < pts.length; i++) {
+      if (dayDiff(pts[i].measured_on, pts[i - 1].measured_on) > GAP_DASH_DAYS) {
+        if (run.length >= 2) pieces.push({ kind: "run", pts: run });
+        pieces.push({ kind: "gap", pts: [pts[i - 1], pts[i]] });
+        run = [pts[i]];
+      } else run.push(pts[i]);
+    }
+    if (run.length >= 2) pieces.push({ kind: "run", pts: run });
+    return pieces;
+  }
   // Rows from several pages, in page order, each id once.
   function mergePages(pages) { const seen = new Set(), out = []; for (const pg of pages) for (const r of pg) if (!seen.has(r.id)) { seen.add(r.id); out.push(r); } return out; }
   const bwRow = (r) => ({ id: Number(r.id), measured_on: String(r.measured_on).slice(0, 10), weight_kg: Number(r.weight_kg) });
@@ -1458,14 +1481,14 @@
     const box = $("bw-chart"), pts = bwPoints(), today = londonToday(Date.now());
     const none = bwState === "ready" && bwEntries.length > 0 && pts.length === 0;
     $("bw-range-empty").textContent = none ? `No entries in the ${rangeWords(bwRange)}. Choose a longer range.` : "";
-    show($("bw-range-empty"), none); show(box, pts.length > 0); show($("bw-readout"), pts.length > 0);
+    show($("bw-range-empty"), none); show(box, pts.length > 0); show($("bw-readout"), pts.length > 0); show($("bw-legend"), pts.length >= 2);
     bwGeom = null;
     if (!pts.length) { box.replaceChildren(); return; }
     if (bwSel < 0 || bwSel >= pts.length) bwSel = pts.length - 1;
     const W = box.clientWidth; bwLastWidth = W;
     const first = pts[0], last = pts[pts.length - 1];
     box.setAttribute("aria-label", pts.length === 1 ? `Body weight, ${rangeWords(bwRange)}: ${fmtKgBw(first.weight_kg)} kg, 1 entry`
-      : `Body weight, ${rangeWords(bwRange)}: from ${fmtKgBw(first.weight_kg)} to ${fmtKgBw(last.weight_kg)} kg, ${pts.length} entries`);
+      : `Body weight, ${rangeWords(bwRange)}: from ${fmtKgBw(first.weight_kg)} to ${fmtKgBw(last.weight_kg)} kg, ${pts.length} entries, with a 7-day average line`);
     const s = pts[bwSel], sa = avgEnding(bwEntries, s.measured_on);
     $("bw-readout").textContent = `${fmtBwDate(s.measured_on, Date.now())} · ${fmtKgBw(s.weight_kg)} kg · 7-day average ${fmtAvgBw(sa)} kg`;
     if (!W) { box.replaceChildren(); return; } // not on screen: drawn when it gets a width
@@ -1485,7 +1508,16 @@
     }
     const mid = addDays(startDay, Math.round(span / 2)), short = (d) => fmtBwDate(d, Date.now()).replace(/^\S+ /, "");
     [[startDay, "start"], [mid, "middle"], [today, "end"]].forEach(([d, anchor]) => svg.append(sv("text", { x: xOf(d), y: H - 8, "text-anchor": anchor, "font-size": 12, fill: "#5A5650" }, short(d))));
-    if (pts.length >= 2) svg.append(sv("polyline", { points: pts.map((p, i) => `${xOf(p.measured_on).toFixed(1)},${yOf(avgs[i]).toFixed(1)}`).join(" "), fill: "none", stroke: "#1A1A18", "stroke-width": 2, "stroke-linejoin": "round", class: "bw-avg-line" }));
+    if (pts.length >= 2) svg.append(sv("polyline", { points: pts.map((p, i) => `${xOf(p.measured_on).toFixed(1)},${yOf(avgs[i]).toFixed(1)}`).join(" "), fill: "none", stroke: "#1A1A18", "stroke-width": 2, "stroke-linejoin": "round", class: "bw-avg-line", "stroke-dasharray": "7 4", "data-series": "average" }));
+    const xy = (p) => [+xOf(p.measured_on).toFixed(1), +yOf(p.weight_kg).toFixed(1)];
+    if (pts.length >= 2) {
+      const g = sv("g", { "data-series": "weighins" });
+      for (const piece of weighinPieces(pts)) {
+        if (piece.kind === "run") g.append(sv("polyline", { points: piece.pts.map((p) => xy(p).join(",")).join(" "), fill: "none", stroke: "#8B6B49", "stroke-width": 2, "stroke-linejoin": "round", "data-kind": "run" }));
+        else { const [a, c] = piece.pts.map(xy); g.append(sv("line", { x1: a[0], y1: a[1], x2: c[0], y2: c[1], stroke: "#8B6B49", "stroke-width": 2, "stroke-dasharray": "4 4", "data-kind": "gap" })); }
+      }
+      svg.append(g);
+    }
     const xs = pts.map((p) => xOf(p.measured_on));
     pts.forEach((p, i) => svg.append(sv("circle", { cx: xs[i], cy: yOf(p.weight_kg), r: 4, fill: "#8B6B49", class: "bw-dot" })));
     svg.append(sv("circle", { cx: xs[bwSel], cy: yOf(s.weight_kg), r: 9, fill: "none", stroke: "#1A1A18", "stroke-width": 2, class: "bw-sel-ring" }));
@@ -1561,7 +1593,7 @@
     beats, topSet, buildCache, validCache, lastRowText, lastText, bestText, prefillValues, flagRows, newBestLines, rebuildCache,
     get cache() { return cache; }, get cacheState() { return cacheState; }, CACHE_KEY, CACHE_MAX_AGE_MS, PAGE_SIZE, LAST_ROWS_SHOWN,
     REPS_MAX, WEIGHT_MAX, MINUTES_MAX, LEVEL_MAX, WEIGHT_STEP, DRAFT_KEY, STALE_DRAFT_HOURS,
-    bw: { londonToday, addDays, dayDiff, validBwDate, parseBodyWeight, fmtKgBw, fmtAvgBw, fmtBwDate, fmtSigned, avgEnding, latestEntry, change30, inRange, niceTicks, nearestIndex, mergePages, bwLoad,
+    bw: { weighinPieces, GAP_DASH_DAYS, londonToday, addDays, dayDiff, validBwDate, parseBodyWeight, fmtKgBw, fmtAvgBw, fmtBwDate, fmtSigned, avgEnding, latestEntry, change30, inRange, niceTicks, nearestIndex, mergePages, bwLoad,
       get entries() { return bwEntries; }, get state() { return bwState; }, get selected() { return bwSel; }, get range() { return bwRange; },
       BW_WEIGHT_MIN, BW_WEIGHT_MAX, AVG_WINDOW_DAYS, CHANGE_DAYS, RECENT_SHOWN, PAGE_SIZE, RANGE_DEFAULT, DATE_MIN } };
 
