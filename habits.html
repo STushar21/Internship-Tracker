@@ -165,6 +165,11 @@
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // Escapes text for HTML (content and quoted attributes): & < > " ' become entities; null and undefined become "".
+  function esc(v) {
+    return v === null || v === undefined ? "" : String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
   let allHabits = [];
   let allCompletions = []; // { habit_id, completed_date }
 
@@ -263,14 +268,14 @@
       }
 
       return `
-        <div class="habit-card" data-id="${h.id}">
+        <div class="habit-card" data-id="${esc(h.id)}">
           <div class="habit-top">
-            <span class="habit-name">${h.name}</span>
+            <span class="habit-name">${esc(h.name)}</span>
             <div class="habit-right">
               <span class="habit-streak">${flameIcon(streak)}<span aria-hidden="true">${streak > 0 ? streak : "—"}</span></span>
               ${streak > 0 ? `<span class="freeze-label">${freezeUsed ? "Freeze used" : "Freeze ready"}</span>` : ""}
-              <button type="button" class="today-toggle ${isDoneToday ? "done" : ""}" data-toggle="${h.id}">&#10003;</button>
-              <button type="button" class="archive-link" data-archive="${h.id}">Archive</button>
+              <button type="button" class="today-toggle ${isDoneToday ? "done" : ""}" data-toggle="${esc(h.id)}">&#10003;</button>
+              <button type="button" class="archive-link" data-archive="${esc(h.id)}">Archive</button>
             </div>
           </div>
           ${gridHasFrozen ? `<div class="grid-legend">Dashed square = freeze used</div>` : ""}
