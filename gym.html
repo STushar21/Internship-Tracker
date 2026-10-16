@@ -1008,10 +1008,31 @@
   // The copy changed (loaded, built or dropped): refresh what's on screen.
   function cacheChanged() {
     if (screen !== "active" || !draft) return;
+    const restore = holdPosition(); // the lines change height: keep what's on screen where it was
     updateLastLines();
     updateFlags();
     const x = chosenExercise();
     if (x) { $("add-last").textContent = lastText(entryFor(x.id), cacheState, Date.now()); if (!addTouched) applyPrefill(x); }
+    restore();
+  }
+  // Keep the Add to workout button (or, when it's off screen, the first card on screen) at the same place in the viewport
+  // while the "Last time" lines above it change height. Safari has no scroll anchoring, so the copy arriving late would
+  // otherwise push the button away. If the scroll after "Add to workout" may still be running, it is started again.
+  let addScroll = null; // { card, until } for the scroll after "Add to workout"
+  function holdPosition() {
+    const btn = $("add-btn"), r = btn.getBoundingClientRect();
+    const el = r.bottom > 0 && r.top < window.innerHeight ? btn : Array.from(document.querySelectorAll("#active .card, #active .ex-card")).find((c) => c.getBoundingClientRect().bottom > 0);
+    if (!el) return () => {};
+    const top = el.getBoundingClientRect().top;
+    return () => {
+      const d = el.getBoundingClientRect().top - top;
+      if (Math.abs(d) >= 1) window.scrollBy(0, d);
+      if (addScroll && performance.now() < addScroll.until && addScroll.card.isConnected) scrollToNewCard(addScroll.card);
+    };
+  }
+  function scrollToNewCard(card) {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" }); // scroll-margin keeps it clear of the bar
   }
   function updateLastLines() {
     for (const line of document.querySelectorAll("#ex-list .last-line")) line.textContent = lastText(entryFor(line.dataset.ex), cacheState, Date.now());
@@ -1118,8 +1139,7 @@
     resetAddFields();
     renderExercises();
     const cards = document.querySelectorAll(".ex-card"), card = cards[cards.length - 1];
-    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (card) card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" }); // scroll-margin keeps it clear of the bar
+    if (card) { addScroll = { card, until: performance.now() + 1000 }; scrollToNewCard(card); }
   }
   // Insert an exercise; returns the row, or throws { user } with the message for the person.
   async function createExercise(name, kind) {
