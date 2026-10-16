@@ -681,6 +681,20 @@
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   // Next up: the dashboard's items, overdue first, then upcoming, by date; applications before follow-ups on the same date; then by name.
+  // "Still to submit": an application whose deadline still matters. Not closed, no applied date, a stage before "Applied"
+  // in the tracker's own order (an unknown or missing stage counts as the first stage, as tracker.html shows it), and a closing date.
+  const TRACKER_STAGES = ["Researching", "Applied", "Online Tests", "Video Interview", "Assessment Centre", "Final Round", "Offer"]; // identical to STAGES in tracker.html
+  function stillToSubmit(a) {
+    const i = TRACKER_STAGES.indexOf(a.stage);
+    return !a.closed && !(a.applied_date && String(a.applied_date).trim()) && (i === -1 ? 0 : i) < TRACKER_STAGES.indexOf("Applied") && !!a.deadline;
+  }
+  // What Next up lists: applications still to submit closing on or before cutoff (overdue included), and open follow-ups due on or before today.
+  function selectNext(apps, contacts, today, cutoff) {
+    return {
+      apps: apps.filter((a) => stillToSubmit(a) && a.deadline <= cutoff),
+      contacts: contacts.filter((c) => (c.closed === null || c.closed === undefined) && !!c.next_follow_up && c.next_follow_up <= today),
+    };
+  }
   function nextItems(apps, contacts) {
     const items = [
       ...apps.map((a) => ({ kind: "app", date: a.deadline, title: a.role ? `${a.company} — ${a.role}` : `${a.company}`, page: "tracker.html" })),
@@ -688,10 +702,20 @@
     ];
     return items.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0) || (x.kind === y.kind ? 0 : x.kind === "app" ? -1 : 1) || (x.title < y.title ? -1 : x.title > y.title ? 1 : 0));
   }
-  function dueText(item, today) {
+  // The first card's subtitle.
+  function dueText(item, today, nowMs = Date.now()) {
     const n = dayDiff(item.date, today);
-    if (item.kind === "app") return n === 0 ? "Closes today" : n === 1 ? "Closes tomorrow" : n > 1 ? `Closes in ${n} days` : `Overdue by ${plural(-n, "day", "days")}`;
-    return n === 0 ? "Follow-up due today" : n < 0 ? `Follow-up overdue by ${plural(-n, "day", "days")}` : n === 1 ? "Follow-up due tomorrow" : `Follow-up due in ${n} days`;
+    if (item.kind === "app") {
+      if (n < 0) return `Deadline passed ${plural(-n, "day", "days")} ago · mark as applied or closed`;
+      return `Submit by ${fmtDay(item.date, nowMs)} · closes ${n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`} · not marked as applied`;
+    }
+    return n === 0 ? "Follow up today" : n < 0 ? `Follow up overdue by ${plural(-n, "day", "days")}` : n === 1 ? "Follow up tomorrow" : `Follow up in ${n} days`;
+  }
+  // The end of a compact link, after the title.
+  function linkText(item, today) {
+    const n = dayDiff(item.date, today);
+    if (item.kind === "app") return n < 0 ? "deadline passed" : n === 0 ? "submit today" : n === 1 ? "submit tomorrow" : `submit in ${n} days`;
+    return n === 0 ? "follow up today" : n < 0 ? `follow up overdue by ${plural(-n, "day", "days")}` : n === 1 ? "follow up tomorrow" : `follow up in ${n} days`;
   }
   function moreSplit(rest) {
     const t = rest.filter((i) => i.page === "tracker.html").length, o = rest.length - t;
@@ -727,25 +751,26 @@
   async function loadNextUp() {
     const body = document.getElementById("next-body");
     body.replaceChildren(el("div", "dash-loading", "Loading…"));
-    // The same filters as the old "What's next" dashboard and digest.py (kept verbatim).
+    // The old dashboard's server-side filters, kept; selectNext() then keeps only applications still to submit (the same rule as digest.py).
     const today = new Date().toISOString().slice(0, 10);
     const soonCutoff = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
     try {
       const [{ data: deadlines }, { data: followups }] = await settle([
         sb.from("applications")
-          .select("company, role, deadline")
+          .select("company, role, deadline, stage, applied_date, closed")
           .is("closed", null)
           .not("deadline", "is", null)
           .lte("deadline", soonCutoff)
           .order("deadline", { ascending: true }),
         sb.from("contacts")
-          .select("name, firm, next_follow_up")
+          .select("name, firm, next_follow_up, closed")
           .is("closed", null)
           .not("next_follow_up", "is", null)
           .lte("next_follow_up", today)
           .order("next_follow_up", { ascending: true }),
       ]);
-      renderNextUp(nextItems(deadlines || [], followups || []), londonDate(Date.now()));
+      const pick = selectNext(deadlines || [], followups || [], today, soonCutoff);
+      renderNextUp(nextItems(pick.apps, pick.contacts), londonDate(Date.now()));
     } catch (err) {
       console.error(err);
       const retry = el("button", "home-retry", "Retry"); retry.type = "button"; retry.addEventListener("click", loadNextUp);
@@ -754,14 +779,14 @@
   }
   function renderNextUp(items, today) {
     const body = document.getElementById("next-body");
-    if (!items.length) { body.replaceChildren(el("div", "next-empty", "Nothing due. You're clear.")); return; }
+    if (!items.length) { body.replaceChildren(el("div", "next-empty", "Nothing to submit or follow up.")); return; }
     const [first, ...rest] = items;
     const card = el("div", "next-first");
-    const btn = el("a", "home-btn", first.page === "tracker.html" ? "Open in Tracker" : "Open in Outreach"); btn.href = first.page;
-    card.append(el("div", "next-title", first.title), el("div", "next-sub", `${dueText(first, today)} · ${fmtDay(first.date, Date.now())}`), btn);
+    const btn = el("a", "home-btn", first.kind === "app" ? "Open application" : "Open contact"); btn.href = first.page;
+    card.append(el("div", "next-title", first.title), el("div", "next-sub", dueText(first, today)), btn);
     const list = el("ul", "next-list");
     for (const it of rest.slice(0, 4)) {
-      const t = dueText(it, today), a = el("a", "next-link", `${it.title} · ${t.charAt(0).toLowerCase()}${t.slice(1)}`); a.href = it.page;
+      const a = el("a", "next-link", `${it.title} · ${linkText(it, today)}`); a.href = it.page;
       const li = el("li"); li.append(a); list.append(li);
     }
     const parts = [card];
@@ -804,7 +829,7 @@
   function loadHome() {
     return Promise.allSettled([loadNextUp(), ...Object.keys(TILES).map(loadTile)]);
   }
-  window.Home = { londonParts, londonDate, weekStartIso, dayDiff, fmtDay, fmtKg, nextItems, dueText, moreSplit, habitsText, gymText, weightText, journalText, loadHome };
+  window.Home = { londonParts, londonDate, weekStartIso, dayDiff, fmtDay, fmtKg, TRACKER_STAGES, stillToSubmit, selectNext, nextItems, dueText, linkText, moreSplit, habitsText, gymText, weightText, journalText, loadHome };
 </script>
 
 <script>
