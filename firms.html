@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Firms — STK</title>
+<style>
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF;
+    color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw);
+    margin: 40px auto;
+    padding: 0 16px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 28px; margin-bottom: 4px; }
+  h2 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 21px; margin: 0 0 10px; }
+  h3 { font-size: 15px; margin: 14px 0 6px; }
+  .sub { color: #5A5650; font-size: 13px; margin-bottom: 8px; }
+  .top-nav {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    background: #1D1D1B;
+    border: 1px solid #2E2E2A;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 0 auto 28px;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #C9956A;
+    padding: 8px 14px 8px 12px;
+    margin-right: 4px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+  }
+  .top-nav a.nav-link {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+  .top-nav a.nav-link.active {
+    background: rgba(201,149,106,0.15);
+    color: #C9956A;
+    border-bottom: 2px solid #C9956A;
+  }
+  .top-nav a.nav-link.soon {
+    color: #8A8F99;
+  }
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret {
+    background: none;
+    border: none;
+    color: #8A8F99;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 8px 10px 8px 2px;
+    margin-right: -6px;
+  }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 120%;
+    left: 0;
+    background: #FFFFFF;
+    border: 1px solid #D8DADD;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1A1A18;
+    text-decoration: none;
+  }
+  .nav-dropdown-menu a:hover { background: #F1EBDC; }
+  .nav-dropdown-menu a.active { color: #6F5439; font-weight: 600; }
+  /* --- login gate and sign out (as on the other pages) --- */
+  #login-gate { max-width: 360px; margin: 60px auto; }
+  #login-gate h2 { font-size: 22px; margin-bottom: 4px; text-align: center; }
+  #login-gate .sub { text-align: center; margin-bottom: 20px; }
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid #D8DADD; color: #5A5650; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; }
+
+  /* --- this page --- */
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 12px; }
+  .back-link:hover { text-decoration: underline; }
+  .card { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 8px 0 16px; }
+  .stat { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 10px; padding: 10px 12px; min-width: 0; }
+  .stat-num { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 12px; color: #5A5650; overflow-wrap: anywhere; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .toolbar .search { flex: 1 1 220px; min-width: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chip { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid #8B6B49; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
+  .input, select.input, textarea.input { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #767067; border-radius: 8px; background: #FFFFFF; color: #1A1A18; font-family: inherit; font-size: 16px; }
+  textarea.input { min-height: 88px; resize: vertical; }
+  .toolbar select.input { width: auto; flex: 0 1 auto; }
+  .field { display: block; font-size: 13px; font-weight: 600; color: #5A5650; margin: 10px 0 4px; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #8B6B49; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn.primary { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
+  .btn.danger { border-color: #8A3A2E; color: #8A3A2E; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+  .err { color: #8A3A2E; font-size: 13px; margin: 6px 0 0; }
+  .ok { color: #2F6B4F; font-size: 13px; font-weight: 600; margin: 6px 0 0; }
+  .msg { font-size: 14px; color: #5A5650; padding: 16px 0; }
+  .banner { background: #FFFFFF; border: 1px solid #8A3A2E; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; color: #8A3A2E; font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .firm { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; margin-bottom: 10px; }
+  .firm-head { display: block; width: 100%; min-height: 44px; text-align: left; background: none; border: none; padding: 12px 14px; font-family: inherit; color: #1A1A18; cursor: pointer; }
+  .firm-head:focus-visible, .btn:focus-visible, .chip:focus-visible, .input:focus-visible, .back-link:focus-visible, .link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .firm-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+  .firm-name { font-weight: 700; font-size: 16px; overflow-wrap: anywhere; }
+  .badge { font-size: 12px; font-weight: 700; color: #6F5439; border: 1px solid #8B6B49; border-radius: 10px; padding: 1px 8px; }
+  .firm-type { font-size: 13px; color: #5A5650; }
+  .firm-status { display: block; font-size: 14px; margin-top: 4px; color: #1A1A18; }
+  .firm-status.due { color: #6F5439; font-weight: 700; }
+  .firm-status.overdue { color: #8A3A2E; font-weight: 700; }
+  .firm-last { display: block; font-size: 13px; color: #5A5650; margin-top: 2px; }
+  .firm-body { padding: 0 14px 14px; border-top: 1px solid #EFE8DA; }
+  .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin-top: 12px; font-size: 14px; }
+  .details div { min-width: 0; overflow-wrap: anywhere; }
+  .details span.k { display: block; font-size: 12px; color: #5A5650; }
+  .link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-weight: 600; overflow-wrap: anywhere; }
+  .timeline { list-style: none; padding: 0; margin: 6px 0 0; font-size: 14px; }
+  .timeline li { padding: 6px 0; border-bottom: 1px solid #EFE8DA; overflow-wrap: anywhere; }
+  .timeline .tnote { color: #5A5650; font-size: 13px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .inline-form { background: #F8F4EA; border: 1px solid #E3DAC4; border-radius: 10px; padding: 12px; margin-top: 10px; }
+  .import-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  .import-table th, .import-table td { text-align: left; padding: 6px; border-bottom: 1px solid #EFE8DA; vertical-align: top; overflow-wrap: anywhere; }
+  .table-wrap { overflow-x: auto; max-width: 100%; }
+  .problems { font-size: 14px; padding-left: 18px; }
+
+  /* --- mobile (phone-width) nav + body spacing: as on the other pages --- */
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand { flex-shrink: 0; }
+    .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid2, .details { grid-template-columns: minmax(0, 1fr); }
+    .toolbar select.input { flex: 1 1 140px; }
+    /* Date inputs: the iOS rules from tracker.html and outreach.html, with min-height 44px as in gym.html */
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      min-height: 44px;
+    }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+    input[type="date"]::-webkit-datetime-edit,
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link active">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html">Games</a>
+      <a href="gym.html">Gym</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+
+<div id="login-gate">
+  <h2>Locked</h2>
+  <div class="sub">This tracker holds personal data. <a href="index.html" style="color:#6F5439;">Sign in from the home page</a>, then come back.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Firms</h1>
+<div class="sub">Your cold-outreach targets: what you've sent and when to follow up.</div>
+<a class="back-link" href="outreach.html">← People</a>
+
+<div class="stats" id="stats"></div>
+
+<div class="toolbar">
+  <input class="input search" id="search" type="search" placeholder="Search firms, leads and notes" aria-label="Search firms, leads and notes" autocomplete="off">
+  <select class="input" id="f-priority" aria-label="Priority"><option value="">Priority: All</option><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select>
+  <select class="input" id="f-type" aria-label="Type"><option value="">Type: All</option><option value="boutique">Boutique</option><option value="investor">Investor</option><option value="other">Other</option></select>
+  <select class="input" id="f-sort" aria-label="Sort"><option value="due">Sort: Due first</option><option value="priority">Sort: Priority</option><option value="name">Sort: Name</option><option value="newest">Sort: Newest</option></select>
+  <button type="button" class="btn primary" id="add-open">Add firm</button>
+  <button type="button" class="btn" id="import-open">Import</button>
+</div>
+<div class="chips" id="chips" role="group" aria-label="Status"></div>
+
+<div class="card" id="firm-form-card" hidden></div>
+<div class="card" id="import-card" hidden></div>
+
+<div id="touches-banner" class="banner" hidden></div>
+<div id="list"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---- constants ----
+  const FOLLOW_UP_DAYS = 5;        // business days after the first outbound email until a follow-up is due
+  const OVERDUE_DAYS = 7;          // a follow-up is overdue after this many business days (counted from the first email)
+  const NO_RESPONSE_DAYS = 7;      // business days after the follow-up before suggesting "close as no response"
+  const RECENT_TOUCHES_SHOWN = 8;  // touches shown in a card's timeline before "Show all"
+  const PAGE_SIZE = 1000;          // PostgREST returns at most 1000 rows per request: load in pages of this size
+  const IMPORT_BATCH = 100;        // rows per insert request when importing
+  const IMPORT_MAX_ROWS = 300;     // the most data rows one import accepts
+  // England and Wales bank holidays, 2026 to 2028. Source: https://www.gov.uk/bank-holidays.json ("england-and-wales"), fetched 16 Oct 2026.
+  // The list ends in 2028: extend it from the same feed before 2029.
+  const BANK_HOLIDAYS = [
+    "2026-01-01", "2026-04-03", "2026-04-06", "2026-05-04", "2026-05-25", "2026-08-31", "2026-12-25", "2026-12-28",
+    "2027-01-01", "2027-03-26", "2027-03-29", "2027-05-03", "2027-05-31", "2027-08-30", "2027-12-27", "2027-12-28",
+    "2028-01-03", "2028-04-14", "2028-04-17", "2028-05-01", "2028-05-29", "2028-08-28", "2028-12-25", "2028-12-26",
+  ];
+  const HOLIDAYS = new Set(BANK_HOLIDAYS);
+
+  const $ = (id) => document.getElementById(id);
+  function el(tag, attrs, kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "text") e.textContent = v;
+      else if (k === "class") e.className = v;
+      else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? "" : v);
+    }
+    for (const c of [].concat(kids || [])) if (c !== null && c !== undefined && c !== false) e.append(c);
+    return e;
+  }
+  const show = (e, on) => { e.hidden = !on; };
+
+  // ---- London calendar dates (YYYY-MM-DD); stepping uses Date.UTC on y/m/d, never 24-hour steps ----
+  function londonToday(nowMs = Date.now()) {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(nowMs)).map((x) => [x.type, x.value]));
+    return `${p.year}-${p.month}-${p.day}`;
+  }
+  const ymd = (s) => s.split("-").map(Number);
+  function addDays(s, n) { const [y, m, d] = ymd(s); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); }
+  function isBusinessDay(s) { const [y, m, d] = ymd(s), w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w >= 1 && w <= 5 && !HOLIDAYS.has(s); }
+  // The date n business days after s (s itself is day 0).
+  function businessDaysAfter(s, n) { let d = s, k = 0; while (k < n) { d = addDays(d, 1); if (isBusinessDay(d)) k++; } return d; }
+  // Business days d with a < d <= b.
+  function businessDaysBetween(a, b) { let n = 0; for (let d = addDays(a, 1); d <= b; d = addDays(d, 1)) if (isBusinessDay(d)) n++; return n; }
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function fmtDay(s, today = londonToday()) {
+    const [y, m, d] = ymd(s), w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    return `${DOW[w]} ${d} ${MON[m - 1]}` + (String(y) === today.slice(0, 4) ? "" : ` ${y}`);
+  }
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+  // ---- per-firm state: a pure function of (firm, touches, today) ----
+  const OUTBOUND = new Set(["email", "form", "linkedin_request", "linkedin_message", "follow_up"]);
+  const EMAIL_LIKE = new Set(["email", "follow_up"]);
+  const STAGE_OF = { follow_up: "Followed Up", reply: "Replied", call_booked: "Call Booked", call_done: "Call Completed", referral: "Referral / Intro" }; // Outreach's stage names
+  const REPLY_OR_LATER = new Set(["reply", "call_booked", "call_done", "referral"]);
+  const STAGES = ["Researching", "Contacted", "Followed Up", "Replied", "Call Booked", "Call Completed", "Referral / Intro"];
+  const CLOSED_TEXT = { no_response: "no response", declined: "declined", dead_end: "dead end", referral: "referral" };
+  const KIND_LABEL = { email: "Email", form: "Form", linkedin_request: "LinkedIn request", linkedin_message: "LinkedIn message", follow_up: "Follow-up",
+                       reply: "Reply", call_booked: "Call booked", call_done: "Call done", referral: "Referral/intro" };
+  const byOrder = (a, b) => (a.happened_on < b.happened_on ? -1 : a.happened_on > b.happened_on ? 1 : a.id - b.id);
+  function firmState(firm, touchesIn, today) {
+    const t = touchesIn.slice().sort(byOrder);
+    const lastIdx = (pred) => { for (let i = t.length - 1; i >= 0; i--) if (pred(t[i])) return i; return -1; };
+    const iLater = lastIdx((x) => STAGE_OF[x.kind]);
+    const sent = t.some((x) => OUTBOUND.has(x.kind));
+    const stage = !t.length ? "Researching" : iLater >= 0 ? STAGE_OF[t[iLater].kind] : sent ? "Contacted" : "Researching";
+    const last = t.length ? t[t.length - 1] : null;
+    const out = { stage, sent, closed: firm.closed || null, last, status: "", tone: "", due: null, overdueBy: 0, dueToday: false, closePrompt: false };
+    if (firm.closed) { out.status = `Closed: ${CLOSED_TEXT[firm.closed] || firm.closed}`; return out; }
+    const iEmail = t.findIndex((x) => x.kind === "email");
+    const iEmailLike = lastIdx((x) => EMAIL_LIKE.has(x.kind));
+    const iFollow = lastIdx((x) => x.kind === "follow_up");
+    const replyAfter = (i) => t.some((x, j) => j > i && REPLY_OR_LATER.has(x.kind));
+    if (iEmail >= 0 && iFollow < 0 && !replyAfter(iEmailLike)) {
+      const first = t[iEmail].happened_on;
+      out.due = businessDaysAfter(first, FOLLOW_UP_DAYS);
+      const overdueAfter = businessDaysAfter(first, OVERDUE_DAYS);
+      const n = today > overdueAfter ? businessDaysBetween(overdueAfter, today) : 0;
+      if (n >= 1) { out.overdueBy = n; out.status = `Follow-up overdue by ${plural(n, "business day", "business days")}`; out.tone = "overdue"; }
+      else if (today >= out.due) { out.dueToday = true; out.status = "Follow-up due"; out.tone = "due"; }
+      else out.status = `Waiting · follow-up due ${fmtDay(out.due, today)}`;
+      return out;
+    }
+    if (iFollow >= 0 && !replyAfter(iFollow)) {
+      out.closePrompt = today >= businessDaysAfter(t[iFollow].happened_on, NO_RESPONSE_DAYS);
+      out.status = out.closePrompt ? "Consider closing as no response" : "Followed up · no further follow-ups";
+      return out;
+    }
+    if (REPLY_OR_LATER.has(t[iLater] ? t[iLater].kind : "")) { out.status = stage; return out; }
+    const iForm = lastIdx((x) => x.kind === "form");
+    if (iForm >= 0) { out.status = `Form submitted on ${fmtDay(t[iForm].happened_on, today)}`; return out; }
+    const iLi = lastIdx((x) => x.kind === "linkedin_request" || x.kind === "linkedin_message");
+    if (iLi >= 0) { out.status = `${KIND_LABEL[t[iLi].kind]} sent on ${fmtDay(t[iLi].happened_on, today)}`; return out; }
+    out.status = "Not started";
+    return out;
+  }
+  const isWaiting = (s) => s.sent && !s.closed && (s.stage === "Contacted" || s.stage === "Followed Up");
+  const isDue = (s) => !s.closed && (s.dueToday || s.overdueBy > 0);
+  const isReplied = (s) => STAGES.indexOf(s.stage) >= STAGES.indexOf("Replied") && s.closed !== "no_response" && s.closed !== "dead_end";
+  function summary(firms, states) {
+    return { total: firms.length, sent: states.filter((s) => s.sent).length, waiting: states.filter(isWaiting).length,
+             due: states.filter(isDue).length, replied: states.filter(isReplied).length, closed: states.filter((s) => !!s.closed).length };
+  }
+  const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  // Due first: overdue (most overdue first), then due today, then priority (1 first), then name.
+  function dueOrder(a, b) {
+    const ra = a.s.overdueBy > 0 ? 0 : a.s.dueToday ? 1 : 2, rb = b.s.overdueBy > 0 ? 0 : b.s.dueToday ? 1 : 2;
+    return ra - rb || (ra === 0 ? b.s.overdueBy - a.s.overdueBy : 0) || a.f.priority - b.f.priority || byName(a.f, b.f);
+  }
+  const SORTS = { due: dueOrder, priority: (a, b) => a.f.priority - b.f.priority || byName(a.f, b.f), name: (a, b) => byName(a.f, b.f), newest: (a, b) => b.f.id - a.f.id };
+
+  // ---- links: only http(s) URLs and simple email addresses become links ----
+  const safeUrl = (v) => (typeof v === "string" && /^https?:\/\//i.test(v.trim()) ? v.trim() : null);
+  const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
+  const safeEmail = (v) => (typeof v === "string" && EMAIL_RE.test(v.trim()) ? v.trim() : null);
+
+  // ---- data ----
+  let userId = null;
+  async function getUserId() { if (!userId) { const { data } = await sb.auth.getUser(); userId = data.user.id; } return userId; }
+  async function pageAll(table, cols) {
+    const out = [];
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const r = await sb.from(table).select(cols).order("id", { ascending: true }).range(from, from + PAGE_SIZE - 1);
+      if (r.error) throw r.error;
+      const rows = r.data || [];
+      out.push(...rows);
+      if (rows.length < PAGE_SIZE) return out;
+    }
+  }
+  const FIRM_COLS = "id, created_at, name, firm_type, priority, route, website, location, lead_name, lead_role, lead_email, lead_linkedin, cv_version, notes, closed";
+  const TOUCH_COLS = "id, firm_id, kind, happened_on, note";
+  const normFirm = (f) => ({ ...f, id: Number(f.id), priority: Number(f.priority) });
+  const normTouch = (t) => ({ ...t, id: Number(t.id), firm_id: Number(t.firm_id) });
+  const data = { firms: null, firmsErr: false, touches: null, touchesErr: false };
+  let byFirm = new Map();
+  function regroup() {
+    byFirm = new Map();
+    for (const t of data.touches || []) { if (!byFirm.has(t.firm_id)) byFirm.set(t.firm_id, []); byFirm.get(t.firm_id).push(t); }
+  }
+  async function loadFirms() {
+    data.firmsErr = false; data.firms = null; render();
+    try { data.firms = (await pageAll("outreach_firms", FIRM_COLS)).map(normFirm); }
+    catch (e) { console.error("[firms] couldn't load firms", e && e.code); data.firmsErr = true; }
+    render();
+  }
+  async function loadTouches() {
+    data.touchesErr = false; data.touches = null; render();
+    try { data.touches = (await pageAll("outreach_touches", TOUCH_COLS)).map(normTouch); regroup(); }
+    catch (e) { console.error("[firms] couldn't load touches", e && e.code); data.touchesErr = true; }
+    render();
+  }
+
+  // ---- view state ----
+  const view = { q: "", chip: "all", priority: "", type: "", sort: "due", open: new Set(), showAll: new Set(), forms: new Map(), notes: new Map() };
+  const CHIPS = [["all", "All"], ["not_started", "Not started"], ["waiting", "Waiting"], ["due", "Follow-up due"], ["replied", "Replied"], ["closed", "Closed"]];
+  const CHIP_TEST = { all: () => true, not_started: (s) => !s.closed && !s.last, waiting: isWaiting, due: isDue, replied: isReplied, closed: (s) => !!s.closed };
+  const TYPE_LABEL = { boutique: "Boutique", investor: "Investor", other: "Other" };
+  const ROUTE_LABEL = { email: "Email", form: "Form", linkedin: "LinkedIn", referral: "Referral" };
+  const touchesOf = (id) => byFirm.get(id) || [];
+  const stateOf = (f, today) => firmState(f, touchesOf(f.id), today);
+  function matches(f, s) {
+    const q = view.q.trim().toLowerCase();
+    if (q && ![f.name, f.lead_name, f.lead_role, f.lead_email, f.notes].some((v) => v && String(v).toLowerCase().includes(q))) return false;
+    if (view.priority && f.priority !== Number(view.priority)) return false;
+    if (view.type && f.firm_type !== view.type) return false;
+    return CHIP_TEST[view.chip](s);
+  }
+  function clearFilters() {
+    view.q = ""; view.chip = "all"; view.priority = ""; view.type = "";
+    $("search").value = ""; $("f-priority").value = ""; $("f-type").value = ""; render();
+  }
+
+  function render() {
+    const today = londonToday(), list = $("list");
+    renderChips();
+    const touchesOk = !!data.touches;
+    const tb = $("touches-banner");
+    if (data.touchesErr) {
+      tb.replaceChildren(el("span", { text: "Couldn't load what you've sent, so statuses and counts are missing." }), el("button", { type: "button", class: "btn", text: "Retry", onclick: loadTouches }));
+      show(tb, true);
+    } else show(tb, false);
+    if (data.firmsErr) {
+      renderStats(null);
+      list.replaceChildren(el("div", { class: "banner" }, [el("span", { text: "Couldn't load your firms." }), el("button", { type: "button", class: "btn", text: "Retry", onclick: loadFirms })]));
+      return;
+    }
+    if (!data.firms) { renderStats(null); list.replaceChildren(el("div", { class: "msg", text: "Loading…" })); return; }
+    const rows = data.firms.map((f) => ({ f, s: touchesOk ? stateOf(f, today) : null }));
+    renderStats(touchesOk ? summary(data.firms, rows.map((r) => r.s)) : { total: data.firms.length, closed: data.firms.filter((f) => f.closed).length });
+    if (!data.firms.length) { list.replaceChildren(el("div", { class: "msg", text: "No firms yet. Add one or import your list." })); return; }
+    // Without the touches, only the search, priority and type filters and the All and Closed chips can apply.
+    const visible = touchesOk ? rows.filter((r) => matches(r.f, r.s))
+      : rows.filter((r) => matches(r.f, { closed: r.f.closed || null, last: null, sent: false, stage: "", dueToday: false, overdueBy: 0 }) && (view.chip === "all" || (view.chip === "closed" && !!r.f.closed)));
+    if (!visible.length) {
+      list.replaceChildren(el("div", { class: "msg" }, [el("div", { text: "No firms match these filters" }), el("button", { type: "button", class: "btn", text: "Clear filters", onclick: clearFilters })]));
+      return;
+    }
+    visible.sort(touchesOk ? SORTS[view.sort] : SORTS[view.sort === "due" ? "priority" : view.sort]);
+    list.replaceChildren(...visible.map((r) => firmCard(r.f, r.s, today)));
+  }
+  function renderStats(c) {
+    const cell = (label, v) => el("div", { class: "stat" }, [el("div", { class: "stat-num", text: v === undefined || v === null ? "—" : String(v) }), el("div", { class: "stat-label", text: label })]);
+    c = c || {};
+    $("stats").replaceChildren(cell("Total", c.total), cell("Sent", c.sent), cell("Waiting", c.waiting), cell("Follow-ups due", c.due), cell("Replied", c.replied), cell("Closed", c.closed));
+  }
+  function renderChips() {
+    $("chips").replaceChildren(...CHIPS.map(([k, label]) => el("button", { type: "button", class: "chip", "aria-pressed": view.chip === k ? "true" : "false", text: label,
+      onclick: () => { view.chip = k; render(); } })));
+  }
+
+  // ---- a firm card ----
+  function detail(label, value) { return el("div", null, [el("span", { class: "k", text: label }), value === null || value === undefined || value === "" ? el("span", { text: "—" }) : value]); }
+  function linkOrText(url, label) { const u = safeUrl(url); return u ? el("a", { class: "link", href: u, target: "_blank", rel: "noopener noreferrer", text: label || u }) : el("span", { text: url }); }
+  function firmCard(f, s, today) {
+    const open = view.open.has(f.id);
+    const head = el("button", { type: "button", class: "firm-head", "aria-expanded": open ? "true" : "false", onclick: () => { open ? view.open.delete(f.id) : view.open.add(f.id); render(); } }, [
+      el("span", { class: "firm-top" }, [el("span", { class: "firm-name", text: f.name }), el("span", { class: "badge", text: `P${f.priority}` }), el("span", { class: "firm-type", text: TYPE_LABEL[f.firm_type] || f.firm_type })]),
+      el("span", { class: "firm-status" + (s && s.tone ? " " + s.tone : ""), text: s ? s.status : (f.closed ? `Closed: ${CLOSED_TEXT[f.closed] || f.closed}` : "Status not available") }),
+      el("span", { class: "firm-last", text: s ? (s.last ? `${KIND_LABEL[s.last.kind] || s.last.kind} · ${fmtDay(s.last.happened_on, today)}` : "Nothing sent yet") : "" }),
+    ]);
+    const card = el("div", { class: "firm", "data-firm": String(f.id) }, [head]);
+    if (!open) return card;
+    const body = el("div", { class: "firm-body" });
+    const em = safeEmail(f.lead_email);
+    body.append(el("div", { class: "details" }, [
+      detail("Lead", f.lead_name ? el("span", { text: f.lead_name + (f.lead_role ? ` · ${f.lead_role}` : "") }) : (f.lead_role ? el("span", { text: f.lead_role }) : null)),
+      detail("Email", f.lead_email ? (em ? el("a", { class: "link", href: `mailto:${em}`, text: em }) : el("span", { text: f.lead_email })) : null),
+      detail("LinkedIn", f.lead_linkedin ? linkOrText(f.lead_linkedin, "LinkedIn profile") : null),
+      detail("Website", f.website ? linkOrText(f.website) : null),
+      detail("Route", el("span", { text: ROUTE_LABEL[f.route] || f.route })),
+      detail("CV version", f.cv_version ? el("span", { text: f.cv_version }) : null),
+      detail("Location", f.location ? el("span", { text: f.location }) : null),
+      detail("Notes", f.notes ? el("span", { text: f.notes, style: "white-space: pre-wrap" }) : null),
+    ]));
+    const ts = touchesOf(f.id).slice().sort(byOrder).reverse();
+    body.append(el("h3", { text: "Timeline" }));
+    if (!data.touches) body.append(el("p", { class: "msg", text: "Not available until what you've sent loads." }));
+    else if (!ts.length) body.append(el("p", { class: "msg", text: "Nothing logged yet." }));
+    else {
+      const all = view.showAll.has(f.id), shownT = all ? ts : ts.slice(0, RECENT_TOUCHES_SHOWN);
+      body.append(el("ul", { class: "timeline" }, shownT.map((t) => el("li", null, [el("span", { text: `${fmtDay(t.happened_on, today)} · ${KIND_LABEL[t.kind] || t.kind}` }), t.note ? el("div", { class: "tnote", text: t.note }) : null]))));
+      if (ts.length > RECENT_TOUCHES_SHOWN) body.append(el("button", { type: "button", class: "btn", text: all ? "Show fewer" : `Show all ${ts.length}`, onclick: () => { all ? view.showAll.delete(f.id) : view.showAll.add(f.id); render(); } }));
+    }
+    body.append(el("h3", { text: "Log" }));
+    const quick = el("div", { class: "quick" });
+    for (const [kind, label] of QUICK) quick.append(el("button", { type: "button", class: "btn", text: label, onclick: () => openLog(f, kind) }));
+    if (f.closed) quick.append(el("button", { type: "button", class: "btn", text: "Reopen", onclick: () => openClose(f, null) }));
+    else for (const [reason, label] of CLOSES) quick.append(el("button", { type: "button", class: "btn", text: label, onclick: () => openClose(f, reason) }));
+    body.append(quick);
+    const form = view.forms.get(f.id);
+    if (form) body.append(form.node);
+    const note = view.notes.get(f.id);
+    if (note) body.append(el("p", { class: note.ok ? "ok" : "err", text: note.text, role: "status" }));
+    body.append(el("div", { class: "row-actions" }, [
+      el("button", { type: "button", class: "btn", text: "Edit", onclick: () => openFirmForm(f) }),
+      el("button", { type: "button", class: "btn danger", text: "Delete firm", onclick: () => deleteFirm(f) }),
+    ]));
+    card.append(body);
+    return card;
+  }
+  const QUICK = [["email", "Email sent"], ["linkedin_request", "LinkedIn request"], ["form", "Form submitted"], ["follow_up", "Follow-up sent"],
+                 ["reply", "Reply received"], ["call_booked", "Call booked"], ["call_done", "Call done"], ["referral", "Referral/intro"]];
+  const CLOSES = [["no_response", "Close: no response"], ["declined", "Close: declined"], ["dead_end", "Close: dead end"]];
+  const MIN_DATE = "2000-01-01";
+  const SAVE_FAILED = "Couldn't save. Check your connection, then Retry.";
+
+  // ---- quick log: a touch ----
+  function openLog(f, kind) {
+    view.notes.delete(f.id);
+    if (!data.touches) { view.forms.delete(f.id); view.notes.set(f.id, { ok: false, text: "What you've sent hasn't loaded yet. Retry it above first." }); render(); return; }
+    if (kind === "follow_up" && !touchesOf(f.id).some((t) => t.kind === "email")) {
+      view.forms.delete(f.id); view.notes.set(f.id, { ok: false, text: "Log the first email before a follow-up." }); render(); return;
+    }
+    const today = londonToday();
+    const date = el("input", { class: "input", type: "date", value: today, max: today, min: MIN_DATE, "aria-label": "Date" });
+    const note = el("input", { class: "input", type: "text", maxlength: "500", autocomplete: "off", "aria-label": "Note (optional)" });
+    const err = el("p", { class: "err", hidden: true, role: "alert" });
+    const save = el("button", { type: "button", class: "btn primary", text: "Save" });
+    const node = el("div", { class: "inline-form", "data-form": "log" }, [
+      el("div", { text: KIND_LABEL[kind], style: "font-weight: 700" }),
+      el("label", { class: "field", text: "Date" }), date,
+      el("label", { class: "field", text: "Note (optional)" }), note, err,
+      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => { view.forms.delete(f.id); render(); } })]),
+    ]);
+    save.addEventListener("click", async () => {
+      const d = date.value, today2 = londonToday();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d < MIN_DATE || d > today2) { err.textContent = "Choose a date from 1 Jan 2000 to today."; show(err, true); return; }
+      if (kind === "follow_up" && touchesOf(f.id).some((t) => t.kind === "follow_up") && !confirm("You've already followed up once. Log another anyway?")) return;
+      save.disabled = true; show(err, false);
+      let r;
+      try { r = await sb.from("outreach_touches").insert({ user_id: await getUserId(), firm_id: f.id, kind, happened_on: d, note: note.value.trim() || null }).select(TOUCH_COLS).single(); }
+      catch (e) { r = { error: e }; }
+      save.disabled = false;
+      if (r.error || !r.data) { err.textContent = SAVE_FAILED; save.textContent = "Retry"; show(err, true); return; }
+      data.touches.push(normTouch(r.data)); regroup();
+      view.forms.delete(f.id); view.notes.set(f.id, { ok: true, text: "Saved" }); render();
+    });
+    view.forms.set(f.id, { node }); render();
+  }
+  // ---- quick log: close or reopen (firms.closed) ----
+  function openClose(f, reason) {
+    view.notes.delete(f.id);
+    const err = el("p", { class: "err", hidden: true, role: "alert" });
+    const save = el("button", { type: "button", class: "btn primary", text: reason ? "Close firm" : "Reopen" });
+    const node = el("div", { class: "inline-form", "data-form": "close" }, [
+      el("div", { text: reason ? `Close ${f.name} as ${CLOSED_TEXT[reason]}?` : `Reopen ${f.name}?` }), err,
+      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => { view.forms.delete(f.id); render(); } })]),
+    ]);
+    save.addEventListener("click", async () => {
+      save.disabled = true; show(err, false);
+      let r;
+      try { r = await sb.from("outreach_firms").update({ closed: reason }).eq("id", f.id); } catch (e) { r = { error: e }; }
+      save.disabled = false;
+      if (r.error) { err.textContent = SAVE_FAILED; save.textContent = "Retry"; show(err, true); return; }
+      f.closed = reason; view.forms.delete(f.id); view.notes.set(f.id, { ok: true, text: "Saved" }); render();
+    });
+    view.forms.set(f.id, { node }); render();
+  }
+  async function deleteFirm(f) {
+    if (!confirm(`Delete ${f.name}? Everything logged for it is deleted too.`)) return;
+    let r;
+    try { r = await sb.from("outreach_firms").delete().eq("id", f.id); } catch (e) { r = { error: e }; }
+    if (r.error) { view.notes.set(f.id, { ok: false, text: "Couldn't delete. Check your connection and try again." }); render(); return; }
+    data.firms = data.firms.filter((x) => x.id !== f.id);
+    if (data.touches) { data.touches = data.touches.filter((t) => t.firm_id !== f.id); regroup(); }
+    view.open.delete(f.id); view.forms.delete(f.id); view.notes.delete(f.id); render();
+  }
+
+  // ---- add and edit a firm ----
+  const FIELDS = [   // [column, label, max, kind]
+    ["name", "Firm name", 80, "text"], ["firm_type", "Type", 0, "type"], ["priority", "Priority", 0, "priority"], ["route", "Route", 0, "route"],
+    ["location", "Location", 80, "text"], ["website", "Website", 300, "url"], ["lead_name", "Lead name", 80, "text"], ["lead_role", "Lead role", 120, "text"],
+    ["lead_email", "Lead email", 200, "email"], ["lead_linkedin", "Lead LinkedIn", 300, "url"], ["cv_version", "CV version", 60, "cv"], ["notes", "Notes", 2000, "notes"],
+  ];
+  const CV_OPTIONS = ["Boutique M&A", "Investor side", "IB/Markets", "Generic finance"];
+  const OPTIONS = { type: [["boutique", "Boutique"], ["investor", "Investor"], ["other", "Other"]], priority: [["1", "P1"], ["2", "P2"], ["3", "P3"]],
+                    route: [["email", "Email"], ["form", "Form"], ["linkedin", "LinkedIn"], ["referral", "Referral"]] };
+  const DEFAULTS = { firm_type: "boutique", priority: 2, route: "email" };
+  const nameKey = (s) => String(s || "").trim().toLowerCase();
+  const DUP_NAME = "That firm is already in your list";
+  // The insert payload: exactly these columns, empty strings as null.
+  function firmPayload(values) {
+    const p = { user_id: values.user_id };
+    for (const [col] of FIELDS) {
+      let v = values[col];
+      if (typeof v === "string") v = v.trim();
+      if (col === "priority") v = Number(v);
+      p[col] = v === "" || v === undefined ? null : v;
+    }
+    return { user_id: p.user_id, name: p.name, firm_type: p.firm_type, priority: p.priority, route: p.route, website: p.website, location: p.location, lead_name: p.lead_name,
+             lead_role: p.lead_role, lead_email: p.lead_email, lead_linkedin: p.lead_linkedin, cv_version: p.cv_version, notes: p.notes };
+  }
+  function validateFirm(values, selfId) {
+    const errs = {};
+    const name = String(values.name || "").trim();
+    if (!name) errs.name = "Enter the firm's name.";
+    else if (name.length > 80) errs.name = "At most 80 characters.";
+    else if ((data.firms || []).some((x) => x.id !== selfId && nameKey(x.name) === nameKey(name))) errs.name = DUP_NAME;
+    for (const [col, , max, kind] of FIELDS) {
+      const v = String(values[col] === null || values[col] === undefined ? "" : values[col]).trim();
+      if (col !== "name" && max && v.length > max) errs[col] = `At most ${max} characters.`;
+      else if (kind === "url" && v && !/^https?:\/\//i.test(v)) errs[col] = "Must start with https:// or http://";
+      else if (kind === "email" && v && !EMAIL_RE.test(v)) errs[col] = "Enter an email like name@firm.com";
+    }
+    return errs;
+  }
+  let firmForm = null;   // { firm, inputs }
+  function openFirmForm(f) {
+    const card = $("firm-form-card"), inputs = {}, errs = {};
+    const rows = [];
+    for (const [col, label, max, kind] of FIELDS) {
+      let input;
+      if (OPTIONS[kind]) input = el("select", { class: "input", id: `ff-${col}` }, OPTIONS[kind].map(([v, t]) => el("option", { value: v, text: t })));
+      else if (kind === "notes") input = el("textarea", { class: "input", id: `ff-${col}`, maxlength: String(max) });
+      else input = el("input", { class: "input", id: `ff-${col}`, type: kind === "email" ? "email" : kind === "url" ? "url" : "text", maxlength: String(max), autocomplete: "off", list: kind === "cv" ? "cv-options" : null });
+      const v = f ? f[col] : DEFAULTS[col];
+      input.value = v === null || v === undefined ? "" : String(v);
+      inputs[col] = input; errs[col] = el("p", { class: "err", hidden: true, id: `ff-${col}-err` });
+      rows.push(el("div", null, [el("label", { class: "field", for: `ff-${col}`, text: label + (col === "name" ? " (required)" : "") }), input, errs[col]]));
+    }
+    const msg = el("p", { class: "err", hidden: true, role: "alert" });
+    const save = el("button", { type: "button", class: "btn primary", text: f ? "Save changes" : "Add firm" });
+    card.replaceChildren(el("h2", { text: f ? `Edit ${f.name}` : "Add a firm" }), el("datalist", { id: "cv-options" }, CV_OPTIONS.map((o) => el("option", { value: o }))),
+      el("div", { class: "grid2" }, rows), msg,
+      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: closeFirmForm })]));
+    firmForm = { firm: f, inputs };
+    save.addEventListener("click", async () => {
+      const values = Object.fromEntries(Object.entries(inputs).map(([k, i]) => [k, i.value]));
+      const bad = validateFirm(values, f ? f.id : null);
+      for (const col of Object.keys(errs)) { errs[col].textContent = bad[col] || ""; show(errs[col], !!bad[col]); inputs[col].setAttribute("aria-invalid", bad[col] ? "true" : "false"); }
+      show(msg, false);
+      if (Object.keys(bad).length) return;
+      save.disabled = true;
+      const payload = firmPayload({ ...values, user_id: await getUserId().catch(() => null) });
+      let r;
+      try {
+        if (f) {
+          const changed = {};
+          for (const [col] of FIELDS) if ((payload[col] ?? null) !== (f[col] ?? null)) changed[col] = payload[col];
+          if (!Object.keys(changed).length) { save.disabled = false; closeFirmForm(); return; }
+          r = await sb.from("outreach_firms").update(changed).eq("id", f.id);
+          if (!r.error) Object.assign(f, changed);
+        } else {
+          r = await sb.from("outreach_firms").insert(payload).select(FIRM_COLS).single();
+          if (!r.error && r.data) data.firms.push(normFirm(r.data));
+        }
+      } catch (e) { r = { error: e }; }
+      save.disabled = false;
+      if (r.error) {
+        if (r.error.code === "23505") { errs.name.textContent = DUP_NAME; show(errs.name, true); return; }
+        msg.textContent = SAVE_FAILED; show(msg, true); save.textContent = "Retry"; return;
+      }
+      closeFirmForm(); if (f) view.notes.set(f.id, { ok: true, text: "Saved" }); render();
+    });
+    show(card, true); show($("import-card"), false);
+    card.scrollIntoView({ block: "nearest" });
+  }
+  function closeFirmForm() { firmForm = null; $("firm-form-card").replaceChildren(); show($("firm-form-card"), false); }
+
+  // ---- import ----
+  const TARGETS = [["name", "Firm name"], ["firm_type", "Type"], ["priority", "Priority"], ["route", "Route"], ["location", "Location"], ["website", "Website"],
+                   ["lead_name", "Lead name"], ["lead_role", "Lead role"], ["lead_email", "Lead email"], ["lead_linkedin", "Lead LinkedIn"], ["cv_version", "CV version"],
+                   ["notes", "Notes"], ["", "Ignore"]];
+  const SYNONYMS = {
+    name: ["firm", "firm name", "firmname", "company", "company name", "name", "organisation", "organization", "bank", "fund", "boutique"],
+    firm_type: ["type", "firm type", "category", "kind", "sector type"], priority: ["priority", "prio", "tier", "rank"],
+    route: ["route", "channel", "method", "approach", "contact method", "how"], location: ["location", "city", "office", "country", "hq", "based"],
+    website: ["website", "site", "url", "web", "homepage"], lead_name: ["lead", "lead name", "contact", "contact name", "person", "who"],
+    lead_role: ["role", "lead role", "title", "job title", "position"], lead_email: ["email", "e-mail", "lead email", "contact email", "mail", "email address"],
+    lead_linkedin: ["linkedin", "lead linkedin", "linkedin url", "linkedin profile", "profile"], cv_version: ["cv", "cv version", "resume", "cv used"],
+    notes: ["notes", "note", "comments", "comment", "remarks"],
+  };
+  const MAX = Object.fromEntries(FIELDS.filter((x) => x[2]).map((x) => [x[0], x[2]]));
+  const normHeader = (h) => String(h).trim().toLowerCase().replace(/[_\-]+/g, " ").replace(/\s+/g, " ");
+  function guessMapping(headers) {
+    const used = new Set();
+    return headers.map((h) => {
+      const k = normHeader(h);
+      for (const [col, list] of Object.entries(SYNONYMS)) if (!used.has(col) && list.map(normHeader).includes(k)) { used.add(col); return col; }
+      return "";
+    });
+  }
+  // Parse a paste: tabs in the first line mean TSV, otherwise CSV. Double quotes wrap fields (with delimiters, newlines and "" inside).
+  function parsePaste(text) {
+    const src = String(text).replace(/\r\n?/g, "\n");
+    const firstLine = src.split("\n").find((l) => l.trim() !== "") || "";
+    const delim = firstLine.includes("\t") ? "\t" : ",";
+    const rows = []; let row = [], field = "", inQ = false, i = 0;
+    while (i < src.length) {
+      const c = src[i];
+      if (inQ) {
+        if (c === '"') { if (src[i + 1] === '"') { field += '"'; i += 2; continue; } inQ = false; i++; continue; }
+        field += c; i++; continue;
+      }
+      if (c === '"' && field === "") { inQ = true; i++; continue; }
+      if (c === delim) { row.push(field); field = ""; i++; continue; }
+      if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; i++; continue; }
+      field += c; i++;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    // Blank lines are skipped, but each row keeps its position in the paste (the header is row 1), so messages name the right row.
+    const numbered = rows.map((r, k) => ({ r, n: k + 1 })).filter((x) => x.r.some((c) => c.trim() !== ""));
+    const head = numbered[0], data_ = numbered.slice(1);
+    return { delim: delim === "\t" ? "tsv" : "csv", headers: head ? head.r.map((h) => h.trim()) : [], rows: data_.map((x) => x.r), rowNos: data_.map((x) => x.n - head.n + 1) };
+  }
+  function mapType(v) {
+    const s = v.trim().toLowerCase(); if (!s) return { v: DEFAULTS.firm_type };
+    if (/investor|fund|private equity|^pe$|^vc$|venture/.test(s)) return { v: "investor" };
+    if (/boutique|m&a|m & a|advisory|bank/.test(s)) return { v: "boutique" };
+    if (s === "other") return { v: "other" };
+    return { v: DEFAULTS.firm_type, warn: `type "${v.trim()}" not recognised, using Boutique` };
+  }
+  function mapPriority(v) {
+    const s = v.trim().toLowerCase(); if (!s) return { v: DEFAULTS.priority };
+    const m = /^p?([1-3])$/.exec(s); if (m) return { v: Number(m[1]) };
+    const abc = { a: 1, b: 2, c: 3, high: 1, medium: 2, med: 2, low: 3 }[s]; if (abc) return { v: abc };
+    return { v: DEFAULTS.priority, warn: `priority "${v.trim()}" not recognised, using P2` };
+  }
+  function mapRoute(v) {
+    const s = v.trim().toLowerCase(); if (!s) return { v: DEFAULTS.route };
+    if (/^(email|e-mail|mail|cold email)$/.test(s)) return { v: "email" };
+    if (/form/.test(s)) return { v: "form" };
+    if (/linkedin|^li$/.test(s)) return { v: "linkedin" };
+    if (/referral|intro/.test(s)) return { v: "referral" };
+    return { v: DEFAULTS.route, warn: `route "${v.trim()}" not recognised, using Email` };
+  }
+  // Rows -> { valid: [{rowNo, values}], dups: [{rowNo, reason}], problems: [{rowNo, reasons}], warnings: [{rowNo, text}] }. Row numbers count the header as row 1.
+  function planImport(parsed, mapping, existing) {
+    const out = { valid: [], dups: [], problems: [], warnings: [], preview: [] };
+    const seen = new Map(), have = new Set(existing.map((f) => nameKey(f.name)));
+    parsed.rows.forEach((cells, k) => {
+      const rowNo = parsed.rowNos ? parsed.rowNos[k] : k + 2, v = { firm_type: "", priority: "", route: "" };
+      mapping.forEach((col, j) => { if (col) v[col] = String(cells[j] === undefined ? "" : cells[j]).trim(); });
+      const reasons = [], warns = [];
+      const t = mapType(v.firm_type || ""), p = mapPriority(String(v.priority || "")), r = mapRoute(v.route || "");
+      for (const x of [t, p, r]) if (x.warn) warns.push(x.warn);
+      const vals = { ...v, firm_type: t.v, priority: p.v, route: r.v };
+      if (!vals.name) reasons.push("blank name");
+      for (const [col, max] of Object.entries(MAX)) if (vals[col] && String(vals[col]).length > max) reasons.push(`${col === "name" ? "name" : TARGETS.find((x) => x[0] === col)[1].toLowerCase()} too long (max ${max})`);
+      for (const col of ["website", "lead_linkedin"]) if (vals[col] && !/^https?:\/\//i.test(vals[col])) reasons.push(`bad ${col === "website" ? "website" : "LinkedIn"} URL (must start with https:// or http://)`);
+      if (vals.lead_email && !EMAIL_RE.test(vals.lead_email)) reasons.push("bad email");
+      if (out.preview.length < 10) out.preview.push({ rowNo, vals });
+      if (reasons.length) { out.problems.push({ rowNo, reasons }); return; }
+      const key = nameKey(vals.name);
+      if (have.has(key)) { out.dups.push({ rowNo, reason: "already in your list" }); return; }
+      if (seen.has(key)) { out.dups.push({ rowNo, reason: `repeated in the paste (row ${seen.get(key)})` }); return; }
+      seen.set(key, rowNo);
+      for (const w of warns) out.warnings.push({ rowNo, text: w });
+      out.valid.push({ rowNo, vals });
+    });
+    return out;
+  }
+  const imp = { text: "", parsed: null, mapping: null, plan: null, failed: null, busy: false, result: null };
+  function openImport() { closeFirmForm(); show($("import-card"), true); renderImport(); $("import-card").scrollIntoView({ block: "nearest" }); }
+  function renderImport() {
+    const card = $("import-card"), parts = [el("h2", { text: "Import firms" })];
+    const ta = el("textarea", { class: "input", id: "import-text", "aria-label": "Paste your spreadsheet here, including the header row", placeholder: "Paste your spreadsheet here, including the header row" });
+    ta.value = imp.text;
+    parts.push(el("label", { class: "field", for: "import-text", text: "Paste your spreadsheet here, including the header row" }), ta);
+    const msg = el("p", { class: "err", id: "import-msg", hidden: true, role: "alert" });
+    parts.push(msg, el("div", { class: "row-actions" }, [
+      el("button", { type: "button", class: "btn primary", text: "Read paste", onclick: () => {
+        imp.text = ta.value; imp.plan = null; imp.failed = null; imp.result = null;
+        const parsed = parsePaste(imp.text);
+        if (!parsed.headers.length) { imp.parsed = null; renderImport(); const m = $("import-msg"); m.textContent = "Nothing to read. Paste the header row and your rows."; show(m, true); return; }
+        if (parsed.rows.length > IMPORT_MAX_ROWS) { imp.parsed = null; renderImport(); const m = $("import-msg"); m.textContent = `That's ${parsed.rows.length} rows. Import at most ${IMPORT_MAX_ROWS} at a time: nothing was imported.`; show(m, true); return; }
+        imp.parsed = parsed; imp.mapping = guessMapping(parsed.headers); renderImport();
+      } }),
+      el("button", { type: "button", class: "btn", text: "Close", onclick: () => show(card, false) }),
+    ]));
+    if (imp.parsed) {
+      parts.push(el("h3", { text: `Step 2: match your columns (${imp.parsed.delim === "tsv" ? "tab-separated" : "comma-separated"}, ${plural(imp.parsed.rows.length, "row", "rows")})` }));
+      const tbody = el("tbody", null, imp.parsed.headers.map((h, j) => {
+        const sel = el("select", { class: "input", "aria-label": `Field for column ${h || j + 1}`, "data-col": String(j) }, TARGETS.map(([v, t]) => el("option", { value: v, text: t })));
+        sel.value = imp.mapping[j] || "";
+        sel.addEventListener("change", () => { imp.mapping[j] = sel.value; imp.plan = null; renderImport(); });
+        return el("tr", null, [el("td", { text: h || `(column ${j + 1})` }), el("td", null, [sel])]);
+      }));
+      parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table" }, [el("thead", null, [el("tr", null, [el("th", { text: "Your column" }), el("th", { text: "Field" })])]), tbody])]));
+      const hasName = imp.mapping.includes("name");
+      if (!hasName) parts.push(el("p", { class: "err", text: "Map a column to Firm name to continue." }));
+      parts.push(el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", text: "Continue", disabled: !hasName, onclick: () => { imp.plan = planImport(imp.parsed, imp.mapping, data.firms || []); renderImport(); } })]));
+    }
+    if (imp.plan) {
+      const p = imp.plan;
+      parts.push(el("h3", { text: "Step 3: check and import" }));
+      parts.push(el("p", { id: "import-summary", text: `${plural(p.valid.length, "row", "rows")} to import · ${plural(p.dups.length, "row", "rows")} skipped as duplicates · ${plural(p.problems.length, "row", "rows")} with problems · ${plural(p.warnings.length, "warning", "warnings")}` }));
+      const cols = TARGETS.filter(([c]) => c && imp.mapping.includes(c));
+      parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table" }, [
+        el("thead", null, [el("tr", null, [el("th", { text: "Row" }), ...cols.map(([, t]) => el("th", { text: t }))])]),
+        el("tbody", null, p.preview.map((r) => el("tr", null, [el("td", { text: String(r.rowNo) }), ...cols.map(([c]) => el("td", { text: r.vals[c] === undefined || r.vals[c] === null ? "" : String(r.vals[c]) }))]))),
+      ])]));
+      const lists = [["Skipped as duplicates", p.dups.map((d) => `Row ${d.rowNo}: ${d.reason}`)], ["Problems (not imported)", p.problems.map((x) => `Row ${x.rowNo}: ${x.reasons.join("; ")}`)],
+                     ["Warnings (imported with the default)", p.warnings.map((w) => `Row ${w.rowNo}: ${w.text}`)]];
+      for (const [title, items] of lists) if (items.length) parts.push(el("h3", { text: title }), el("ul", { class: "problems", "data-list": title }, items.map((t) => el("li", { text: t }))));
+      parts.push(el("p", { class: "msg", text: "Row numbers count the header as row 1." }));
+      const todo = imp.failed || (imp.result && imp.result.ok ? [] : p.valid);   // after a complete import there's nothing left to send
+      const btn = el("button", { type: "button", class: "btn primary", id: "import-confirm", text: imp.failed ? `Retry ${plural(imp.failed.length, "row", "rows")}` : "Confirm import", disabled: imp.busy || !todo.length, onclick: () => runImport(todo) });
+      parts.push(el("div", { class: "row-actions" }, [btn]));
+      if (imp.result) parts.push(el("p", { class: imp.result.ok ? "ok" : "err", id: "import-result", text: imp.result.text, role: "status" }));
+    }
+    card.replaceChildren(...parts);
+  }
+  async function runImport(rows) {
+    if (imp.busy || !rows.length) return;
+    imp.busy = true; renderImport();
+    const uid = await getUserId().catch(() => null), failed = [];
+    let done = 0;
+    for (let k = 0; k < rows.length; k += IMPORT_BATCH) {
+      const batch = rows.slice(k, k + IMPORT_BATCH);
+      let r;
+      try { r = await sb.from("outreach_firms").insert(batch.map((x) => firmPayload({ ...x.vals, user_id: uid }))).select(FIRM_COLS); } catch (e) { r = { error: e }; }
+      if (r.error || !r.data) { failed.push(...batch); continue; }
+      data.firms.push(...r.data.map(normFirm)); done += r.data.length;
+    }
+    imp.busy = false;
+    const span = (rs) => rs.map((x) => x.rowNo).join(", ");
+    imp.failed = failed.length ? failed : null;
+    imp.result = failed.length
+      ? { ok: false, text: `Imported ${plural(done, "firm", "firms")}. ${plural(failed.length, "row wasn't", "rows weren't")} imported (rows ${span(failed)}): Retry sends only those.` }
+      : { ok: true, text: `Imported ${plural(done, "firm", "firms")}.` };
+    renderImport(); render();
+  }
+
+  // ---- toolbar ----
+  $("search").addEventListener("input", (e) => { view.q = e.target.value; render(); });
+  $("f-priority").addEventListener("change", (e) => { view.priority = e.target.value; render(); });
+  $("f-type").addEventListener("change", (e) => { view.type = e.target.value; render(); });
+  $("f-sort").addEventListener("change", (e) => { view.sort = e.target.value; render(); });
+  $("add-open").addEventListener("click", () => openFirmForm(null));
+  $("import-open").addEventListener("click", openImport);
+
+  window.Firms = { BANK_HOLIDAYS, FOLLOW_UP_DAYS, OVERDUE_DAYS, NO_RESPONSE_DAYS, londonToday, addDays, isBusinessDay, businessDaysAfter, businessDaysBetween, fmtDay,
+                   firmState, summary, dueOrder, SORTS, safeUrl, safeEmail, parsePaste, guessMapping, planImport, mapType, mapPriority, mapRoute, firmPayload, validateFirm, data, view };
+
+  let started = false;
+  sb.auth.onAuthStateChange((event, session) => {
+    document.getElementById("login-gate").style.display = session ? "none" : "block";
+    document.getElementById("app-content").style.display = session ? "block" : "none";
+    if (session && !started) { started = true; render(); loadFirms(); loadTouches(); }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+</script>
+<script src="site-nav.js?v=1"></script>
+</body>
+</html>
