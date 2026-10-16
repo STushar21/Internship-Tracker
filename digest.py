@@ -34,6 +34,28 @@ HEADERS = {
 today = date.today()
 soon_cutoff = today + timedelta(days=LOOKAHEAD_DAYS)
 
+# The tracker's stage order (identical to STAGES in tracker.html).
+TRACKER_STAGES = ["Researching", "Applied", "Online Tests", "Video Interview", "Assessment Centre", "Final Round", "Offer"]
+
+
+def still_to_submit(app):
+    """An application whose deadline still matters: not closed, no applied date, a stage before "Applied"
+    (an unknown or missing stage counts as the first one, as the tracker shows it), and a closing date.
+    The same rule as Next up on the home page."""
+    stage = app.get("stage")
+    i = TRACKER_STAGES.index(stage) if stage in TRACKER_STAGES else 0
+    applied = app.get("applied_date")
+    return (not app.get("closed")) and not (applied and str(applied).strip()) and i < TRACKER_STAGES.index("Applied") and bool(app.get("deadline"))
+
+
+def select_items(apps, contacts, today_iso, cutoff_iso):
+    """What the email lists, without network, secrets or sending: applications still to submit closing on or
+    before the cutoff (overdue included), and open follow-ups due on or before today. Order is kept."""
+    return (
+        [a for a in apps if still_to_submit(a) and a["deadline"] <= cutoff_iso],
+        [c for c in contacts if c.get("closed") is None and c.get("next_follow_up") and c["next_follow_up"] <= today_iso],
+    )
+
 
 def fetch_closing_soon():
     """Applications that are open (not closed) with a deadline on or before
@@ -41,7 +63,7 @@ def fetch_closing_soon():
     too, since there's no lower bound on the date filter."""
     query = (
         f"{SUPABASE_URL}/rest/v1/applications"
-        f"?select=company,role,deadline"
+        f"?select=company,role,deadline,stage,applied_date,closed"
         f"&closed=is.null"
         f"&deadline=not.is.null"
         f"&deadline=lte.{soon_cutoff.isoformat()}"
@@ -57,7 +79,7 @@ def fetch_followups_due():
     before today — due today or overdue."""
     query = (
         f"{SUPABASE_URL}/rest/v1/contacts"
-        f"?select=name,firm,next_follow_up"
+        f"?select=name,firm,next_follow_up,closed"
         f"&closed=is.null"
         f"&next_follow_up=not.is.null"
         f"&next_follow_up=lte.{today.isoformat()}"
@@ -100,8 +122,7 @@ def send_email(subject, body):
 
 
 def main():
-    closing_soon = fetch_closing_soon()
-    followups_due = fetch_followups_due()
+    closing_soon, followups_due = select_items(fetch_closing_soon(), fetch_followups_due(), today.isoformat(), soon_cutoff.isoformat())
 
     # Nothing to report — skip sending so the inbox doesn't fill with empty digests
     if not closing_soon and not followups_due:
