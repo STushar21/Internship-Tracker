@@ -114,83 +114,70 @@
   .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
   #logout-btn { background: none; border: 1px solid #D8DADD; color: #5A5650; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; }
 
-  /* --- this page --- */
+  /* --- the board --- */
   .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 12px; }
   .back-link:hover { text-decoration: underline; }
   .card { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-  .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 8px 0 16px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0 16px; }
   .stat { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 10px; padding: 10px 12px; min-width: 0; }
   .stat-num { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 24px; font-variant-numeric: tabular-nums; }
   .stat-label { font-size: 12px; color: #5A5650; overflow-wrap: anywhere; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
   .toolbar .search { flex: 1 1 220px; min-width: 0; }
+  .toolbar select.input { width: auto; flex: 0 1 auto; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .chip { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid #8B6B49; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .chip[aria-pressed="true"] { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
   .input, select.input, textarea.input { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #767067; border-radius: 8px; background: #FFFFFF; color: #1A1A18; font-family: inherit; font-size: 16px; }
   textarea.input { min-height: 88px; resize: vertical; }
-  .toolbar select.input { width: auto; flex: 0 1 auto; }
   .field { display: block; font-size: 13px; font-weight: 600; color: #5A5650; margin: 10px 0 4px; }
   .btn { min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #8B6B49; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .btn.primary { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
   .btn.danger { border-color: #8A3A2E; color: #8A3A2E; }
   .btn:disabled { opacity: 0.6; cursor: default; }
-  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+  .btn:focus-visible, .chip:focus-visible, .input:focus-visible, .back-link:focus-visible, .link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
   .err { color: #8A3A2E; font-size: 13px; margin: 6px 0 0; }
   .ok { color: #2F6B4F; font-size: 13px; font-weight: 600; margin: 6px 0 0; }
   .msg { font-size: 14px; color: #5A5650; padding: 16px 0; }
+  .hint { font-size: 13px; color: #5A5650; }
   .banner { background: #FFFFFF; border: 1px solid #8A3A2E; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; color: #8A3A2E; font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .firm { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; margin-bottom: 10px; }
-  .firm-head { display: block; width: 100%; min-height: 44px; text-align: left; background: none; border: none; padding: 12px 14px; font-family: inherit; color: #1A1A18; cursor: pointer; }
-  .firm-head:focus-visible, .btn:focus-visible, .chip:focus-visible, .input:focus-visible, .back-link:focus-visible, .link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
-  .firm-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
-  .firm-name { font-weight: 700; font-size: 16px; overflow-wrap: anywhere; }
-  .badge { font-size: 12px; font-weight: 700; color: #6F5439; border: 1px solid #8B6B49; border-radius: 10px; padding: 1px 8px; }
-  .firm-type { font-size: 13px; color: #5A5650; }
-  .firm-status { display: block; font-size: 14px; margin-top: 4px; color: #1A1A18; }
-  .firm-status.due { color: #6F5439; font-weight: 700; }
-  .firm-status.overdue { color: #8A3A2E; font-weight: 700; }
-  .firm-last { display: block; font-size: 13px; color: #5A5650; margin-top: 2px; }
-  .firm-body { padding: 0 14px 14px; border-top: 1px solid #EFE8DA; }
-  .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin-top: 12px; font-size: 14px; }
-  .details div { min-width: 0; overflow-wrap: anywhere; }
-  .details span.k { display: block; font-size: 12px; color: #5A5650; }
-  .link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-weight: 600; overflow-wrap: anywhere; }
-  .timeline { list-style: none; padding: 0; margin: 6px 0 0; font-size: 14px; }
-  .timeline li { padding: 6px 0; border-bottom: 1px solid #EFE8DA; overflow-wrap: anywhere; }
-  .timeline .tnote { color: #5A5650; font-size: 13px; }
-  .quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .inline-form { background: #F8F4EA; border: 1px solid #E3DAC4; border-radius: 10px; padding: 12px; margin-top: 10px; }
+  .board { list-style: none; padding: 0; margin: 0; }
+  .row { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; margin-bottom: 8px; padding: 10px 12px; font-size: 14px; overflow-wrap: anywhere; }
+  .badge { font-size: 12px; font-weight: 700; color: #6F5439; border: 1px solid #8B6B49; border-radius: 10px; padding: 1px 8px; white-space: nowrap; }
+  .name { font-weight: 700; font-size: 16px; }
+  .status { font-weight: 600; }
+  .when { color: #5A5650; }
+  .follow.due { font-weight: 700; color: #6F5439; }
+  .follow.overdue { font-weight: 700; color: #8A3A2E; }
+  .links { display: flex; flex-wrap: wrap; gap: 0 14px; }
+  .link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-weight: 600; }
+  .plain { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; }
+  .l1 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .l2, .l3 { margin-top: 2px; }
+  .head-row { display: none; }
+  .dk { display: none; }
+  .edit-panel { background: #F8F4EA; border: 1px solid #E3DAC4; border-radius: 10px; padding: 12px; margin-top: 10px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+  .with-btn { display: flex; gap: 8px; align-items: center; }
+  .with-btn .input { flex: 1 1 auto; min-width: 0; }
+  .with-btn .btn { flex: 0 0 auto; white-space: nowrap; }
+  .suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
   .import-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
   .import-table th, .import-table td { text-align: left; padding: 6px; border-bottom: 1px solid #EFE8DA; vertical-align: top; overflow-wrap: anywhere; }
   .table-wrap { overflow-x: auto; max-width: 100%; }
+  /* The preview has up to ten columns: on phones it scrolls sideways inside .table-wrap instead of breaking words letter by letter */
+  .import-table.preview th, .import-table.preview td { min-width: 8em; overflow-wrap: break-word; }
+  .import-table.preview th:first-child, .import-table.preview td:first-child { min-width: 0; }
   .problems { font-size: 14px; padding-left: 18px; }
-  .reasoning { font-size: 14px; color: #1A1A18; margin: 12px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .plan ol.steps { list-style: none; padding: 0; margin: 6px 0 0; }
-  .step { border: 1px solid #E3DAC4; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; overflow-wrap: anywhere; }
-  .step-head { font-weight: 700; }
-  .step-line { margin-top: 2px; }
-  .step-overdue { margin-top: 2px; color: #8A3A2E; font-weight: 700; }
-  .step-msg summary, .help summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: #6F5439; font-weight: 600; }
-  .step-subject { font-weight: 600; margin: 4px 0; }
-  .step-body { white-space: pre-wrap; overflow-wrap: anywhere; background: #F8F4EA; border-radius: 8px; padding: 8px 10px; }
-  .step-tools, .step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-  .step-note { font-size: 13px; color: #5A5650; }
-  .step-warn { font-size: 13px; font-weight: 700; color: #8A3A2E; }
-  .step-unlinked { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; padding: 8px 10px; border: 1px solid #8A3A2E; border-radius: 8px; color: #8A3A2E; font-size: 14px; font-weight: 600; }
-  .link-btn { display: inline-flex; align-items: center; text-decoration: none; }
-  label.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; }
-  label.check input { width: 22px; height: 22px; margin: 0; }
-  .plist { list-style: none; padding: 0; margin: 6px 0 0; font-size: 14px; }
-  .plist li { padding: 8px 0; border-bottom: 1px solid #EFE8DA; overflow-wrap: anywhere; }
-  .p-name { font-weight: 600; }
-  .p-badge { color: #5A5650; }
-  .p-links { display: flex; flex-wrap: wrap; gap: 0 14px; }
-  .btn.toggle[aria-pressed="true"] { background: #2F6B4F; border-color: #2F6B4F; color: #FFFFFF; }
-  .help-pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; background: #F8F4EA; border-radius: 8px; padding: 10px; margin: 6px 0; }
-  .timeline li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-  .timeline .touch-del { margin-left: auto; }
+  @media (min-width: 900px) {
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ph { display: none; }
+    .dk { display: block; }
+    .row-grid, .head-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1.3fr) auto; gap: 10px; align-items: start; }
+    .head-row { padding: 0 13px 6px; font-size: 12px; font-weight: 700; color: #5A5650; }
+  }
 
   /* --- mobile (phone-width) nav + body spacing: as on the other pages --- */
   @media (max-width: 640px) {
@@ -207,7 +194,7 @@
     .nav-dropdown-menu { position: fixed; }
     .nav-caret { padding: 11px 14px 11px 6px; }
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid2, .details { grid-template-columns: minmax(0, 1fr); }
+    .grid2 { grid-template-columns: minmax(0, 1fr); }
     .toolbar select.input { flex: 1 1 140px; }
     /* Date inputs: the iOS rules from tracker.html and outreach.html, with min-height 44px as in gym.html */
     input[type="date"] {
@@ -265,27 +252,23 @@
 <div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
 
 <h1>Firms</h1>
-<div class="sub">Your cold-outreach targets: what you've sent and when to follow up.</div>
+<div class="sub">Who you've emailed, what they said, and when to follow up.</div>
 <a class="back-link" href="outreach.html">← People</a>
 
 <div class="stats" id="stats"></div>
 
 <div class="toolbar">
-  <input class="input search" id="search" type="search" placeholder="Search firms, leads and notes" aria-label="Search firms, leads and notes" autocomplete="off">
-  <select class="input" id="f-priority" aria-label="Priority"><option value="">Priority: All</option><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select>
-  <select class="input" id="f-type" aria-label="Type"><option value="">Type: All</option><option value="boutique">Boutique</option><option value="investor">Investor</option><option value="other">Other</option></select>
-  <select class="input" id="f-sort" aria-label="Sort"><option value="due">Sort: Due first</option><option value="priority">Sort: Priority</option><option value="name">Sort: Name</option><option value="newest">Sort: Newest</option></select>
+  <input class="input search" id="search" type="search" placeholder="Search firms and notes" aria-label="Search firms and notes" autocomplete="off">
+  <select class="input" id="f-priority" aria-label="Priority"><option value="">Priority: All</option><option value="1">Priority 1</option><option value="2">Priority 2</option><option value="3">Priority 3</option></select>
+  <select class="input" id="f-sort" aria-label="Sort"><option value="follow">Sort: Follow-up date</option><option value="priority">Sort: Priority</option><option value="name">Sort: Name</option><option value="sent">Sort: Last sent</option><option value="status">Sort: Status</option></select>
   <button type="button" class="btn primary" id="add-open">Add firm</button>
   <button type="button" class="btn" id="import-open">Import</button>
-  <button type="button" class="btn" id="plan-open">Paste plan</button>
 </div>
 <div class="chips" id="chips" role="group" aria-label="Status"></div>
 
-<div class="card" id="firm-form-card" hidden></div>
+<div class="card" id="add-card" hidden></div>
 <div class="card" id="import-card" hidden></div>
-<div class="card" id="plan-card" hidden></div>
 
-<div id="touches-banner" class="banner" hidden></div>
 <div id="list"></div>
 </div>
 
@@ -296,18 +279,11 @@
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ---- constants ----
-  const FOLLOW_UP_DAYS = 5;        // business days after the first outbound email until a follow-up is due
-  const OVERDUE_DAYS = 7;          // a follow-up is overdue after this many business days (counted from the first email)
-  const NO_RESPONSE_DAYS = 7;      // business days after the follow-up before suggesting "close as no response"
-  const RECENT_TOUCHES_SHOWN = 8;  // touches shown in a card's timeline before "Show all"
-  const PAGE_SIZE = 1000;          // PostgREST returns at most 1000 rows per request: load in pages of this size
-  const IMPORT_BATCH = 100;        // rows per insert request when importing
-  const IMPORT_MAX_ROWS = 300;     // the most data rows one import accepts
-  const PLAN_MAX_CHARS = 60000;    // the longest plan block the plan import accepts
-  const STEPS_MAX_NEW = 6;         // steps in one plan block
-  const STEPS_MAX_TOTAL = 12;      // steps one firm can have in all
-  const MAILTO_MAX = 1800;         // the longest "Open in Mail" link; a longer message is copied instead
-  const LINKEDIN_NOTE_MAX = 300;   // LinkedIn's limit for a connection request note
+  const SUGGEST_DAYS = [5, 7, 10];  // the follow-up buttons: business days after the last email (or after today)
+  const PAGE_SIZE = 1000;           // PostgREST returns at most 1000 rows per request: load in pages of this size
+  const IMPORT_BATCH = 100;         // rows per insert request when importing
+  const IMPORT_MAX_ROWS = 300;      // the most data rows one import accepts
+  const NOTE_MAX = 120;             // "What was said" is at most this many characters
   // England and Wales bank holidays, 2026 to 2028. Source: https://www.gov.uk/bank-holidays.json ("england-and-wales"), fetched 16 Oct 2026.
   // The list ends in 2028: extend it from the same feed before 2029.
   const BANK_HOLIDAYS = [
@@ -342,8 +318,6 @@
   function isBusinessDay(s) { const [y, m, d] = ymd(s), w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w >= 1 && w <= 5 && !HOLIDAYS.has(s); }
   // The date n business days after s (s itself is day 0).
   function businessDaysAfter(s, n) { let d = s, k = 0; while (k < n) { d = addDays(d, 1); if (isBusinessDay(d)) k++; } return d; }
-  // Business days d with a < d <= b.
-  function businessDaysBetween(a, b) { let n = 0; for (let d = addDays(a, 1); d <= b; d = addDays(d, 1)) if (isBusinessDay(d)) n++; return n; }
   const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function fmtDay(s, today = londonToday()) {
     const [y, m, d] = ymd(s), w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
@@ -351,73 +325,12 @@
   }
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
-  // ---- per-firm state: a pure function of (firm, touches, today) ----
-  const OUTBOUND = new Set(["email", "form", "linkedin_request", "linkedin_message", "follow_up"]);
-  const EMAIL_LIKE = new Set(["email", "follow_up"]);
-  const STAGE_OF = { follow_up: "Followed Up", reply: "Replied", call_booked: "Call Booked", call_done: "Call Completed", referral: "Referral / Intro" }; // Outreach's stage names
-  const REPLY_OR_LATER = new Set(["reply", "call_booked", "call_done", "referral"]);
-  const STAGES = ["Researching", "Contacted", "Followed Up", "Replied", "Call Booked", "Call Completed", "Referral / Intro"];
-  const CLOSED_TEXT = { no_response: "no response", declined: "declined", dead_end: "dead end", referral: "referral" };
-  const KIND_LABEL = { email: "Email", form: "Form", linkedin_request: "LinkedIn request", linkedin_message: "LinkedIn message", follow_up: "Follow-up",
-                       reply: "Reply", call_booked: "Call booked", call_done: "Call done", referral: "Referral/intro" };
-  const byOrder = (a, b) => (a.happened_on < b.happened_on ? -1 : a.happened_on > b.happened_on ? 1 : a.id - b.id);
-  function firmState(firm, touchesIn, today) {
-    const t = touchesIn.slice().sort(byOrder);
-    const lastIdx = (pred) => { for (let i = t.length - 1; i >= 0; i--) if (pred(t[i])) return i; return -1; };
-    const iLater = lastIdx((x) => STAGE_OF[x.kind]);
-    const sent = t.some((x) => OUTBOUND.has(x.kind));
-    const stage = !t.length ? "Researching" : iLater >= 0 ? STAGE_OF[t[iLater].kind] : sent ? "Contacted" : "Researching";
-    const last = t.length ? t[t.length - 1] : null;
-    const out = { stage, sent, closed: firm.closed || null, last, status: "", tone: "", due: null, overdueBy: 0, dueToday: false, closePrompt: false };
-    if (firm.closed) { out.status = `Closed: ${CLOSED_TEXT[firm.closed] || firm.closed}`; return out; }
-    const iEmail = t.findIndex((x) => x.kind === "email");
-    const iEmailLike = lastIdx((x) => EMAIL_LIKE.has(x.kind));
-    const iFollow = lastIdx((x) => x.kind === "follow_up");
-    const replyAfter = (i) => t.some((x, j) => j > i && REPLY_OR_LATER.has(x.kind));
-    if (iEmail >= 0 && iFollow < 0 && !replyAfter(iEmailLike)) {
-      const first = t[iEmail].happened_on;
-      out.due = businessDaysAfter(first, FOLLOW_UP_DAYS);
-      const overdueAfter = businessDaysAfter(first, OVERDUE_DAYS);
-      const n = today > overdueAfter ? businessDaysBetween(overdueAfter, today) : 0;
-      if (n >= 1) { out.overdueBy = n; out.status = `Follow-up overdue by ${plural(n, "business day", "business days")}`; out.tone = "overdue"; }
-      else if (today >= out.due) { out.dueToday = true; out.status = "Follow-up due"; out.tone = "due"; }
-      else out.status = `Waiting · follow-up due ${fmtDay(out.due, today)}`;
-      return out;
-    }
-    if (iFollow >= 0 && !replyAfter(iFollow)) {
-      out.closePrompt = today >= businessDaysAfter(t[iFollow].happened_on, NO_RESPONSE_DAYS);
-      out.status = out.closePrompt ? "Consider closing as no response" : "Followed up · no further follow-ups";
-      return out;
-    }
-    if (REPLY_OR_LATER.has(t[iLater] ? t[iLater].kind : "")) { out.status = stage; return out; }
-    const iForm = lastIdx((x) => x.kind === "form");
-    if (iForm >= 0) { out.status = `Form submitted on ${fmtDay(t[iForm].happened_on, today)}`; return out; }
-    const iLi = lastIdx((x) => x.kind === "linkedin_request" || x.kind === "linkedin_message");
-    if (iLi >= 0) { out.status = `${KIND_LABEL[t[iLi].kind]} sent on ${fmtDay(t[iLi].happened_on, today)}`; return out; }
-    out.status = "Not started";
-    return out;
-  }
-  const isWaiting = (s) => s.sent && !s.closed && (s.stage === "Contacted" || s.stage === "Followed Up");
-  const isDue = (s) => !s.closed && (s.dueToday || s.overdueBy > 0);
-  const isReplied = (s) => STAGES.indexOf(s.stage) >= STAGES.indexOf("Replied") && s.closed !== "no_response" && s.closed !== "dead_end";
-  function summary(firms, states) {
-    return { total: firms.length, sent: states.filter((s) => s.sent).length, waiting: states.filter(isWaiting).length,
-             due: states.filter(isDue).length, replied: states.filter(isReplied).length, closed: states.filter((s) => !!s.closed).length };
-  }
-  const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-  // Due first: overdue (most overdue first), then due today, then priority (1 first), then name.
-  function dueOrder(a, b) {
-    const ra = a.s.overdueBy > 0 ? 0 : a.s.dueToday ? 1 : 2, rb = b.s.overdueBy > 0 ? 0 : b.s.dueToday ? 1 : 2;
-    return ra - rb || (ra === 0 ? b.s.overdueBy - a.s.overdueBy : 0) || a.f.priority - b.f.priority || byName(a.f, b.f);
-  }
-  const SORTS = { due: dueOrder, priority: (a, b) => a.f.priority - b.f.priority || byName(a.f, b.f), name: (a, b) => byName(a.f, b.f), newest: (a, b) => b.f.id - a.f.id };
-
   // ---- links: only http(s) URLs and simple email addresses become links ----
   const safeUrl = (v) => (typeof v === "string" && /^https?:\/\//i.test(v.trim()) ? v.trim() : null);
   const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
   const safeEmail = (v) => (typeof v === "string" && EMAIL_RE.test(v.trim()) ? v.trim() : null);
 
-  // ---- data ----
+  // ---- paging ----
   let userId = null;
   async function getUserId() { if (!userId) { const { data } = await sb.auth.getUser(); userId = data.user.id; } return userId; }
   async function pageAll(table, cols) {
@@ -430,338 +343,8 @@
       if (rows.length < PAGE_SIZE) return out;
     }
   }
-  const FIRM_COLS = "id, created_at, name, firm_type, priority, route, website, location, lead_name, lead_role, lead_email, lead_linkedin, cv_version, notes, closed, size, summary, reasoning, people, deals, documents";
-  const TOUCH_COLS = "id, firm_id, kind, happened_on, note";
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  const normFirm = (f) => ({ ...f, id: Number(f.id), priority: Number(f.priority), people: arr(f.people), deals: arr(f.deals), documents: arr(f.documents) });
-  const STEP_COLS = "id, firm_id, position, ref, channel, target, purpose, subject, message, after_ref, offset_business_days, planned_on, status, done_on, outcome, skip_reason, documents, form_url, note, touch_id";
-  const normStep = (s) => ({ ...s, id: Number(s.id), firm_id: Number(s.firm_id), position: Number(s.position), offset_business_days: s.offset_business_days === null || s.offset_business_days === undefined ? null : Number(s.offset_business_days),
-                             touch_id: s.touch_id === null || s.touch_id === undefined ? null : Number(s.touch_id), documents: arr(s.documents) });
-  const normTouch = (t) => ({ ...t, id: Number(t.id), firm_id: Number(t.firm_id) });
-  const data = { firms: null, firmsErr: false, touches: null, touchesErr: false, steps: null, stepsErr: false };
-  let byFirm = new Map();
-  function regroup() {
-    byFirm = new Map();
-    for (const t of data.touches || []) { if (!byFirm.has(t.firm_id)) byFirm.set(t.firm_id, []); byFirm.get(t.firm_id).push(t); }
-  }
-  async function loadFirms() {
-    data.firmsErr = false; data.firms = null; render();
-    try { data.firms = (await pageAll("outreach_firms", FIRM_COLS)).map(normFirm); }
-    catch (e) { console.error("[firms] couldn't load firms", e && e.code); data.firmsErr = true; }
-    render();
-  }
-  let stepsBy = new Map();
-  function regroupSteps() {
-    stepsBy = new Map();
-    for (const st of data.steps || []) { if (!stepsBy.has(st.firm_id)) stepsBy.set(st.firm_id, []); stepsBy.get(st.firm_id).push(st); }
-    for (const list of stepsBy.values()) list.sort((a, b) => a.position - b.position || a.id - b.id);
-  }
-  async function loadSteps() {
-    data.stepsErr = false; data.steps = null; render();
-    try { data.steps = (await pageAll("outreach_steps", STEP_COLS)).map(normStep); regroupSteps(); }
-    catch (e) { console.error("[firms] couldn't load the plans", e && e.code); data.stepsErr = true; }
-    render();
-  }
-  async function loadTouches() {
-    data.touchesErr = false; data.touches = null; render();
-    try { data.touches = (await pageAll("outreach_touches", TOUCH_COLS)).map(normTouch); regroup(); }
-    catch (e) { console.error("[firms] couldn't load touches", e && e.code); data.touchesErr = true; }
-    render();
-  }
 
-  // ---- view state ----
-  const view = { q: "", chip: "all", priority: "", type: "", sort: "due", open: new Set(), showAll: new Set(), forms: new Map(), notes: new Map(), stepForms: new Map(), stepNotes: new Map() };
-  const CHIPS = [["all", "All"], ["not_started", "Not started"], ["waiting", "Waiting"], ["due", "Follow-up due"], ["replied", "Replied"], ["closed", "Closed"]];
-  const CHIP_TEST = { all: () => true, not_started: (s) => !s.closed && !s.last, waiting: isWaiting, due: isDue, replied: isReplied, closed: (s) => !!s.closed };
-  const TYPE_LABEL = { boutique: "Boutique", investor: "Investor", other: "Other" };
-  const ROUTE_LABEL = { email: "Email", form: "Form", linkedin: "LinkedIn", referral: "Referral" };
-  const touchesOf = (id) => byFirm.get(id) || [];
-  const stateOf = (f, today) => firmState(f, touchesOf(f.id), today);
-  function matches(f, s) {
-    const q = view.q.trim().toLowerCase();
-    if (q && ![f.name, f.lead_name, f.lead_role, f.lead_email, f.notes].some((v) => v && String(v).toLowerCase().includes(q))) return false;
-    if (view.priority && f.priority !== Number(view.priority)) return false;
-    if (view.type && f.firm_type !== view.type) return false;
-    return CHIP_TEST[view.chip](s);
-  }
-  function clearFilters() {
-    view.q = ""; view.chip = "all"; view.priority = ""; view.type = "";
-    $("search").value = ""; $("f-priority").value = ""; $("f-type").value = ""; render();
-  }
-
-  function render() {
-    const today = londonToday(), list = $("list");
-    renderChips();
-    const touchesOk = !!data.touches;
-    const tb = $("touches-banner");
-    if (data.touchesErr) {
-      tb.replaceChildren(el("span", { text: "Couldn't load what you've sent, so statuses and counts are missing." }), el("button", { type: "button", class: "btn", text: "Retry", onclick: loadTouches }));
-      show(tb, true);
-    } else show(tb, false);
-    if (data.firmsErr) {
-      renderStats(null);
-      list.replaceChildren(el("div", { class: "banner" }, [el("span", { text: "Couldn't load your firms." }), el("button", { type: "button", class: "btn", text: "Retry", onclick: loadFirms })]));
-      return;
-    }
-    if (!data.firms) { renderStats(null); list.replaceChildren(el("div", { class: "msg", text: "Loading…" })); return; }
-    const rows = data.firms.map((f) => ({ f, s: touchesOk ? stateOf(f, today) : null }));
-    renderStats(touchesOk ? summary(data.firms, rows.map((r) => r.s)) : { total: data.firms.length, closed: data.firms.filter((f) => f.closed).length });
-    if (!data.firms.length) { list.replaceChildren(el("div", { class: "msg", text: "No firms yet. Add one or import your list." })); return; }
-    // Without the touches, only the search, priority and type filters and the All and Closed chips can apply.
-    const visible = touchesOk ? rows.filter((r) => matches(r.f, r.s))
-      : rows.filter((r) => matches(r.f, { closed: r.f.closed || null, last: null, sent: false, stage: "", dueToday: false, overdueBy: 0 }) && (view.chip === "all" || (view.chip === "closed" && !!r.f.closed)));
-    if (!visible.length) {
-      list.replaceChildren(el("div", { class: "msg" }, [el("div", { text: "No firms match these filters" }), el("button", { type: "button", class: "btn", text: "Clear filters", onclick: clearFilters })]));
-      return;
-    }
-    visible.sort(touchesOk ? SORTS[view.sort] : SORTS[view.sort === "due" ? "priority" : view.sort]);
-    list.replaceChildren(...visible.map((r) => firmCard(r.f, r.s, today)));
-  }
-  function renderStats(c) {
-    const cell = (label, v) => el("div", { class: "stat" }, [el("div", { class: "stat-num", text: v === undefined || v === null ? "—" : String(v) }), el("div", { class: "stat-label", text: label })]);
-    c = c || {};
-    $("stats").replaceChildren(cell("Total", c.total), cell("Sent", c.sent), cell("Waiting", c.waiting), cell("Follow-ups due", c.due), cell("Replied", c.replied), cell("Closed", c.closed));
-  }
-  function renderChips() {
-    $("chips").replaceChildren(...CHIPS.map(([k, label]) => el("button", { type: "button", class: "chip", "aria-pressed": view.chip === k ? "true" : "false", text: label,
-      onclick: () => { view.chip = k; render(); } })));
-  }
-
-  // ---- a firm card ----
-  function detail(label, value) { return el("div", null, [el("span", { class: "k", text: label }), value === null || value === undefined || value === "" ? el("span", { text: "—" }) : value]); }
-  function linkOrText(url, label) { const u = safeUrl(url); return u ? el("a", { class: "link", href: u, target: "_blank", rel: "noopener noreferrer", text: label || u }) : el("span", { text: url }); }
-  function firmCard(f, s, today) {
-    const open = view.open.has(f.id);
-    const head = el("button", { type: "button", class: "firm-head", "aria-expanded": open ? "true" : "false", onclick: () => { open ? view.open.delete(f.id) : view.open.add(f.id); render(); } }, [
-      el("span", { class: "firm-top" }, [el("span", { class: "firm-name", text: f.name }), el("span", { class: "badge", text: `P${f.priority}` }), el("span", { class: "firm-type", text: TYPE_LABEL[f.firm_type] || f.firm_type })]),
-      el("span", { class: "firm-status" + (s && s.tone ? " " + s.tone : ""), text: s ? s.status : (f.closed ? `Closed: ${CLOSED_TEXT[f.closed] || f.closed}` : "Status not available") }),
-      el("span", { class: "firm-last", text: s ? (s.last ? `${KIND_LABEL[s.last.kind] || s.last.kind} · ${fmtDay(s.last.happened_on, today)}` : "Nothing sent yet") : "" }),
-    ]);
-    const card = el("div", { class: "firm", "data-firm": String(f.id) }, [head]);
-    if (!open) return card;
-    const body = el("div", { class: "firm-body" });
-    if (f.reasoning) body.append(el("p", { class: "reasoning", text: f.reasoning }));
-    for (const sec of [planSection(f, today), peopleSection(f), dealsSection(f), docsSection(f, today)]) if (sec) body.append(sec);
-    const em = safeEmail(f.lead_email);
-    body.append(el("div", { class: "details" }, [
-      detail("Lead", f.lead_name ? el("span", { text: f.lead_name + (f.lead_role ? ` · ${f.lead_role}` : "") }) : (f.lead_role ? el("span", { text: f.lead_role }) : null)),
-      detail("Email", f.lead_email ? (em ? el("a", { class: "link", href: `mailto:${em}`, text: em }) : el("span", { text: f.lead_email })) : null),
-      detail("LinkedIn", f.lead_linkedin ? linkOrText(f.lead_linkedin, "LinkedIn profile") : null),
-      detail("Website", f.website ? linkOrText(f.website) : null),
-      detail("Route", el("span", { text: ROUTE_LABEL[f.route] || f.route })),
-      detail("CV version", f.cv_version ? el("span", { text: f.cv_version }) : null),
-      detail("Location", f.location ? el("span", { text: f.location }) : null),
-      detail("Notes", f.notes ? el("span", { text: f.notes, style: "white-space: pre-wrap" }) : null),
-    ]));
-    const ts = touchesOf(f.id).slice().sort(byOrder).reverse();
-    body.append(el("h3", { text: "Timeline" }));
-    if (!data.touches) body.append(el("p", { class: "msg", text: "Not available until what you've sent loads." }));
-    else if (!ts.length) body.append(el("p", { class: "msg", text: "Nothing logged yet." }));
-    else {
-      const all = view.showAll.has(f.id), shownT = all ? ts : ts.slice(0, RECENT_TOUCHES_SHOWN);
-      body.append(el("ul", { class: "timeline" }, shownT.map((t) => el("li", { "data-touch": String(t.id) }, [el("span", { text: `${fmtDay(t.happened_on, today)} · ${KIND_LABEL[t.kind] || t.kind}` }), t.note ? el("div", { class: "tnote", text: t.note }) : null,
-        el("button", { type: "button", class: "btn touch-del", text: "Delete", "aria-label": `Delete ${KIND_LABEL[t.kind] || t.kind} on ${fmtDay(t.happened_on, today)}`, disabled: busy.has(`touch:${t.id}`), onclick: () => deleteTouch(f, t) })]))));
-      if (ts.length > RECENT_TOUCHES_SHOWN) body.append(el("button", { type: "button", class: "btn", text: all ? "Show fewer" : `Show all ${ts.length}`, onclick: () => { all ? view.showAll.delete(f.id) : view.showAll.add(f.id); render(); } }));
-    }
-    body.append(el("h3", { text: "Log" }));
-    const quick = el("div", { class: "quick" });
-    for (const [kind, label] of QUICK) quick.append(el("button", { type: "button", class: "btn", text: label, onclick: () => openLog(f, kind) }));
-    if (f.closed) quick.append(el("button", { type: "button", class: "btn", text: "Reopen", onclick: () => openClose(f, null) }));
-    else for (const [reason, label] of CLOSES) quick.append(el("button", { type: "button", class: "btn", text: label, onclick: () => openClose(f, reason) }));
-    body.append(quick);
-    const form = view.forms.get(f.id);
-    if (form) body.append(form.node);
-    const note = view.notes.get(f.id);
-    if (note) body.append(el("p", { class: note.ok ? "ok" : "err", text: note.text, role: "status" }, note.retry ? [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: () => { view.notes.delete(f.id); note.retry(); } })] : []));
-    body.append(el("div", { class: "row-actions" }, [
-      el("button", { type: "button", class: "btn", text: "Edit", onclick: () => openFirmForm(f) }),
-      el("button", { type: "button", class: "btn danger", text: "Delete firm", onclick: () => deleteFirm(f) }),
-    ]));
-    card.append(body);
-    return card;
-  }
-  const QUICK = [["email", "Email sent"], ["linkedin_request", "LinkedIn request"], ["form", "Form submitted"], ["follow_up", "Follow-up sent"],
-                 ["reply", "Reply received"], ["call_booked", "Call booked"], ["call_done", "Call done"], ["referral", "Referral/intro"]];
-  const CLOSES = [["no_response", "Close: no response"], ["declined", "Close: declined"], ["dead_end", "Close: dead end"]];
-  const MIN_DATE = "2000-01-01";
-  const SAVE_FAILED = "Couldn't save. Check your connection, then Retry.";
-
-  // ---- quick log: a touch ----
-  function openLog(f, kind) {
-    view.notes.delete(f.id);
-    if (!data.touches) { view.forms.delete(f.id); view.notes.set(f.id, { ok: false, text: "What you've sent hasn't loaded yet. Retry it above first." }); render(); return; }
-    if (kind === "follow_up" && !touchesOf(f.id).some((t) => t.kind === "email")) {
-      view.forms.delete(f.id); view.notes.set(f.id, { ok: false, text: "Log the first email before a follow-up." }); render(); return;
-    }
-    const today = londonToday();
-    const date = el("input", { class: "input", type: "date", value: today, max: today, min: MIN_DATE, "aria-label": "Date" });
-    const note = el("input", { class: "input", type: "text", maxlength: "500", autocomplete: "off", "aria-label": "Note (optional)" });
-    const err = el("p", { class: "err", hidden: true, role: "alert" });
-    const save = el("button", { type: "button", class: "btn primary", text: "Save" });
-    const node = el("div", { class: "inline-form", "data-form": "log" }, [
-      el("div", { text: KIND_LABEL[kind], style: "font-weight: 700" }),
-      el("label", { class: "field", text: "Date" }), date,
-      el("label", { class: "field", text: "Note (optional)" }), note, err,
-      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => { view.forms.delete(f.id); render(); } })]),
-    ]);
-    save.addEventListener("click", async () => {
-      const d = date.value, today2 = londonToday();
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d < MIN_DATE || d > today2) { err.textContent = "Choose a date from 1 Jan 2000 to today."; show(err, true); return; }
-      if (kind === "follow_up" && touchesOf(f.id).some((t) => t.kind === "follow_up") && !confirm("You've already followed up once. Log another anyway?")) return;
-      save.disabled = true; show(err, false);
-      let r;
-      try { r = await sb.from("outreach_touches").insert({ user_id: await getUserId(), firm_id: f.id, kind, happened_on: d, note: note.value.trim() || null }).select(TOUCH_COLS).single(); }
-      catch (e) { r = { error: e }; }
-      save.disabled = false;
-      if (r.error || !r.data) { err.textContent = SAVE_FAILED; save.textContent = "Retry"; show(err, true); return; }
-      data.touches.push(normTouch(r.data)); regroup();
-      view.forms.delete(f.id); view.notes.set(f.id, { ok: true, text: "Saved" }); render();
-    });
-    view.forms.set(f.id, { node }); render();
-  }
-  // ---- quick log: close or reopen (firms.closed) ----
-  function openClose(f, reason) {
-    view.notes.delete(f.id);
-    const err = el("p", { class: "err", hidden: true, role: "alert" });
-    const save = el("button", { type: "button", class: "btn primary", text: reason ? "Close firm" : "Reopen" });
-    const node = el("div", { class: "inline-form", "data-form": "close" }, [
-      el("div", { text: reason ? `Close ${f.name} as ${CLOSED_TEXT[reason]}?` : `Reopen ${f.name}?` }), err,
-      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => { view.forms.delete(f.id); render(); } })]),
-    ]);
-    save.addEventListener("click", async () => {
-      save.disabled = true; show(err, false);
-      let r;
-      try { r = await sb.from("outreach_firms").update({ closed: reason }).eq("id", f.id); } catch (e) { r = { error: e }; }
-      save.disabled = false;
-      if (r.error) { err.textContent = SAVE_FAILED; save.textContent = "Retry"; show(err, true); return; }
-      f.closed = reason; view.forms.delete(f.id); view.notes.set(f.id, { ok: true, text: "Saved" }); render();
-    });
-    view.forms.set(f.id, { node }); render();
-  }
-  async function deleteFirm(f) {
-    if (!confirm(`Delete ${f.name}? Everything logged for it is deleted too.`)) return;
-    let r;
-    try { r = await sb.from("outreach_firms").delete().eq("id", f.id); } catch (e) { r = { error: e }; }
-    if (r.error) { view.notes.set(f.id, { ok: false, text: "Couldn't delete. Check your connection and try again." }); render(); return; }
-    data.firms = data.firms.filter((x) => x.id !== f.id);
-    if (data.touches) { data.touches = data.touches.filter((t) => t.firm_id !== f.id); regroup(); }
-    view.open.delete(f.id); view.forms.delete(f.id); view.notes.delete(f.id); render();
-  }
-
-  // ---- add and edit a firm ----
-  const FIELDS = [   // [column, label, max, kind]
-    ["name", "Firm name", 80, "text"], ["firm_type", "Type", 0, "type"], ["priority", "Priority", 0, "priority"], ["route", "Route", 0, "route"],
-    ["location", "Location", 80, "text"], ["website", "Website", 300, "url"], ["lead_name", "Lead name", 80, "text"], ["lead_role", "Lead role", 120, "text"],
-    ["lead_email", "Lead email", 200, "email"], ["lead_linkedin", "Lead LinkedIn", 300, "url"], ["cv_version", "CV version", 60, "cv"], ["notes", "Notes", 2000, "notes"],
-  ];
-  const CV_OPTIONS = ["Boutique M&A", "Investor side", "IB/Markets", "Generic finance"];
-  const OPTIONS = { type: [["boutique", "Boutique"], ["investor", "Investor"], ["other", "Other"]], priority: [["1", "P1"], ["2", "P2"], ["3", "P3"]],
-                    route: [["email", "Email"], ["form", "Form"], ["linkedin", "LinkedIn"], ["referral", "Referral"]] };
-  const DEFAULTS = { firm_type: "boutique", priority: 2, route: "email" };
-  const nameKey = (s) => String(s || "").trim().toLowerCase();
-  const DUP_NAME = "That firm is already in your list";
-  // The insert payload: exactly these columns, empty strings as null.
-  function firmPayload(values) {
-    const p = { user_id: values.user_id };
-    for (const [col] of FIELDS) {
-      let v = values[col];
-      if (typeof v === "string") v = v.trim();
-      if (col === "priority") v = Number(v);
-      p[col] = v === "" || v === undefined ? null : v;
-    }
-    return { user_id: p.user_id, name: p.name, firm_type: p.firm_type, priority: p.priority, route: p.route, website: p.website, location: p.location, lead_name: p.lead_name,
-             lead_role: p.lead_role, lead_email: p.lead_email, lead_linkedin: p.lead_linkedin, cv_version: p.cv_version, notes: p.notes };
-  }
-  function validateFirm(values, selfId) {
-    const errs = {};
-    const name = String(values.name || "").trim();
-    if (!name) errs.name = "Enter the firm's name.";
-    else if (name.length > 80) errs.name = "At most 80 characters.";
-    else if ((data.firms || []).some((x) => x.id !== selfId && nameKey(x.name) === nameKey(name))) errs.name = DUP_NAME;
-    for (const [col, , max, kind] of FIELDS) {
-      const v = String(values[col] === null || values[col] === undefined ? "" : values[col]).trim();
-      if (col !== "name" && max && v.length > max) errs[col] = `At most ${max} characters.`;
-      else if (kind === "url" && v && !/^https?:\/\//i.test(v)) errs[col] = "Must start with https:// or http://";
-      else if (kind === "email" && v && !EMAIL_RE.test(v)) errs[col] = "Enter an email like name@firm.com";
-    }
-    return errs;
-  }
-  let firmForm = null;   // { firm, inputs }
-  function openFirmForm(f) {
-    const card = $("firm-form-card"), inputs = {}, errs = {};
-    const rows = [];
-    for (const [col, label, max, kind] of FIELDS) {
-      let input;
-      if (OPTIONS[kind]) input = el("select", { class: "input", id: `ff-${col}` }, OPTIONS[kind].map(([v, t]) => el("option", { value: v, text: t })));
-      else if (kind === "notes") input = el("textarea", { class: "input", id: `ff-${col}`, maxlength: String(max) });
-      else input = el("input", { class: "input", id: `ff-${col}`, type: kind === "email" ? "email" : kind === "url" ? "url" : "text", maxlength: String(max), autocomplete: "off", list: kind === "cv" ? "cv-options" : null });
-      const v = f ? f[col] : DEFAULTS[col];
-      input.value = v === null || v === undefined ? "" : String(v);
-      inputs[col] = input; errs[col] = el("p", { class: "err", hidden: true, id: `ff-${col}-err` });
-      rows.push(el("div", null, [el("label", { class: "field", for: `ff-${col}`, text: label + (col === "name" ? " (required)" : "") }), input, errs[col]]));
-    }
-    const msg = el("p", { class: "err", hidden: true, role: "alert" });
-    const save = el("button", { type: "button", class: "btn primary", text: f ? "Save changes" : "Add firm" });
-    card.replaceChildren(el("h2", { text: f ? `Edit ${f.name}` : "Add a firm" }), el("datalist", { id: "cv-options" }, CV_OPTIONS.map((o) => el("option", { value: o }))),
-      el("div", { class: "grid2" }, rows), msg,
-      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: closeFirmForm })]));
-    firmForm = { firm: f, inputs };
-    save.addEventListener("click", async () => {
-      const values = Object.fromEntries(Object.entries(inputs).map(([k, i]) => [k, i.value]));
-      const bad = validateFirm(values, f ? f.id : null);
-      for (const col of Object.keys(errs)) { errs[col].textContent = bad[col] || ""; show(errs[col], !!bad[col]); inputs[col].setAttribute("aria-invalid", bad[col] ? "true" : "false"); }
-      show(msg, false);
-      if (Object.keys(bad).length) return;
-      save.disabled = true;
-      const payload = firmPayload({ ...values, user_id: await getUserId().catch(() => null) });
-      let r;
-      try {
-        if (f) {
-          const changed = {};
-          for (const [col] of FIELDS) if ((payload[col] ?? null) !== (f[col] ?? null)) changed[col] = payload[col];
-          if (!Object.keys(changed).length) { save.disabled = false; closeFirmForm(); return; }
-          r = await sb.from("outreach_firms").update(changed).eq("id", f.id);
-          if (!r.error) Object.assign(f, changed);
-        } else {
-          r = await sb.from("outreach_firms").insert(payload).select(FIRM_COLS).single();
-          if (!r.error && r.data) data.firms.push(normFirm(r.data));
-        }
-      } catch (e) { r = { error: e }; }
-      save.disabled = false;
-      if (r.error) {
-        if (r.error.code === "23505") { errs.name.textContent = DUP_NAME; show(errs.name, true); return; }
-        msg.textContent = SAVE_FAILED; show(msg, true); save.textContent = "Retry"; return;
-      }
-      closeFirmForm(); if (f) view.notes.set(f.id, { ok: true, text: "Saved" }); render();
-    });
-    show(card, true); show($("import-card"), false); show($("plan-card"), false);
-    card.scrollIntoView({ block: "nearest" });
-  }
-  function closeFirmForm() { firmForm = null; $("firm-form-card").replaceChildren(); show($("firm-form-card"), false); }
-
-  // ---- import ----
-  const TARGETS = [["name", "Firm name"], ["firm_type", "Type"], ["priority", "Priority"], ["route", "Route"], ["location", "Location"], ["website", "Website"],
-                   ["lead_name", "Lead name"], ["lead_role", "Lead role"], ["lead_email", "Lead email"], ["lead_linkedin", "Lead LinkedIn"], ["cv_version", "CV version"],
-                   ["notes", "Notes"], ["", "Ignore"]];
-  const SYNONYMS = {
-    name: ["firm", "firm name", "firmname", "company", "company name", "name", "organisation", "organization", "bank", "fund", "boutique"],
-    firm_type: ["type", "firm type", "category", "kind", "sector type"], priority: ["priority", "prio", "tier", "rank"],
-    route: ["route", "channel", "method", "approach", "contact method", "how"], location: ["location", "city", "office", "country", "hq", "based"],
-    website: ["website", "site", "url", "web", "homepage"], lead_name: ["lead", "lead name", "contact", "contact name", "person", "who"],
-    lead_role: ["role", "lead role", "title", "job title", "position"], lead_email: ["email", "e-mail", "lead email", "contact email", "mail", "email address"],
-    lead_linkedin: ["linkedin", "lead linkedin", "linkedin url", "linkedin profile", "profile"], cv_version: ["cv", "cv version", "resume", "cv used"],
-    notes: ["notes", "note", "comments", "comment", "remarks"],
-  };
-  const MAX = Object.fromEntries(FIELDS.filter((x) => x[2]).map((x) => [x[0], x[2]]));
-  const normHeader = (h) => String(h).trim().toLowerCase().replace(/[_\-]+/g, " ").replace(/\s+/g, " ");
-  function guessMapping(headers) {
-    const used = new Set();
-    return headers.map((h) => {
-      const k = normHeader(h);
-      for (const [col, list] of Object.entries(SYNONYMS)) if (!used.has(col) && list.map(normHeader).includes(k)) { used.add(col); return col; }
-      return "";
-    });
-  }
+  // ---- import: parsing a paste ----
   // Parse a paste: tabs in the first line mean TSV, otherwise CSV. Double quotes wrap fields (with delimiters, newlines and "" inside).
   function parsePaste(text) {
     const src = String(text).replace(/\r\n?/g, "\n");
@@ -785,55 +368,358 @@
     const head = numbered[0], data_ = numbered.slice(1);
     return { delim: delim === "\t" ? "tsv" : "csv", headers: head ? head.r.map((h) => h.trim()) : [], rows: data_.map((x) => x.r), rowNos: data_.map((x) => x.n - head.n + 1) };
   }
-  function mapType(v) {
-    const s = v.trim().toLowerCase(); if (!s) return { v: DEFAULTS.firm_type };
-    if (/investor|fund|private equity|^pe$|^vc$|venture/.test(s)) return { v: "investor" };
-    if (/boutique|m&a|m & a|advisory|bank/.test(s)) return { v: "boutique" };
-    if (s === "other") return { v: "other" };
-    return { v: DEFAULTS.firm_type, warn: `type "${v.trim()}" not recognised, using Boutique` };
+
+  // ---- statuses and the board's rules (pure functions) ----
+  const STATUSES = [["not_started", "Not started"], ["waiting", "Waiting"], ["replied", "Replied"], ["call_booked", "Call booked"], ["no_response", "No response"], ["dead_end", "Dead end"]];
+  const STATUS_LABEL = Object.fromEntries(STATUSES);
+  const STATUS_ORDER = Object.fromEntries(STATUSES.map(([k], i) => [k, i]));
+  const ACTIVE = new Set(["waiting", "replied", "call_booked"]);   // statuses that can have a follow-up due
+  const CLOSED = new Set(["no_response", "dead_end"]);             // no follow-up is shown for these
+  const MIN_DATE = "2000-01-01";
+  const dayDiff = (a, b) => { const [y1, m1, d1] = ymd(a), [y2, m2, d2] = ymd(b); return Math.round((Date.UTC(y1, m1 - 1, d1) - Date.UTC(y2, m2 - 1, d2)) / 86400000); };
+  function validDate(s) {
+    if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    const [y, m, d] = ymd(s), t = new Date(Date.UTC(y, m - 1, d));
+    return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+  }
+  function addYears(s, n) { const [y, m, d] = ymd(s); return new Date(Date.UTC(y + n, m - 1, d)).toISOString().slice(0, 10); }
+  const maxFollowUp = (today) => addYears(today, 2);
+  const isDue = (f, today) => !!f.next_follow_up_on && f.next_follow_up_on <= today && ACTIVE.has(f.status);
+  // The date a firm's follow-up counts as, for display and sorting: none for No response and Dead end.
+  const followDate = (f) => (f.next_follow_up_on && !CLOSED.has(f.status) ? f.next_follow_up_on : null);
+  function followText(f, today) {
+    const d = followDate(f);
+    if (!d) return { text: "", tone: "" };
+    const n = dayDiff(today, d);
+    if (n > 0) return { text: `Follow-up overdue by ${plural(n, "day", "days")}`, tone: "overdue" };
+    if (n === 0) return { text: "Follow-up due today", tone: "due" };
+    return { text: `Follow up ${fmtDay(d, today)}`, tone: "" };
+  }
+  const sentText = (f, today) => (f.last_sent_on ? `Last sent ${fmtDay(f.last_sent_on, today)}` : "Not sent yet") + (f.last_note ? ` · ${f.last_note}` : "");
+  function summary(firms, today) {
+    const c = { total: firms.length, due: firms.filter((f) => isDue(f, today)).length };
+    for (const [k] of STATUSES) c[k] = firms.filter((f) => f.status === k).length;
+    return c;
+  }
+  const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  function sorter(kind, today) {
+    if (kind === "priority") return (a, b) => a.priority - b.priority || byName(a, b);
+    if (kind === "name") return byName;
+    if (kind === "sent") return (a, b) => (a.last_sent_on ? 0 : 1) - (b.last_sent_on ? 0 : 1) || (a.last_sent_on < b.last_sent_on ? 1 : a.last_sent_on > b.last_sent_on ? -1 : 0) || byName(a, b);
+    if (kind === "status") return (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || byName(a, b);
+    // Follow-up date: due or overdue first (earliest first), then upcoming by date, then no follow-up date; then priority, then name.
+    return (a, b) => {
+      const da = followDate(a), db = followDate(b);
+      const ga = !da ? 2 : da <= today ? 0 : 1, gb = !db ? 2 : db <= today ? 0 : 1;
+      return ga - gb || (ga < 2 ? (da < db ? -1 : da > db ? 1 : 0) : 0) || a.priority - b.priority || byName(a, b);
+    };
+  }
+  const CHIPS = [["all", "All"], ...STATUSES, ["due", "Follow-up due"]];
+  function matches(f, v, today) {
+    const q = v.q.trim().toLowerCase();
+    if (q && ![f.name, f.last_note].some((x) => x && String(x).toLowerCase().includes(q))) return false;
+    if (v.priority && f.priority !== Number(v.priority)) return false;
+    if (v.chip === "all") return true;
+    if (v.chip === "due") return isDue(f, today);
+    return f.status === v.chip;
+  }
+  // The edit panel's quick buttons only fill the form (nothing is saved until Save).
+  function quickApply(form, kind, today) {
+    const out = { ...form };
+    if (kind === "sent") { out.last_sent_on = today; if (out.status === "not_started") out.status = "waiting"; }
+    else out.status = kind;
+    return out;
+  }
+  // "+N days": N business days after the last email sent, or after today when that's empty.
+  const suggestDate = (lastSent, n, today) => businessDaysAfter(validDate(lastSent) ? lastSent : today, n);
+
+  // ---- data ----
+  const FIRM_COLS = "id, created_at, name, priority, website, lead_email, lead_linkedin, status, last_sent_on, last_note, next_follow_up_on";
+  const normFirm = (f) => ({ ...f, id: Number(f.id), priority: Number(f.priority) });
+  const data = { firms: null, err: false };
+  async function loadFirms() {
+    data.err = false; data.firms = null; render();
+    try { data.firms = (await pageAll("outreach_firms", FIRM_COLS)).map(normFirm); }
+    catch (e) { console.error("[firms] couldn't load firms", e && e.code); data.err = true; }
+    render();
+  }
+  const view = { q: "", chip: "all", priority: "", sort: "follow", editing: null, notes: new Map() };
+  const DUP_NAME = "That firm is already in your list";
+  const SAVE_FAILED = "Couldn't save. Check your connection, then Retry.";
+  const nameKey = (s) => String(s || "").trim().toLowerCase();
+  const COLS = ["user_id", "name", "priority", "website", "lead_email", "lead_linkedin", "status", "last_sent_on", "last_note", "next_follow_up_on"];
+  function firmPayload(v) {
+    const t = (x) => (x === undefined || x === null ? null : typeof x === "string" ? (x.trim() === "" ? null : x.trim()) : x);
+    return { user_id: v.user_id, name: t(v.name), priority: Number(v.priority) || 2, website: t(v.website), lead_email: t(v.lead_email), lead_linkedin: t(v.lead_linkedin),
+             status: v.status || "not_started", last_sent_on: t(v.last_sent_on), last_note: t(v.last_note), next_follow_up_on: t(v.next_follow_up_on) };
+  }
+  // Field errors for the edit panel (pure).
+  function validateFirm(v, selfId, firms, today) {
+    const e = {}, name = String(v.name || "").trim();
+    if (!name) e.name = "Enter the firm's name.";
+    else if (name.length > 80) e.name = "At most 80 characters.";
+    else if (firms.some((x) => x.id !== selfId && nameKey(x.name) === nameKey(name))) e.name = DUP_NAME;
+    const ls = String(v.last_sent_on || "").trim(), nf = String(v.next_follow_up_on || "").trim();
+    if (ls && !validDate(ls)) e.last_sent_on = "Enter a date.";
+    else if (ls && ls > today) e.last_sent_on = "Last email sent can't be in the future.";
+    else if (ls && ls < MIN_DATE) e.last_sent_on = "Use a date from 2000 on.";
+    if (nf && !validDate(nf)) e.next_follow_up_on = "Enter a date.";
+    else if (nf && nf < MIN_DATE) e.next_follow_up_on = "Use a date from 2000 on.";
+    else if (nf && nf > maxFollowUp(today)) e.next_follow_up_on = "At most two years ahead.";
+    if (String(v.last_note || "").trim().length > NOTE_MAX) e.last_note = `At most ${NOTE_MAX} characters.`;
+    for (const [col, max] of [["website", 300], ["lead_linkedin", 300]]) { const u = String(v[col] || "").trim(); if (u.length > max) e[col] = `At most ${max} characters.`; else if (u && !/^https?:\/\//i.test(u)) e[col] = "Must start with https:// or http://"; }
+    const em = String(v.lead_email || "").trim();
+    if (em.length > 200) e.lead_email = "At most 200 characters."; else if (em && !EMAIL_RE.test(em)) e.lead_email = "Enter an email like name@firm.com";
+    return e;
+  }
+
+  // ---- rendering ----
+  function render() {
+    const today = londonToday(), list = $("list");
+    renderChips();
+    if (data.err) {
+      renderStats(null);
+      list.replaceChildren(el("div", { class: "banner" }, [el("span", { text: "Couldn't load your firms." }), el("button", { type: "button", class: "btn", text: "Retry", onclick: loadFirms })]));
+      return;
+    }
+    if (!data.firms) { renderStats(null); list.replaceChildren(el("div", { class: "msg", text: "Loading…" })); return; }
+    renderStats(summary(data.firms, today));
+    if (!data.firms.length) { list.replaceChildren(el("div", { class: "msg", text: "No firms yet. Add one or import your list." })); return; }
+    const rows = data.firms.filter((f) => matches(f, view, today)).sort(sorter(view.sort, today));
+    if (!rows.length) {
+      list.replaceChildren(el("div", { class: "msg" }, [el("div", { text: "No firms match these filters" }), el("button", { type: "button", class: "btn", text: "Clear filters", onclick: clearFilters })]));
+      return;
+    }
+    const head = el("div", { class: "head-row", "aria-hidden": "true" }, ["Firm", "Status", "Last email sent", "What was said", "Next follow-up", ""].map((t) => el("span", { text: t })));
+    list.replaceChildren(head, el("ul", { class: "board" }, rows.map((f) => firmRow(f, today))));
+  }
+  function renderStats(c) {
+    const cells = [["Total", "total"], ...STATUSES.map(([k, l]) => [l, k]), ["Follow-ups due", "due"]];
+    $("stats").replaceChildren(...cells.map(([label, k]) => el("div", { class: "stat", "data-stat": k }, [el("div", { class: "stat-num", text: c ? String(c[k]) : "—" }), el("div", { class: "stat-label", text: label })])));
+  }
+  function renderChips() {
+    $("chips").replaceChildren(...CHIPS.map(([k, label]) => el("button", { type: "button", class: "chip", "aria-pressed": view.chip === k ? "true" : "false", text: label, onclick: () => { view.chip = k; render(); } })));
+  }
+  function clearFilters() { view.q = ""; view.chip = "all"; view.priority = ""; $("search").value = ""; $("f-priority").value = ""; render(); }
+  function linksOf(f) {
+    const parts = [];
+    if (f.website) { const u = safeUrl(f.website); parts.push(u ? el("a", { class: "link", href: u, target: "_blank", rel: "noopener noreferrer", text: "Website" }) : el("span", { class: "plain", text: f.website })); }
+    if (f.lead_email) { const m = safeEmail(f.lead_email); parts.push(m ? el("a", { class: "link", href: `mailto:${m}`, text: "Email" }) : el("span", { class: "plain", text: f.lead_email })); }
+    if (f.lead_linkedin) { const u = safeUrl(f.lead_linkedin); parts.push(u ? el("a", { class: "link", href: u, target: "_blank", rel: "noopener noreferrer", text: "LinkedIn" }) : el("span", { class: "plain", text: f.lead_linkedin })); }
+    return parts.length ? el("div", { class: "links" }, parts) : null;
+  }
+  function firmRow(f, today) {
+    const fu = followText(f, today), status = STATUS_LABEL[f.status] || f.status;
+    const editBtn = () => el("button", { type: "button", class: "btn", text: view.editing === f.id ? "Close" : "Edit", "aria-expanded": view.editing === f.id ? "true" : "false",
+      onclick: () => { for (const k of [...panels.keys()]) if (k !== "new") panels.delete(k); view.editing = view.editing === f.id ? null : f.id; view.notes.delete(f.id); render(); } });
+    const li = el("li", { class: "row", "data-firm": String(f.id) }, [
+      // phones (and narrow windows): stacked lines
+      el("div", { class: "ph" }, [
+        el("div", { class: "l1" }, [el("span", { class: "badge", text: `P${f.priority}` }), el("span", { class: "name", text: f.name }), el("span", { class: "status", text: status })]),
+        el("div", { class: "l2 when", text: sentText(f, today) }),
+        fu.text ? el("div", { class: "l3 follow" + (fu.tone ? " " + fu.tone : ""), text: fu.text }) : null,
+        linksOf(f), editBtn()]),
+      // 900px and wider: one row of columns
+      el("div", { class: "dk row-grid" }, [
+        el("div", null, [el("div", { class: "l1" }, [el("span", { class: "badge", text: `P${f.priority}` }), el("span", { class: "name", text: f.name })]), linksOf(f)]),
+        el("div", { class: "status", text: status }),
+        el("div", { class: "when", text: f.last_sent_on ? fmtDay(f.last_sent_on, today) : "Not sent yet" }),
+        el("div", { text: f.last_note || "" }),
+        el("div", { class: "follow" + (fu.tone ? " " + fu.tone : ""), text: fu.text }),
+        el("div", null, [editBtn()])]),
+    ]);
+    const note = view.notes.get(f.id);
+    if (note) li.append(el("p", { class: note.ok ? "ok" : "err", role: "status", text: note.text }, note.retry ? [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: note.retry })] : []));
+    if (view.editing === f.id) li.append(editPanel(f));
+    return li;
+  }
+
+  // ---- the edit panel (also used for Add firm) ----
+  let panels = new Map();   // firm id (or "new") -> { node, inputs } so typed values survive re-renders
+  function editPanel(f) {
+    const key = f ? f.id : "new";
+    if (panels.has(key)) return panels.get(key).node;
+    const today = londonToday(), inputs = {}, errs = {};
+    const fieldErr = (col) => (errs[col] = el("p", { class: "err", hidden: true, "data-err": col }));
+    const text = (col, label, max, type = "text") => { inputs[col] = el("input", { class: "input", type, maxlength: String(max), autocomplete: "off", id: `${key}-${col}` }); return [el("label", { class: "field", for: `${key}-${col}`, text: label }), inputs[col], fieldErr(col)]; };
+    const select = (col, label, opts) => { inputs[col] = el("select", { class: "input", id: `${key}-${col}` }, opts.map(([v, t]) => el("option", { value: v, text: t }))); return [el("label", { class: "field", for: `${key}-${col}`, text: label }), inputs[col]]; };
+    const date = (col, label, min, max) => { inputs[col] = el("input", { class: "input", type: "date", min, max, id: `${key}-${col}` }); return inputs[col]; };
+    const counter = el("span", { class: "hint", "data-counter": "1" }), suggestMsg = el("span", { class: "hint", "data-suggested": "1" });
+    const quick = el("div", { class: "quick" }, [["sent", "Sent today"], ["replied", "Replied"], ["call_booked", "Call booked"], ["no_response", "No response"], ["dead_end", "Dead end"]].map(([k, t]) =>
+      el("button", { type: "button", class: "btn", text: t, onclick: () => { const v = quickApply(values(), k, londonToday()); inputs.status.value = v.status; inputs.last_sent_on.value = v.last_sent_on || ""; } })));
+    const lastSent = date("last_sent_on", "Last email sent", MIN_DATE, today), next = date("next_follow_up_on", "Next follow-up", MIN_DATE, maxFollowUp(today));
+    const msg = el("p", { class: "err", hidden: true, role: "alert" }, []);
+    const save = el("button", { type: "button", class: "btn primary", text: f ? "Save" : "Add firm" });
+    const node = el("div", { class: "edit-panel", "data-panel": String(key) }, [
+      quick,
+      el("div", { class: "grid2" }, [
+        el("div", null, text("name", "Name (required)", 80)),
+        el("div", null, select("status", "Status", STATUSES)),
+        el("div", null, select("priority", "Priority", [["1", "1"], ["2", "2"], ["3", "3"]])),
+        el("div", null, [el("label", { class: "field", for: `${key}-last_sent_on`, text: "Last email sent" }), el("div", { class: "with-btn" }, [lastSent,
+          el("button", { type: "button", class: "btn", text: "Today", onclick: () => { lastSent.value = londonToday(); } })]), fieldErr("last_sent_on")]),
+        el("div", null, [...text("last_note", "What was said", NOTE_MAX), counter]),
+        el("div", null, [el("label", { class: "field", for: `${key}-next_follow_up_on`, text: "Next follow-up" }), next,
+          el("div", { class: "suggest" }, [...SUGGEST_DAYS.map((n) => el("button", { type: "button", class: "btn", text: `+${n} days`, onclick: () => {
+            const d = suggestDate(lastSent.value, n, londonToday()); next.value = d; suggestMsg.textContent = `Follow up ${fmtDay(d)}`; } })), suggestMsg]), fieldErr("next_follow_up_on")]),
+        el("div", null, text("website", "Website", 300, "url")),
+        el("div", null, text("lead_email", "Email", 200, "email")),
+        el("div", null, text("lead_linkedin", "LinkedIn", 300, "url")),
+      ]),
+      msg,
+      el("div", { class: "row-actions" }, [save, el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => close() }),
+        f ? el("button", { type: "button", class: "btn danger", text: "Delete firm", onclick: () => deleteFirm(f) }) : null]),
+    ]);
+    const values = () => Object.fromEntries(Object.entries(inputs).map(([k, i]) => [k, i.value]));
+    const close = () => { panels.delete(key); if (f) { view.editing = null; render(); } else { show($("add-card"), false); $("add-card").replaceChildren(); } };
+    const start = f || { status: "not_started", priority: 2 };
+    for (const col of ["name", "status", "priority", "last_sent_on", "last_note", "next_follow_up_on", "website", "lead_email", "lead_linkedin"]) inputs[col].value = start[col] === null || start[col] === undefined ? "" : String(start[col]);
+    const count = () => { counter.textContent = `${inputs.last_note.value.length} / ${NOTE_MAX}`; };
+    inputs.last_note.addEventListener("input", count); count();
+    let busy = false;
+    const doSave = async () => {
+      if (busy) return;
+      const v = values(), today2 = londonToday(), bad = validateFirm(v, f ? f.id : null, data.firms || [], today2);
+      for (const col of Object.keys(errs)) { errs[col].textContent = bad[col] || ""; show(errs[col], !!bad[col]); }
+      for (const [col, i] of Object.entries(inputs)) i.setAttribute("aria-invalid", bad[col] ? "true" : "false");
+      show(msg, false);
+      if (Object.keys(bad).length) return;
+      busy = true; save.disabled = true;
+      const payload = firmPayload({ ...v, user_id: await getUserId().catch(() => null) });
+      let r;
+      try {
+        if (f) {
+          const changed = {};
+          for (const col of COLS.slice(1)) if ((payload[col] ?? null) !== (f[col] ?? null)) changed[col] = payload[col];
+          r = !Object.keys(changed).length ? { error: null } : await sb.from("outreach_firms").update(changed).eq("id", f.id);
+          if (!r.error) Object.assign(f, changed);
+        } else {
+          r = await sb.from("outreach_firms").insert(payload).select(FIRM_COLS).single();
+          if (!r.error && r.data) data.firms.push(normFirm(r.data));
+        }
+      } catch (e) { r = { error: e }; }
+      busy = false; save.disabled = false;
+      if (r.error) {
+        if (r.error.code === "23505") { errs.name.textContent = DUP_NAME; show(errs.name, true); return; }
+        msg.replaceChildren(document.createTextNode(SAVE_FAILED + " "), el("button", { type: "button", class: "btn", text: "Retry", onclick: doSave })); show(msg, true); return;
+      }
+      const id = f ? f.id : data.firms[data.firms.length - 1].id;
+      panels.delete(key); view.notes.set(id, { ok: true, text: "Saved" });
+      if (f) view.editing = null; else { show($("add-card"), false); $("add-card").replaceChildren(); }
+      render();
+    };
+    save.addEventListener("click", doSave);
+    panels.set(key, { node, inputs });
+    return node;
+  }
+  function openAdd() {
+    panels.delete("new"); show($("import-card"), false);
+    const card = $("add-card"); card.replaceChildren(el("h2", { text: "Add a firm" }), editPanel(null)); show(card, true); card.scrollIntoView({ block: "nearest" });
+  }
+  async function deleteFirm(f) {
+    if (!confirm(`Delete ${f.name}? This can't be undone.`)) return;
+    let r; try { r = await sb.from("outreach_firms").delete().eq("id", f.id); } catch (e) { r = { error: e }; }
+    if (r.error) { view.notes.set(f.id, { ok: false, text: "Couldn't delete. Check your connection, then Retry.", retry: () => { view.notes.delete(f.id); deleteFirm(f); } }); render(); return; }
+    data.firms = data.firms.filter((x) => x.id !== f.id); panels.delete(f.id); view.editing = null; view.notes.delete(f.id); render();
+  }
+
+  // ---- import ----
+  const TARGETS = [["name", "Firm name"], ["priority", "Priority"], ["status", "Status"], ["last_sent_on", "Last email sent"], ["last_note", "What was said"], ["next_follow_up_on", "Next follow-up"],
+                   ["website", "Website"], ["lead_email", "Email"], ["lead_linkedin", "LinkedIn"], ["", "Ignore"]];
+  const SYNONYMS = {
+    name: ["company", "firm", "firm name", "company name", "name"], priority: ["p", "priority", "prio"], status: ["status", "stage", "outcome"],
+    last_sent_on: ["last sent", "date sent", "emailed", "last email", "last email sent", "sent"], last_note: ["notes", "note", "comments", "comment", "response", "what was said"],
+    next_follow_up_on: ["follow up", "next follow up", "next follow-up", "chase", "next action date", "follow up date", "next follow up date"],
+    website: ["website", "url", "site"], lead_email: ["email", "e-mail", "email address"], lead_linkedin: ["linkedin", "linked in", "linkedin url"],
+  };
+  const normHeader = (h) => String(h).trim().toLowerCase().replace(/[_\-]+/g, " ").replace(/\s+/g, " ");
+  function guessMapping(headers) {
+    const used = new Set();
+    return headers.map((h) => {
+      const k = normHeader(h);
+      for (const [col, list] of Object.entries(SYNONYMS)) if (!used.has(col) && list.map(normHeader).includes(k)) { used.add(col); return col; }
+      return "";
+    });
   }
   function mapPriority(v) {
-    const s = v.trim().toLowerCase(); if (!s) return { v: DEFAULTS.priority };
+    const s = String(v || "").trim().toLowerCase(); if (!s) return { v: 2 };
     const m = /^p?([1-3])$/.exec(s); if (m) return { v: Number(m[1]) };
-    const abc = { a: 1, b: 2, c: 3, high: 1, medium: 2, med: 2, low: 3 }[s]; if (abc) return { v: abc };
-    return { v: DEFAULTS.priority, warn: `priority "${v.trim()}" not recognised, using P2` };
+    const abc = { a: 1, b: 2, c: 3 }[s]; if (abc) return { v: abc };
+    return { v: 2, warn: `priority "${String(v).trim()}" not recognised, using 2` };
   }
-  function mapRoute(v) {
-    const s = v.trim().toLowerCase(); if (!s) return { v: DEFAULTS.route };
-    if (/^(email|e-mail|mail|cold email)$/.test(s)) return { v: "email" };
-    if (/form/.test(s)) return { v: "form" };
-    if (/linkedin|^li$/.test(s)) return { v: "linkedin" };
-    if (/referral|intro/.test(s)) return { v: "referral" };
-    return { v: DEFAULTS.route, warn: `route "${v.trim()}" not recognised, using Email` };
+  // Status text, by case-insensitive substring tests in this order.
+  const STATUS_RULES = [["no_response", ["no response", "no reply", "ghost"]], ["dead_end", ["dead", "declin", "reject", "no thanks", "not hiring", "said no", "closed", "not working"]],
+                        ["call_booked", ["call", "meeting", "interview"]], ["replied", ["repl", "respond", "positive"]], ["waiting", ["wait", "sent", "active", "pending", "emailed", "chas", "follow"]],
+                        ["not_started", ["not started", "to do", "todo"]]];
+  function mapStatus(v) {
+    const s = String(v || "").trim().toLowerCase();
+    if (!s) return { v: "not_started" };
+    for (const [k, words] of STATUS_RULES) if (words.some((w) => s.includes(w))) return { v: k };
+    return { v: "not_started", warn: `status "${String(v).trim()}" not recognised, using Not started` };
   }
-  // Rows -> { valid: [{rowNo, values}], dups: [{rowNo, reason}], problems: [{rowNo, reasons}], warnings: [{rowNo, text}] }. Row numbers count the header as row 1.
-  function planImport(parsed, mapping, existing) {
+  const MONTHS = { jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7, aug: 8, august: 8, sep: 9, sept: 9, september: 9,
+                   oct: 10, october: 10, nov: 11, november: 11, dec: 12, december: 12 };
+  const iso = (y, m, d) => `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  // A spreadsheet date: YYYY-MM-DD, DD/MM/YYYY, DD/MM/YY (UK order), "12 Oct 2026", "12 October 2026", or "12 Oct" (no year: the most recent past
+  // occurrence for a sent date, the next upcoming one for a follow-up). Returns { v } or { v: null, bad: true }.
+  function parseSheetDate(raw, kind, today) {
+    const s = String(raw || "").trim().replace(/\s+/g, " ");
+    if (!s) return { v: null };
+    let y, m, d, m_;
+    if ((m_ = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) [y, m, d] = [Number(m_[1]), Number(m_[2]), Number(m_[3])];
+    else if ((m_ = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(s))) [d, m, y] = [Number(m_[1]), Number(m_[2]), m_[3].length === 2 ? 2000 + Number(m_[3]) : Number(m_[3])];
+    else if ((m_ = /^(\d{1,2})(?:st|nd|rd|th)? ([A-Za-z]+)\.?,? (\d{4})$/.exec(s)) && MONTHS[m_[2].toLowerCase()]) [d, m, y] = [Number(m_[1]), MONTHS[m_[2].toLowerCase()], Number(m_[3])];
+    else if ((m_ = /^(\d{1,2})(?:st|nd|rd|th)? ([A-Za-z]+)\.?$/.exec(s)) && MONTHS[m_[2].toLowerCase()]) {
+      d = Number(m_[1]); m = MONTHS[m_[2].toLowerCase()]; y = Number(today.slice(0, 4));
+      if (!validDate(iso(y, m, d)) && !(m === 2 && d === 29)) return { v: null, bad: true };
+      if (kind === "sent") { while (!validDate(iso(y, m, d)) || iso(y, m, d) > today) y--; }
+      else { while (!validDate(iso(y, m, d)) || iso(y, m, d) < today) y++; }
+    } else return { v: null, bad: true };
+    const out = iso(y, m, d);
+    return validDate(out) ? { v: out } : { v: null, bad: true };
+  }
+  // Rows -> { valid, dups, problems, warnings, preview }. Row numbers count the header as row 1.
+  function planImport(parsed, mapping, existing, today) {
     const out = { valid: [], dups: [], problems: [], warnings: [], preview: [] };
     const seen = new Map(), have = new Set(existing.map((f) => nameKey(f.name)));
     parsed.rows.forEach((cells, k) => {
-      const rowNo = parsed.rowNos ? parsed.rowNos[k] : k + 2, v = { firm_type: "", priority: "", route: "" };
-      mapping.forEach((col, j) => { if (col) v[col] = String(cells[j] === undefined ? "" : cells[j]).trim(); });
-      const reasons = [], warns = [];
-      const t = mapType(v.firm_type || ""), p = mapPriority(String(v.priority || "")), r = mapRoute(v.route || "");
-      for (const x of [t, p, r]) if (x.warn) warns.push(x.warn);
-      const vals = { ...v, firm_type: t.v, priority: p.v, route: r.v };
-      if (!vals.name) reasons.push("blank name");
-      for (const [col, max] of Object.entries(MAX)) if (vals[col] && String(vals[col]).length > max) reasons.push(`${col === "name" ? "name" : TARGETS.find((x) => x[0] === col)[1].toLowerCase()} too long (max ${max})`);
-      for (const col of ["website", "lead_linkedin"]) if (vals[col] && !/^https?:\/\//i.test(vals[col])) reasons.push(`bad ${col === "website" ? "website" : "LinkedIn"} URL (must start with https:// or http://)`);
-      if (vals.lead_email && !EMAIL_RE.test(vals.lead_email)) reasons.push("bad email");
-      if (out.preview.length < 10) out.preview.push({ rowNo, vals });
+      const rowNo = parsed.rowNos ? parsed.rowNos[k] : k + 2, raw = {};
+      mapping.forEach((col, j) => { if (col) raw[col] = String(cells[j] === undefined ? "" : cells[j]).trim(); });
+      const warn = (t) => out.warnings.push({ rowNo, text: t });
+      const v = { name: raw.name || "" };
+      const p = mapPriority(raw.priority); v.priority = p.v; if (p.warn) warn(p.warn);
+      const st = mapStatus(raw.status); v.status = st.v; if (st.warn) warn(st.warn);
+      const ls = parseSheetDate(raw.last_sent_on, "sent", today);
+      if (ls.bad) warn(`last email sent "${raw.last_sent_on}" isn't a date I can read, left empty`);
+      else if (ls.v && ls.v > today) { warn(`last email sent ${raw.last_sent_on} is in the future, left empty`); ls.v = null; }
+      else if (ls.v && ls.v < MIN_DATE) { warn(`last email sent ${raw.last_sent_on} is before 2000, left empty`); ls.v = null; }
+      v.last_sent_on = ls.v;
+      const nf = parseSheetDate(raw.next_follow_up_on, "next", today);
+      if (nf.bad) warn(`next follow-up "${raw.next_follow_up_on}" isn't a date I can read, left empty`);
+      else if (nf.v && (nf.v < MIN_DATE || nf.v > maxFollowUp(today))) { warn(`next follow-up ${raw.next_follow_up_on} is outside 2000 to two years ahead, left empty`); nf.v = null; }
+      v.next_follow_up_on = nf.v;
+      v.last_note = raw.last_note || null;
+      if (v.last_note && v.last_note.length > NOTE_MAX) { warn(`what was said is ${v.last_note.length} characters, cut to ${NOTE_MAX}`); v.last_note = v.last_note.slice(0, NOTE_MAX); }
+      for (const [col, label] of [["website", "website"], ["lead_linkedin", "LinkedIn"]]) {
+        const u = raw[col] || ""; v[col] = null;
+        if (u && /^https?:\/\//i.test(u) && u.length <= 300) v[col] = u; else if (u) warn(`${label} "${u}" isn't an http(s) link, dropped`);
+      }
+      const em = raw.lead_email || ""; v.lead_email = null;
+      if (em && EMAIL_RE.test(em) && em.length <= 200) v.lead_email = em; else if (em) warn(`email "${em}" isn't a valid address, dropped`);
+      if (out.preview.length < 10) out.preview.push({ rowNo, vals: v });
+      const reasons = [];
+      if (!v.name) reasons.push("blank name"); else if (v.name.length > 80) reasons.push("name too long (max 80)");
       if (reasons.length) { out.problems.push({ rowNo, reasons }); return; }
-      const key = nameKey(vals.name);
+      const key = nameKey(v.name);
       if (have.has(key)) { out.dups.push({ rowNo, reason: "already in your list" }); return; }
       if (seen.has(key)) { out.dups.push({ rowNo, reason: `repeated in the paste (row ${seen.get(key)})` }); return; }
       seen.set(key, rowNo);
-      for (const w of warns) out.warnings.push({ rowNo, text: w });
-      out.valid.push({ rowNo, vals });
+      out.valid.push({ rowNo, vals: v });
     });
     return out;
   }
   const imp = { text: "", parsed: null, mapping: null, plan: null, failed: null, busy: false, result: null };
-  function openImport() { closeFirmForm(); show($("plan-card"), false); show($("import-card"), true); renderImport(); $("import-card").scrollIntoView({ block: "nearest" }); }
+  function openImport() { panels.delete("new"); show($("add-card"), false); show($("import-card"), true); renderImport(); $("import-card").scrollIntoView({ block: "nearest" }); }
   function renderImport() {
     const card = $("import-card"), parts = [el("h2", { text: "Import firms" })];
     const ta = el("textarea", { class: "input", id: "import-text", "aria-label": "Paste your spreadsheet here, including the header row", placeholder: "Paste your spreadsheet here, including the header row" });
@@ -861,24 +747,25 @@
       parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table" }, [el("thead", null, [el("tr", null, [el("th", { text: "Your column" }), el("th", { text: "Field" })])]), tbody])]));
       const hasName = imp.mapping.includes("name");
       if (!hasName) parts.push(el("p", { class: "err", text: "Map a column to Firm name to continue." }));
-      parts.push(el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", text: "Continue", disabled: !hasName, onclick: () => { imp.plan = planImport(imp.parsed, imp.mapping, data.firms || []); renderImport(); } })]));
+      parts.push(el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", text: "Continue", disabled: !hasName, onclick: () => { imp.plan = planImport(imp.parsed, imp.mapping, data.firms || [], londonToday()); renderImport(); } })]));
     }
     if (imp.plan) {
       const p = imp.plan;
       parts.push(el("h3", { text: "Step 3: check and import" }));
       parts.push(el("p", { id: "import-summary", text: `${plural(p.valid.length, "row", "rows")} to import · ${plural(p.dups.length, "row", "rows")} skipped as duplicates · ${plural(p.problems.length, "row", "rows")} with problems · ${plural(p.warnings.length, "warning", "warnings")}` }));
       const cols = TARGETS.filter(([c]) => c && imp.mapping.includes(c));
-      parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table" }, [
+      const show_ = (c, val) => (val === null || val === undefined ? "" : c === "status" ? STATUS_LABEL[val] : String(val));
+      parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table preview" }, [
         el("thead", null, [el("tr", null, [el("th", { text: "Row" }), ...cols.map(([, t]) => el("th", { text: t }))])]),
-        el("tbody", null, p.preview.map((r) => el("tr", null, [el("td", { text: String(r.rowNo) }), ...cols.map(([c]) => el("td", { text: r.vals[c] === undefined || r.vals[c] === null ? "" : String(r.vals[c]) }))]))),
+        el("tbody", null, p.preview.map((r) => el("tr", null, [el("td", { text: String(r.rowNo) }), ...cols.map(([c]) => el("td", { text: show_(c, r.vals[c]) }))]))),
       ])]));
       const lists = [["Skipped as duplicates", p.dups.map((d) => `Row ${d.rowNo}: ${d.reason}`)], ["Problems (not imported)", p.problems.map((x) => `Row ${x.rowNo}: ${x.reasons.join("; ")}`)],
-                     ["Warnings (imported with the default)", p.warnings.map((w) => `Row ${w.rowNo}: ${w.text}`)]];
+                     ["Warnings", p.warnings.map((w) => `Row ${w.rowNo}: ${w.text}`)]];
       for (const [title, items] of lists) if (items.length) parts.push(el("h3", { text: title }), el("ul", { class: "problems", "data-list": title }, items.map((t) => el("li", { text: t }))));
       parts.push(el("p", { class: "msg", text: "Row numbers count the header as row 1." }));
       const todo = imp.failed || (imp.result && imp.result.ok ? [] : p.valid);   // after a complete import there's nothing left to send
-      const btn = el("button", { type: "button", class: "btn primary", id: "import-confirm", text: imp.failed ? `Retry ${plural(imp.failed.length, "row", "rows")}` : "Confirm import", disabled: imp.busy || !todo.length, onclick: () => runImport(todo) });
-      parts.push(el("div", { class: "row-actions" }, [btn]));
+      parts.push(el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", id: "import-confirm", text: imp.failed ? `Retry ${plural(imp.failed.length, "row", "rows")}` : "Confirm import",
+        disabled: imp.busy || !todo.length, onclick: () => runImport(todo) })]));
       if (imp.result) parts.push(el("p", { class: imp.result.ok ? "ok" : "err", id: "import-result", text: imp.result.text, role: "status" }));
     }
     card.replaceChildren(...parts);
@@ -896,745 +783,29 @@
       data.firms.push(...r.data.map(normFirm)); done += r.data.length;
     }
     imp.busy = false;
-    const span = (rs) => rs.map((x) => x.rowNo).join(", ");
     imp.failed = failed.length ? failed : null;
     imp.result = failed.length
-      ? { ok: false, text: `Imported ${plural(done, "firm", "firms")}. ${plural(failed.length, "row wasn't", "rows weren't")} imported (rows ${span(failed)}): Retry sends only those.` }
+      ? { ok: false, text: `Imported ${plural(done, "firm", "firms")}. ${plural(failed.length, "row wasn't", "rows weren't")} imported (rows ${failed.map((x) => x.rowNo).join(", ")}): Retry sends only those.` }
       : { ok: true, text: `Imported ${plural(done, "firm", "firms")}.` };
     renderImport(); render();
-  }
-
-
-  // ======== per-firm plans: the plan block (validatePack, planDates), the import, the steps timeline ========
-  const CHANNELS = ["linkedin_request", "linkedin_message", "email", "form", "follow_up"];
-  const CHANNEL_LABEL = { linkedin_request: "LinkedIn request", linkedin_message: "LinkedIn message", email: "Email", form: "Form", follow_up: "Follow-up" };
-  const MESSAGE_MAX = { linkedin_request: LINKEDIN_NOTE_MAX, linkedin_message: 1500, email: 4000, follow_up: 4000, form: 4000 };
-  const REF_RE = /^[a-z][a-z0-9_]{0,19}$/;
-  const PLACEHOLDER_RES = [/\[[^\]]{1,40}\]/, /\{\{[^}]*\}\}/, /\b(?:XXX|TBC)\b/i];
-  const KNOWN_KEYS = {
-    root: ["version", "mode", "firm", "people", "deals", "reasoning", "steps", "documents"],
-    firm: ["name", "type", "priority", "website", "location", "size", "summary", "cv_version"],
-    person: ["name", "role", "email", "email_status", "linkedin", "alumnus", "source"],
-    deal: ["title", "date", "source"],
-    step: ["id", "channel", "target", "purpose", "subject", "message", "form_url", "planned_on", "after", "offset_business_days"],
-  };
-  function findPlaceholder(s) { for (const re of PLACEHOLDER_RES) { const m = re.exec(String(s || "")); if (m) return m[0]; } return null; }
-  function validDate(s) {
-    if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-    const [y, m, d] = ymd(s), t = new Date(Date.UTC(y, m - 1, d));
-    return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
-  }
-  function nextBusinessDay(s) { let d = s; while (!isBusinessDay(d)) d = addDays(d, 1); return d; }
-  // Where a JSON text stops being valid: { pos, msg }, or null. Used only to name the line and column (browsers word JSON.parse errors differently).
-  function jsonErrorAt(s) {
-    let i = 0;
-    const ws = () => { while (i < s.length && " \t\n\r".includes(s[i])) i++; };
-    const fail = (msg) => { throw { pos: i, msg }; };
-    function value() {
-      ws(); const c = s[i];
-      if (c === "{") return obj();
-      if (c === "[") return arr();
-      if (c === '"') return str();
-      if (c === "-" || (c >= "0" && c <= "9")) return num();
-      for (const w of ["true", "false", "null"]) if (s.startsWith(w, i)) { i += w.length; return; }
-      fail(i >= s.length ? "the block ends too early" : `unexpected ${JSON.stringify(c)}`);
-    }
-    function obj() {
-      i++; ws(); if (s[i] === "}") { i++; return; }
-      for (;;) {
-        ws(); if (s[i] !== '"') fail("expected a quoted key"); str(); ws();
-        if (s[i] !== ":") fail('expected ":"'); i++; value(); ws();
-        if (s[i] === ",") { i++; continue; } if (s[i] === "}") { i++; return; } fail('expected "," or "}"');
-      }
-    }
-    function arr() {
-      i++; ws(); if (s[i] === "]") { i++; return; }
-      for (;;) { value(); ws(); if (s[i] === ",") { i++; continue; } if (s[i] === "]") { i++; return; } fail('expected "," or "]"'); }
-    }
-    function str() {
-      i++;
-      while (i < s.length) { const c = s[i]; if (c === '"') { i++; return; } if (c === "\\") { i += 2; continue; } if (c < " ") fail("a line break or control character inside a string (write \\n)"); i++; }
-      fail("a string isn't closed");
-    }
-    function num() { const m = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/.exec(s.slice(i)); if (!m) fail("a bad number"); i += m[0].length; }
-    try { value(); ws(); if (i < s.length) fail("extra text after the block"); return null; }
-    catch (e) { if (e && typeof e.pos === "number") return e; throw e; }
-  }
-  // Planned dates for a block's steps (pure): the first step's date moves to the next business day if needed; a step with after gets
-  // businessDaysAfter(its parent's date, offset). existingSteps supplies refs for append mode.
-  function planDates(steps, existingSteps = [], today = londonToday()) {
-    const dates = [], warnings = [], byRef = new Map(existingSteps.map((s) => [s.ref, s.planned_on]));
-    steps.forEach((s, i) => {
-      let d = null;
-      if (s && s.planned_on) {
-        d = s.planned_on;
-        if (!isBusinessDay(d)) {
-          if (i === 0) { const moved = nextBusinessDay(d); warnings.push({ index: i, msg: `${fmtDay(d, today)} isn't a business day, so the plan starts on ${fmtDay(moved, today)}` }); d = moved; }
-          else warnings.push({ index: i, msg: `${fmtDay(d, today)} isn't a business day` });
-        }
-      } else if (s && s.after_ref && byRef.get(s.after_ref)) d = businessDaysAfter(byRef.get(s.after_ref), s.offset_business_days);
-      dates.push(d);
-      if (s && s.ref && d) byRef.set(s.ref, d);
-    });
-    return { dates, warnings };
-  }
-  // Checks a pasted plan block (pure: no DOM, nothing executed). existing = { firms, steps } as loaded.
-  function validatePack(text, today = londonToday(), existing = { firms: [], steps: [] }) {
-    const errors = [], warnings = [];
-    const err = (path, msg) => errors.push({ path, msg }), warn = (path, msg) => warnings.push({ path, msg });
-    const out = { errors, warnings, mode: "replace", firm: null, match: null, people: [], deals: [], documents: [], reasoning: null, steps: [] };
-    let src = String(text === null || text === undefined ? "" : text);
-    if (src.length > PLAN_MAX_CHARS) { err("(block)", `is ${src.length.toLocaleString("en-GB")} characters; the most is ${PLAN_MAX_CHARS.toLocaleString("en-GB")}`); return out; }
-    src = src.replace(/^﻿/, "");
-    const lines = src.split(/\r\n|\r|\n/); let top = 0;
-    while (lines.length && lines[0].trim() === "") { lines.shift(); top++; }
-    while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
-    if (lines.length && /^\s*```(?:json)?\s*$/i.test(lines[0])) {
-      lines.shift(); top++;
-      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
-      if (lines.length && /^\s*```\s*$/.test(lines[lines.length - 1])) lines.pop();
-    }
-    const body = lines.join("\n");
-    if (!body.trim()) { err("(block)", "is empty: paste the plan block"); return out; }
-    let pack;
-    try { pack = JSON.parse(body); }
-    catch (e) {
-      const at = jsonErrorAt(body) || { pos: body.length, msg: "not valid JSON" };
-      const before = body.slice(0, at.pos).split("\n");
-      err("(json)", `isn't valid JSON at line ${before.length + top}, column ${before[before.length - 1].length + 1}: ${at.msg}`);
-      return out;
-    }
-    if (!pack || typeof pack !== "object" || Array.isArray(pack)) { err("(block)", "must be one JSON object, { … }"); return out; }
-    const unknown = (o, keys, path) => { for (const k of Object.keys(o)) if (!keys.includes(k)) warn(path ? `${path}.${k}` : k, "unknown key, ignored"); };
-    const text_ = (o, k, path, opt = {}) => {
-      const v = o[k], p = path ? `${path}.${k}` : k;
-      if (v === undefined || v === null || v === "") { if (opt.required) err(p, "is required"); return null; }
-      if (typeof v !== "string") { err(p, "must be text"); return null; }
-      const t = v.trim();
-      if (!t) { if (opt.required) err(p, "is required"); return null; }
-      if (opt.max && t.length > opt.max) { err(p, `is ${t.length} characters; the most is ${opt.max}`); return null; }
-      if (opt.url && !/^https?:\/\//i.test(t)) { err(p, "must start with https:// or http://"); return null; }
-      if (opt.email && !EMAIL_RE.test(t)) { err(p, "isn't a valid email address"); return null; }
-      return t;
-    };
-    const list = (k, max) => {
-      const v = pack[k];
-      if (v === undefined || v === null) return [];
-      if (!Array.isArray(v)) { err(k, "must be a list, [ … ]"); return []; }
-      if (v.length > max) err(k, `has ${v.length} entries; the most is ${max}`);
-      return v.slice(0, max);
-    };
-    unknown(pack, KNOWN_KEYS.root, "");
-    if (pack.version !== 1) err("version", "must be 1");
-    if (pack.mode !== undefined && pack.mode !== "replace" && pack.mode !== "append") err("mode", 'must be "replace" or "append"');
-    out.mode = pack.mode === "append" ? "append" : "replace";
-    const f = pack.firm;
-    if (!f || typeof f !== "object" || Array.isArray(f)) err("firm", "is required: an object with at least a name");
-    else {
-      unknown(f, KNOWN_KEYS.firm, "firm");
-      const firm = { name: text_(f, "name", "firm", { max: 80, required: true }), firm_type: "boutique", priority: 2, website: text_(f, "website", "firm", { max: 300, url: true }),
-                     location: text_(f, "location", "firm", { max: 80 }), size: text_(f, "size", "firm", { max: 40 }), summary: text_(f, "summary", "firm", { max: 600 }), cv_version: text_(f, "cv_version", "firm", { max: 60 }) };
-      if (f.type !== undefined && f.type !== null && f.type !== "") { if (["boutique", "investor", "other"].includes(f.type)) firm.firm_type = f.type; else err("firm.type", 'must be "boutique", "investor" or "other"'); }
-      if (f.priority !== undefined && f.priority !== null) { if (Number.isInteger(f.priority) && f.priority >= 1 && f.priority <= 3) firm.priority = f.priority; else err("firm.priority", "must be 1, 2 or 3"); }
-      out.firm = firm;
-    }
-    list("people", 10).forEach((p, i) => {
-      const path = `people[${i}]`;
-      if (!p || typeof p !== "object" || Array.isArray(p)) { err(path, "must be an object"); return; }
-      unknown(p, KNOWN_KEYS.person, path);
-      let es = "unknown";
-      if (p.email_status !== undefined && p.email_status !== null && p.email_status !== "") { if (["found", "guessed", "unknown"].includes(p.email_status)) es = p.email_status; else err(`${path}.email_status`, 'must be "found", "guessed" or "unknown"'); }
-      if (p.alumnus !== undefined && p.alumnus !== null && typeof p.alumnus !== "boolean") err(`${path}.alumnus`, "must be true or false");
-      out.people.push({ name: text_(p, "name", path, { max: 80, required: true }), role: text_(p, "role", path, { max: 120 }), email: text_(p, "email", path, { email: true }), email_status: es,
-                        linkedin: text_(p, "linkedin", path, { url: true }), alumnus: p.alumnus === true, source: text_(p, "source", path, { url: true }), verified: false });
-    });
-    list("deals", 10).forEach((d, i) => {
-      const path = `deals[${i}]`;
-      if (!d || typeof d !== "object" || Array.isArray(d)) { err(path, "must be an object"); return; }
-      unknown(d, KNOWN_KEYS.deal, path);
-      const date = text_(d, "date", path, { max: 20 });
-      if (date && !(/^\d{4}$/.test(date) || (/^\d{4}-(0[1-9]|1[0-2])$/.test(date)) || validDate(date))) err(`${path}.date`, "must be YYYY, YYYY-MM or YYYY-MM-DD");
-      out.deals.push({ title: text_(d, "title", path, { max: 200, required: true }), date, source: text_(d, "source", path, { url: true }), verified: false });
-    });
-    out.reasoning = text_(pack, "reasoning", "", { max: 1500 });
-    list("documents", 10).forEach((v, i) => {
-      if (typeof v !== "string" || !v.trim()) err(`documents[${i}]`, "must be text"); else if (v.trim().length > 80) err(`documents[${i}]`, `is ${v.trim().length} characters; the most is 80`); else out.documents.push(v.trim());
-    });
-    // the existing firm, matched by name (case-insensitive), and its steps
-    const match = out.firm && out.firm.name ? (existing.firms || []).find((x) => nameKey(x.name) === nameKey(out.firm.name)) || null : null;
-    out.match = match;
-    const old = match ? (existing.steps || []).filter((s) => s.firm_id === match.id) : [];
-    const oldRefs = new Map(old.map((s) => [s.ref, s]));
-    const rawSteps = pack.steps;
-    if (!Array.isArray(rawSteps) || !rawSteps.length) err("steps", `must list 1 to ${STEPS_MAX_NEW} steps`);
-    else if (rawSteps.length > STEPS_MAX_NEW) err("steps", `has ${rawSteps.length} steps; the most is ${STEPS_MAX_NEW}`);
-    const steps = Array.isArray(rawSteps) ? rawSteps.slice(0, STEPS_MAX_NEW) : [];
-    const seen = new Set(), items = [];
-    steps.forEach((s, i) => {
-      const path = `steps[${i}]`;
-      if (!s || typeof s !== "object" || Array.isArray(s)) { err(path, "must be an object"); items.push(null); return; }
-      unknown(s, KNOWN_KEYS.step, path);
-      const e2 = (k, m) => err(`${path}.${k}`, m);
-      const id = s.id;
-      if (typeof id !== "string" || !REF_RE.test(id)) e2("id", "must start with a lowercase letter and use only a–z, 0–9 and _, at most 20 characters");
-      else if (seen.has(id)) e2("id", `"${id}" is used twice`);
-      else if (out.mode === "append" && oldRefs.has(id)) e2("id", `"${id}" is already a step of ${match.name}`);
-      const ch = s.channel;
-      if (!CHANNELS.includes(ch)) e2("channel", `must be one of ${CHANNELS.join(", ")}`);
-      const needSubject = ch === "email" || ch === "follow_up";
-      const target = text_(s, "target", path, { max: 160 }), purpose = text_(s, "purpose", path, { max: 300 });
-      const subject = text_(s, "subject", path, { max: 200, required: needSubject });
-      const message = text_(s, "message", path, { max: MESSAGE_MAX[ch] || 4000, required: ch !== "form" });
-      for (const [k, v] of [["subject", subject], ["message", message]]) { const ph = v && findPlaceholder(v); if (ph) e2(k, `has a leftover placeholder: ${ph}`); }
-      const form_url = text_(s, "form_url", path, { max: 300, url: true });
-      if (form_url && ch !== "form") e2("form_url", "is only for form steps");
-      const hasPlanned = s.planned_on !== undefined && s.planned_on !== null && s.planned_on !== "";
-      const hasAfter = s.after !== undefined && s.after !== null && s.after !== "";
-      let planned = null, after = null, offset = null;
-      if (hasPlanned && hasAfter) e2("planned_on", "use planned_on or after, not both");
-      else if (i === 0 && !hasPlanned) e2("planned_on", "is required on the first step (YYYY-MM-DD)");
-      else if (hasPlanned) { if (validDate(s.planned_on)) planned = s.planned_on; else e2("planned_on", "must be a date, YYYY-MM-DD"); }
-      else if (!hasAfter) e2("after", "is needed when there's no planned_on (with offset_business_days)");
-      else {
-        if (typeof s.after !== "string") e2("after", "must be a step id");
-        else if (seen.has(s.after)) after = s.after;
-        else if (steps.slice(i + 1).some((x) => x && x.id === s.after)) e2("after", `points to "${s.after}", a later step; it must point to an earlier one`);
-        else if (out.mode === "append" && oldRefs.has(s.after)) after = s.after;
-        else e2("after", `points to "${s.after}", which isn't an earlier step`);
-        const o = s.offset_business_days;
-        if (o === undefined || o === null) e2("offset_business_days", "is required with after");
-        else if (!Number.isInteger(o) || o < 0 || o > 40) e2("offset_business_days", "must be a whole number from 0 to 40");
-        else offset = o;
-      }
-      if (typeof id === "string" && REF_RE.test(id)) seen.add(id);
-      items.push({ ref: typeof id === "string" ? id : null, channel: ch, target, purpose, subject, message, form_url, planned_on: planned, after_ref: after, offset_business_days: offset });
-    });
-    if (match && out.mode === "replace" && old.some((s) => s.status === "done"))
-      err("mode", `${match.name} already has steps marked done, so replacing its plan would lose them. Use "mode": "append" to add steps instead`);
-    if (match && out.mode === "append" && old.length + steps.length > STEPS_MAX_TOTAL)
-      err("steps", `would give ${match.name} ${old.length + steps.length} steps; the most is ${STEPS_MAX_TOTAL}`);
-    if (!match && out.mode === "append" && out.firm && out.firm.name) warn("mode", `no firm called ${out.firm.name} yet, so it will be created`);
-    const pd = planDates(items, out.mode === "append" ? old : [], today);
-    pd.warnings.forEach((w) => warn(`steps[${w.index}].planned_on`, w.msg));
-    items.forEach((s, i) => {
-      if (!s) return;
-      s.planned_on = pd.dates[i];
-      if (s.planned_on && s.planned_on < today) warn(`steps[${i}].planned_on`, `${fmtDay(s.planned_on, today)} is before today`);
-    });
-    out.steps = items;
-    return out;
-  }
-  // What a plan does to an existing firm: fill only empty fields, merge people (by name) and deals (by title), add new documents.
-  const emptyVal = (v) => v === null || v === undefined || (typeof v === "string" && !v.trim());
-  function mergeFirm(match, v) {
-    const changes = {}, filled = [];
-    for (const col of ["website", "location", "size", "summary", "cv_version"]) if (v.firm && !emptyVal(v.firm[col]) && emptyVal(match[col])) { changes[col] = v.firm[col]; filled.push(col); }
-    if (!emptyVal(v.reasoning) && emptyVal(match.reasoning)) { changes.reasoning = v.reasoning; filled.push("reasoning"); }
-    const people = Array.isArray(match.people) ? match.people : [], deals = Array.isArray(match.deals) ? match.deals : [], docs = Array.isArray(match.documents) ? match.documents : [];
-    const pk = new Set(people.map((p) => nameKey(p.name))), dk = new Set(deals.map((d) => nameKey(d.title))), ck = new Set(docs.map(nameKey));
-    const newP = v.people.filter((p) => !pk.has(nameKey(p.name)) && pk.add(nameKey(p.name)));
-    const newD = v.deals.filter((d) => !dk.has(nameKey(d.title)) && dk.add(nameKey(d.title)));
-    const newC = v.documents.filter((c) => !ck.has(nameKey(c)) && ck.add(nameKey(c)));
-    if (newP.length) changes.people = [...people, ...newP];
-    if (newD.length) changes.deals = [...deals, ...newD];
-    if (newC.length) changes.documents = [...docs, ...newC];
-    return { changes, filled, peopleNew: newP.length, peopleKept: people.length, dealsNew: newD.length, dealsKept: deals.length, docsNew: newC.length };
-  }
-  const STEP_PAYLOAD_KEYS = ["user_id", "firm_id", "position", "ref", "channel", "target", "purpose", "subject", "message", "after_ref", "offset_business_days", "planned_on", "form_url"];
-  function stepPayload(s, userId_, firmId, position) {
-    const p = { user_id: userId_, firm_id: firmId, position, ref: s.ref, channel: s.channel, target: s.target, purpose: s.purpose, subject: s.subject, message: s.message,
-                after_ref: s.after_ref, offset_business_days: s.offset_business_days, planned_on: s.planned_on, form_url: s.form_url };
-    for (const k of STEP_PAYLOAD_KEYS) if (p[k] === "" || p[k] === undefined) p[k] = null;
-    return p;
-  }
-  const RESTORE_KEYS = ["user_id", "firm_id", "position", "ref", "channel", "target", "purpose", "subject", "message", "after_ref", "offset_business_days", "planned_on", "status", "done_on",
-                        "outcome", "skip_reason", "documents", "form_url", "note", "touch_id"];
-
-  // ---- the plan panel ----
-  const SAMPLE_PLAN = `{"version":1,"firm":{"name":"Example Test Partners","type":"boutique","priority":2,"website":"https://example.com","location":"London","size":"11-50","summary":"A fictional firm used to test the plan import.","cv_version":"Boutique M&A"},"people":[{"name":"Alex Example","role":"Partner","email":"alex.example@example.com","email_status":"guessed","linkedin":"https://www.linkedin.com/in/example","alumnus":true,"source":"https://example.com/team"}],"deals":[{"title":"Advised a fictional company on its sale","date":"2026-09","source":"https://example.com/deals"}],"reasoning":"Test data: LinkedIn first because the contact is an alumnus, then a short email, then one follow-up.","steps":[{"id":"s1","channel":"linkedin_request","target":"Alex Example","purpose":"Warm connection before the email","planned_on":"2026-10-20","message":"Hi Alex, I'm a Lancaster Economics and Finance student interested in M&A advisory. I'd be glad to connect."},{"id":"s2","channel":"email","target":"Alex Example","purpose":"Cold email","after":"s1","offset_business_days":2,"subject":"Test email subject","message":"This is a fictional test message with no placeholders."},{"id":"s3","channel":"follow_up","target":"Alex Example","purpose":"The one follow-up","after":"s2","offset_business_days":5,"subject":"Re: Test email subject","message":"This is a fictional test follow-up."}],"documents":["CV: Boutique M&A"]}`;
-  const PLAN_SHAPE = `{ "version": 1, "mode": "replace" | "append" (default replace),
-  "firm": { name (required, 1..80), type (boutique|investor|other, default boutique), priority (1..3, default 2),
-            website (http/https), location (<=80), size (<=40), summary (<=600), cv_version (<=60) },
-  "people": [ up to 10 of { name (1..80), role (<=120), email (a valid address or empty),
-              email_status (found|guessed|unknown, default unknown), linkedin (http/https or empty),
-              alumnus (true/false, default false), source (http/https or empty) } ],
-  "deals": [ up to 10 of { title (1..200), date (YYYY, YYYY-MM or YYYY-MM-DD), source (http/https or empty) } ],
-  "reasoning": (<=1500),
-  "steps": [ 1..6 of { id (a–z first, then a–z, 0–9, _; at most 20; unique),
-             channel (linkedin_request|linkedin_message|email|form|follow_up),
-             target (<=160), purpose (<=300), subject (<=200; required for email and follow_up),
-             message (required except for form; at most 300 for linkedin_request, 1500 for
-                      linkedin_message, 4000 for email and follow_up),
-             form_url (http/https; form steps only),
-             planned_on (YYYY-MM-DD)  OR  after (an earlier step id) with offset_business_days (0..40) } ],
-  "documents": [ up to 10 texts, each <=80 ] }
-
-The first step needs planned_on. A [placeholder], {{placeholder}}, XXX or TBC left in a subject or
-message is an error. Unknown keys are ignored with a warning. A Markdown code fence around the block is fine.`;
-  const plan = { text: "", result: null, busy: false, done: false, msg: null };
-  function openPlan() { closeFirmForm(); show($("import-card"), false); show($("plan-card"), true); renderPlan(); $("plan-card").scrollIntoView({ block: "nearest" }); }
-  function renderPlan() {
-    const card = $("plan-card"), parts = [el("h2", { text: "Paste a plan" })];
-    parts.push(el("details", { class: "help" }, [el("summary", { text: "Plan format" }),
-      el("pre", { class: "help-pre", text: PLAN_SHAPE }), el("p", { class: "msg", text: "A sample block (fictional data):" }), el("pre", { class: "help-pre", text: JSON.stringify(JSON.parse(SAMPLE_PLAN), null, 2) })]));
-    const ta = el("textarea", { class: "input", id: "plan-text", "aria-label": "Plan block", placeholder: "Paste the plan block here" });
-    ta.value = plan.text;
-    ta.addEventListener("input", () => { plan.text = ta.value; if (plan.done) { plan.done = false; plan.result = null; plan.msg = null; renderPlan(); $("plan-text").focus(); } });
-    parts.push(el("label", { class: "field", for: "plan-text", text: "Plan block" }), ta,
-      el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", id: "plan-check", text: "Check", disabled: plan.busy, onclick: () => {
-        plan.text = $("plan-text").value; plan.done = false; plan.msg = null;
-        if (!data.firms || !data.steps) { plan.result = null; plan.msg = { ok: false, text: "Your firms and plans haven't loaded yet, so the block can't be checked against them. Retry them first." }; return renderPlan(); }
-        plan.result = validatePack(plan.text, londonToday(), { firms: data.firms || [], steps: data.steps || [] }); renderPlan();
-      } }), el("button", { type: "button", class: "btn", text: "Close", onclick: () => show(card, false) })]));
-    const r = plan.result;
-    if (r) {
-      parts.push(el("h3", { text: r.errors.length ? `${plural(r.errors.length, "error", "errors")} (nothing can be imported until they're fixed)` : "No errors" }));
-      if (r.errors.length) parts.push(el("ul", { class: "problems", id: "plan-errors" }, r.errors.map((e) => el("li", { class: "err", text: `${e.path}: ${e.msg}` }))));
-      if (r.warnings.length) parts.push(el("h3", { text: plural(r.warnings.length, "warning", "warnings") }), el("ul", { class: "problems", id: "plan-warnings" }, r.warnings.map((w) => el("li", { text: `${w.path}: ${w.msg}` }))));
-      if (r.firm && r.firm.name) {
-        const lines = [];
-        if (r.match) {
-          const m = mergeFirm(r.match, r);
-          lines.push(`Existing firm: ${r.match.name} (matched by name). Mode: ${r.mode}.`);
-          lines.push(m.filled.length ? `Will fill the empty fields: ${m.filled.join(", ")}.` : "No firm fields will change (filled fields are never overwritten).");
-          lines.push(`People: ${m.peopleNew} new, ${m.peopleKept} already there. Deals: ${m.dealsNew} new, ${m.dealsKept} already there. Documents: ${m.docsNew} new.`);
-          const old = (data.steps || []).filter((s) => s.firm_id === r.match.id);
-          if (r.mode === "replace") lines.push(old.length ? `Replaces its ${plural(old.length, "planned or skipped step", "planned or skipped steps")}.` : "It has no steps yet.");
-          else lines.push(`Adds ${plural(r.steps.length, "step", "steps")} after its ${plural(old.length, "step", "steps")}.`);
-        } else {
-          lines.push(`New firm: ${r.firm.name}. People: ${r.people.length}. Deals: ${r.deals.length}. Documents: ${r.documents.length}.`);
-        }
-        parts.push(el("div", { id: "plan-summary" }, lines.map((t) => el("p", { text: t }))));
-      }
-      if (r.steps.length) {
-        parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table", id: "plan-steps" }, [
-          el("thead", null, [el("tr", null, ["Step", "Channel", "Planned", "Timing"].map((h) => el("th", { text: h })))]),
-          el("tbody", null, r.steps.filter(Boolean).map((s) => el("tr", null, [el("td", { text: s.ref || "?" }), el("td", { text: CHANNEL_LABEL[s.channel] || String(s.channel) }),
-            el("td", { text: s.planned_on ? fmtDay(s.planned_on) : "—" }), el("td", { text: s.after_ref ? `${s.offset_business_days} business days after ${s.after_ref}` : "fixed date" })]))),
-        ])]));
-      }
-      parts.push(el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", id: "plan-import", text: plan.busy ? "Importing…" : "Import",
-        disabled: !!r.errors.length || plan.busy || plan.done, onclick: () => runPlanImport(r) })]));
-    }
-    if (plan.msg) parts.push(el("p", { class: plan.msg.ok ? "ok" : "err", id: "plan-result", role: "status", text: plan.msg.text }));
-    card.replaceChildren(...parts);
-  }
-  // Inserting steps, deleting them and putting them back, each returning { ok, rows }.
-  async function insertSteps(rows) { let r; try { r = await sb.from("outreach_steps").insert(rows).select(STEP_COLS); } catch (e) { r = { error: e }; } return { ok: !r.error && !!r.data, rows: r.data || [] }; }
-  async function deleteStepsById(ids) { if (!ids.length) return true; let r; try { r = await sb.from("outreach_steps").delete().in("id", ids); } catch (e) { r = { error: e }; } return !r.error; }
-  async function runPlanImport(r) {
-    if (plan.busy || plan.done || r.errors.length) return;
-    plan.busy = true; plan.msg = null; renderPlan();
-    const finish = (ok, text) => { plan.busy = false; plan.done = ok; plan.msg = { ok, text }; renderPlan(); render(); };
-    const uid = await getUserId().catch(() => null);
-    if (!r.match) {   // a new firm, then its steps; if the steps fail, the firm is removed again
-      let fr;
-      try {
-        fr = await sb.from("outreach_firms").insert({ user_id: uid, name: r.firm.name, firm_type: r.firm.firm_type, priority: r.firm.priority, website: r.firm.website, location: r.firm.location,
-          size: r.firm.size, summary: r.firm.summary, cv_version: r.firm.cv_version, reasoning: r.reasoning, people: r.people, deals: r.deals, documents: r.documents }).select(FIRM_COLS).single();
-      } catch (e) { fr = { error: e }; }
-      if (fr.error || !fr.data) return finish(false, fr.error && fr.error.code === "23505" ? `${DUP_NAME}: reload the page so the plan matches it.` : "Couldn't create the firm. Nothing was imported.");
-      const firm = normFirm(fr.data);
-      const ins = await insertSteps(r.steps.map((s, i) => stepPayload(s, uid, firm.id, i + 1)));
-      if (!ins.ok) {
-        let gone; try { gone = await sb.from("outreach_firms").delete().eq("id", firm.id); } catch (e) { gone = { error: e }; }
-        if (gone.error) { data.firms.push(firm); return finish(false, `Couldn't save the plan's steps, and couldn't remove the new firm again: ${firm.name} now exists with no plan. Delete it from its card, or paste the plan again with "mode": "append".`); }
-        return finish(false, "Couldn't save the plan's steps, so the new firm was removed again. Nothing was imported.");
-      }
-      data.firms.push(firm); data.steps.push(...ins.rows.map(normStep)); regroupSteps(); view.open.add(firm.id);
-      return finish(true, `Imported ${firm.name} with ${plural(ins.rows.length, "step", "steps")}.`);
-    }
-    // an existing firm: (replace) remove its planned and skipped steps, add the new steps, then fill its empty fields
-    const firm = r.match, merge = mergeFirm(firm, r);
-    const old = (data.steps || []).filter((s) => s.firm_id === firm.id);
-    const removed = r.mode === "replace" ? old.filter((s) => s.status === "planned" || s.status === "skipped") : [];
-    if (r.mode === "replace" && removed.length !== old.length) return finish(false, `${firm.name} has steps marked done, so its plan can't be replaced. Use "mode": "append".`);
-    if (removed.length) {
-      let dr; try { dr = await sb.from("outreach_steps").delete().eq("firm_id", firm.id).in("status", ["planned", "skipped"]); } catch (e) { dr = { error: e }; }
-      if (dr.error) return finish(false, "Couldn't remove the old plan. Nothing was imported.");
-    }
-    const startPos = r.mode === "append" ? old.reduce((m, s) => Math.max(m, s.position), 0) : 0;
-    const putBack = async () => {
-      if (!removed.length) return true;
-      const ok = await insertSteps(removed.map((s) => Object.fromEntries(RESTORE_KEYS.map((k) => [k, k === "user_id" ? uid : s[k] === undefined ? null : s[k]]))));
-      if (ok.ok) { data.steps = data.steps.filter((s) => !removed.includes(s)).concat(ok.rows.map(normStep)); regroupSteps(); }
-      return ok.ok;
-    };
-    const lost = () => removed.map((s) => `${s.ref} (${fmtDay(s.planned_on)})`).join(", ");
-    const ins = await insertSteps(r.steps.map((s, i) => stepPayload(s, uid, firm.id, startPos + i + 1)));
-    if (!ins.ok) {
-      if (removed.length) data.steps = data.steps.filter((s) => !removed.includes(s));
-      if (await putBack()) return finish(false, removed.length ? "Couldn't save the new steps. The previous plan was put back; nothing was imported." : "Couldn't save the new steps. Nothing was imported.");
-      regroupSteps();
-      return finish(false, `Couldn't save the new steps, and couldn't put back the previous plan: ${firm.name} has lost its ${plural(removed.length, "planned or skipped step", "planned or skipped steps")} (${lost()}). Paste the plan again to recreate them.`);
-    }
-    const newRows = ins.rows.map(normStep);
-    if (Object.keys(merge.changes).length) {
-      let ur; try { ur = await sb.from("outreach_firms").update(merge.changes).eq("id", firm.id); } catch (e) { ur = { error: e }; }
-      if (ur.error) {
-        const undone = await deleteStepsById(newRows.map((s) => s.id));
-        if (removed.length) data.steps = data.steps.filter((s) => !removed.includes(s));
-        const back = undone && await putBack();
-        regroupSteps();
-        if (undone && back) return finish(false, "Couldn't update the firm, so the import was undone. Nothing changed.");
-        if (!undone) { data.steps.push(...newRows); regroupSteps(); return finish(false, `Couldn't update the firm, and couldn't undo the import: ${firm.name} has the new steps (${newRows.map((s) => s.ref).join(", ")}) but its details weren't filled in.`); }
-        return finish(false, `Couldn't update the firm; the new steps were removed, but the previous plan couldn't be put back: ${firm.name} has lost ${lost()}.`);
-      }
-      Object.assign(firm, merge.changes);
-    }
-    data.steps = data.steps.filter((s) => !removed.includes(s)).concat(newRows); regroupSteps(); view.open.add(firm.id);
-    finish(true, `Imported ${plural(newRows.length, "step", "steps")} for ${firm.name}${merge.filled.length ? `, and filled ${merge.filled.join(", ")}` : ""}.`);
-  }
-
-  // ---- steps on the card ----
-  const OUTCOMES = { linkedin_request: [["", "None"], ["accepted", "Accepted"], ["ignored", "Ignored"]], email: [["", "None"], ["bounced", "Bounced"]], follow_up: [["", "None"], ["bounced", "Bounced"]],
-                     form: [["", "None"], ["acknowledged", "Acknowledged"]] };
-  const MAILTO_EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-  const stepsOf = (id) => stepsBy.get(id) || [];
-  function matchingPerson(f, target) {
-    const t = String(target || "").toLowerCase();
-    return (Array.isArray(f.people) ? f.people : []).find((p) => p && p.name && t.includes(String(p.name).toLowerCase())) || null;
-  }
-  // The "Open in Mail" link: the To address only for a valid email of the person named in the target; subject and body percent-encoded, line breaks as CRLF.
-  function mailtoFor(f, step) {
-    const p = matchingPerson(f, step.target);
-    const to = p && typeof p.email === "string" && MAILTO_EMAIL_RE.test(p.email.trim()) ? p.email.trim() : "";
-    const enc = (s) => encodeURIComponent(String(s || "").replace(/\r\n|\r|\n/g, "\r\n"));
-    const href = `mailto:${to}?subject=${enc(step.subject)}&body=${enc(step.message)}`;
-    return { href, to, tooLong: href.length > MAILTO_MAX };
-  }
-  function stepWarnings(f, step) {
-    const w = [], p = matchingPerson(f, step.target);
-    if (p && (p.verified !== true || p.email_status === "guessed")) w.push("Contact not verified");
-    if (!(Array.isArray(f.deals) ? f.deals : []).some((d) => d && d.verified === true)) w.push("No verified deal on file");
-    return w;
-  }
-  const busy = new Set();   // keys of writes in progress ("step:12", "touch:5", "people:3:0")
-  function stepNote(id) { const n = view.stepNotes.get(id); return n ? el("p", { class: n.ok ? "ok" : "err", role: "status", text: n.text }, n.retry ? [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: n.retry })] : []) : null; }
-  function setStepNote(id, ok, text, retry) { view.stepNotes.set(id, { ok, text, retry }); render(); }
-  async function copyText(id, text, what) {
-    try { await navigator.clipboard.writeText(text); setStepNote(id, true, `${what} copied`); }
-    catch (e) { setStepNote(id, false, `Couldn't copy the ${what.toLowerCase()}: select it in the message and copy it instead.`); }
-  }
-  function planSection(f, today) {
-    const sec = el("section", { class: "plan", "data-section": "plan" });
-    if (data.stepsErr) {
-      sec.append(el("p", { class: "err", text: "Couldn't load the plan." }, [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: loadSteps })]));
-      return sec;
-    }
-    const steps = stepsOf(f.id);
-    if (!data.steps || !steps.length) return null;
-    sec.append(el("h3", { text: "Plan" }));
-    sec.append(el("ol", { class: "steps" }, steps.map((s) => stepItem(f, s, today))));
-    return sec;
-  }
-  function stepItem(f, s, today) {
-    const status = s.status === "done" ? "Done" : s.status === "skipped" ? `Skipped: ${s.skip_reason || "no reason given"}` : "Planned";
-    const li = el("li", { class: "step", "data-step": String(s.id) }, [
-      el("div", { class: "step-head", text: `${s.ref} · ${CHANNEL_LABEL[s.channel] || s.channel} · ${status}` }),
-      s.target ? el("div", { class: "step-line", text: `To: ${s.target}` }) : null,
-      s.purpose ? el("div", { class: "step-line", text: `Why: ${s.purpose}` }) : null,
-      el("div", { class: "step-line", text: `Planned ${fmtDay(s.planned_on, today)}` + (s.status === "done" ? ` · Done ${fmtDay(s.done_on, today)}${s.outcome ? ` · ${s.outcome}` : ""}` : "") }),
-    ]);
-    if (s.status === "planned" && s.planned_on < today) {
-      const n = businessDaysBetween(s.planned_on, today);
-      if (n >= 1) li.append(el("div", { class: "step-overdue", text: `Overdue by ${plural(n, "business day", "business days")}` }));
-    }
-    // A done step with no linked history entry (whatever the cause): say so and offer the repair. Hidden while its own save or link runs.
-    if (s.status === "done" && s.touch_id === null && !busy.has(`step:${s.id}`) && !busy.has(`link:${s.id}`)) {
-      li.append(el("div", { class: "step-unlinked" }, [el("span", { text: "This step is marked done, but no history entry is linked to it." }),
-        el("button", { type: "button", class: "btn", text: "Link the logged entry", onclick: () => linkLogged(f, s) })]));
-    } else if (s.status === "done" && s.touch_id === null && busy.has(`link:${s.id}`)) {
-      li.append(el("div", { class: "step-unlinked" }, [el("button", { type: "button", class: "btn", text: "Linking…", disabled: true })]));
-    }
-    if (s.subject || s.message) {
-      li.append(el("details", { class: "step-msg" }, [el("summary", { text: "Message" }),
-        s.subject ? el("div", { class: "step-subject", text: `Subject: ${s.subject}` }) : null, el("div", { class: "step-body", text: s.message || "" })]));
-    }
-    const tools = el("div", { class: "step-tools" });
-    if (s.message) tools.append(el("button", { type: "button", class: "btn", text: "Copy message", onclick: () => copyText(s.id, s.message, "Message") }));
-    if ((s.channel === "email" || s.channel === "follow_up") && s.subject) tools.append(el("button", { type: "button", class: "btn", text: "Copy subject", onclick: () => copyText(s.id, s.subject, "Subject") }));
-    if (s.channel === "email" || s.channel === "follow_up") {
-      const m = mailtoFor(f, s);
-      if (m.tooLong) tools.append(el("button", { type: "button", class: "btn", text: "Open in Mail", disabled: true }), el("span", { class: "step-note", text: "Too long for Open in Mail; use Copy" }));
-      else tools.append(el("a", { class: "btn link-btn", href: m.href, text: "Open in Mail" }));
-    }
-    if (s.channel === "linkedin_request" || s.channel === "linkedin_message") tools.append(el("span", { class: "step-note counter", text: `${(s.message || "").length} / ${MESSAGE_MAX[s.channel]}` }));
-    if (s.channel === "form" && safeUrl(s.form_url)) tools.append(el("a", { class: "btn link-btn", href: safeUrl(s.form_url), target: "_blank", rel: "noopener noreferrer", text: "Open form" }));
-    for (const w of stepWarnings(f, s)) tools.append(el("span", { class: "step-warn", text: w }));
-    li.append(tools);
-    const acts = el("div", { class: "step-actions" }), dis = busy.has(`step:${s.id}`);
-    if (s.status === "planned") {
-      acts.append(el("button", { type: "button", class: "btn primary", text: "Mark done", disabled: dis, onclick: () => openStepForm(f, s, "done") }),
-                  el("button", { type: "button", class: "btn", text: "Skip", disabled: dis, onclick: () => openStepForm(f, s, "skip") }),
-                  el("button", { type: "button", class: "btn", text: "Reschedule", disabled: dis, onclick: () => openStepForm(f, s, "reschedule") }),
-                  el("button", { type: "button", class: "btn", text: "Edit message", disabled: dis, onclick: () => openStepForm(f, s, "edit") }));
-    } else if (s.status === "done") acts.append(el("button", { type: "button", class: "btn", text: "Undo", disabled: dis, onclick: () => undoStep(f, s) }));
-    else acts.append(el("button", { type: "button", class: "btn", text: "Unskip", disabled: dis, onclick: () => unskipStep(f, s) }));
-    li.append(acts);
-    const form = view.stepForms.get(s.id);
-    if (form) li.append(form);
-    const note = stepNote(s.id);
-    if (note) li.append(note);
-    return li;
-  }
-  function replaceStep(row) {
-    const n = normStep(row), i = data.steps.findIndex((x) => x.id === n.id);
-    if (i >= 0) data.steps[i] = n; else data.steps.push(n);
-    regroupSteps(); return n;
-  }
-  async function stepUpdate(id, patch, where = {}) {
-    let q = sb.from("outreach_steps").update(patch).eq("id", id);
-    for (const [k, v] of Object.entries(where)) q = q.eq(k, v);
-    let r; try { r = await q.select(STEP_COLS); } catch (e) { r = { error: e }; }
-    return r.error ? { error: r.error } : { rows: r.data || [] };
-  }
-  async function changedElsewhere(s) { view.stepForms.delete(s.id); await loadSteps(); setStepNote(s.id, false, "This step was already changed elsewhere, so the plan was reloaded. Check it and try again."); }
-  function dateInput(value, min, max) { return el("input", { class: "input", type: "date", value, min, max: max || null, "aria-label": "Date" }); }
-  function openStepForm(f, s, kind) {
-    view.stepNotes.delete(s.id);
-    const today = londonToday(), err = el("p", { class: "err", hidden: true, role: "alert" });
-    const fail = (t) => { err.textContent = t; show(err, true); };
-    const cancel = el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => { view.stepForms.delete(s.id); render(); } });
-    let node;
-    if (kind === "done") {
-      const date = dateInput(today, MIN_DATE, today);
-      const outcome = OUTCOMES[s.channel] ? el("select", { class: "input", "aria-label": "Outcome" }, OUTCOMES[s.channel].map(([v, t]) => el("option", { value: v, text: t }))) : null;
-      const docs = (Array.isArray(f.documents) ? f.documents : []).map((d) => el("input", { type: "checkbox", value: d }));
-      const formUrl = s.channel === "form" ? el("input", { class: "input", type: "url", maxlength: "300", value: s.form_url || "", "aria-label": "Form URL" }) : null;
-      const note = el("input", { class: "input", type: "text", maxlength: "500", autocomplete: "off", "aria-label": "Note (optional)" });
-      const save = el("button", { type: "button", class: "btn primary", text: "Save" });
-      node = el("div", { class: "inline-form", "data-form": "step-done" }, [el("div", { text: `Mark ${s.ref} done`, style: "font-weight: 700" }),
-        el("label", { class: "field", text: "Date" }), date,
-        outcome ? el("label", { class: "field", text: "Outcome" }) : null, outcome,
-        docs.length ? el("div", { class: "field", text: "Documents attached" }) : null, ...docs.map((c) => el("label", { class: "check" }, [c, el("span", { text: c.value })])),
-        formUrl ? el("label", { class: "field", text: "Form URL" }) : null, formUrl,
-        el("label", { class: "field", text: "Note (optional)" }), note, err, el("div", { class: "row-actions" }, [save, cancel])]);
-      save.addEventListener("click", () => {
-        const d = date.value, t2 = londonToday(), fu = formUrl ? formUrl.value.trim() : "";
-        if (!validDate(d) || d < MIN_DATE || d > t2) return fail("Choose a date from 1 Jan 2000 to today.");
-        if (fu && !/^https?:\/\//i.test(fu)) return fail("The form URL must start with https:// or http://");
-        markDone(f, s, { date: d, outcome: outcome && outcome.value ? outcome.value : null, documents: docs.filter((c) => c.checked).map((c) => c.value),
-                         form_url: formUrl ? (fu || null) : undefined, note: note.value.trim() || null }, save, fail);
-      });
-    } else if (kind === "skip") {
-      const reason = el("input", { class: "input", type: "text", maxlength: "300", autocomplete: "off", "aria-label": "Reason for skipping" });
-      const save = el("button", { type: "button", class: "btn primary", text: "Skip step" });
-      node = el("div", { class: "inline-form", "data-form": "step-skip" }, [el("label", { class: "field", text: "Why skip it? (required)" }), reason, err, el("div", { class: "row-actions" }, [save, cancel])]);
-      save.addEventListener("click", () => {
-        const why = reason.value.trim();
-        if (!why) return fail("Give a reason."); if (why.length > 300) return fail("At most 300 characters.");
-        simpleStepWrite(s, save, fail, { status: "skipped", skip_reason: why }, { status: "planned" }, "Skipped");
-      });
-    } else if (kind === "reschedule") {
-      const date = dateInput(s.planned_on >= today ? s.planned_on : today, today, null);
-      const hint = el("p", { class: "step-warn", hidden: true });
-      date.addEventListener("input", () => { const ok = !validDate(date.value) || isBusinessDay(date.value); hint.textContent = ok ? "" : `${fmtDay(date.value)} isn't a business day (a weekend or a bank holiday). You can still use it.`; show(hint, !ok); });
-      const save = el("button", { type: "button", class: "btn primary", text: "Save date" });
-      node = el("div", { class: "inline-form", "data-form": "step-reschedule" }, [el("label", { class: "field", text: "New date" }), date, hint, err, el("div", { class: "row-actions" }, [save, cancel])]);
-      save.addEventListener("click", () => {
-        if (!validDate(date.value) || date.value < londonToday()) return fail("Choose today or a later date.");
-        simpleStepWrite(s, save, fail, { planned_on: date.value }, { status: "planned" }, "Rescheduled");
-      });
-    } else {
-      const needSubject = s.channel === "email" || s.channel === "follow_up";
-      const subj = needSubject ? el("input", { class: "input", type: "text", maxlength: "200", value: s.subject || "", "aria-label": "Subject" }) : null;
-      const msg = el("textarea", { class: "input", maxlength: String(MESSAGE_MAX[s.channel] || 4000), "aria-label": "Message" }); msg.value = s.message || "";
-      const save = el("button", { type: "button", class: "btn primary", text: "Save message" });
-      node = el("div", { class: "inline-form", "data-form": "step-edit" }, [subj ? el("label", { class: "field", text: "Subject" }) : null, subj, el("label", { class: "field", text: "Message" }), msg, err,
-        el("div", { class: "row-actions" }, [save, cancel])]);
-      save.addEventListener("click", () => {
-        const sv = subj ? subj.value.trim() : null, mv = msg.value.trim(), max = MESSAGE_MAX[s.channel] || 4000;
-        if (subj && !sv) return fail("The subject is required."); if (sv && sv.length > 200) return fail("The subject is at most 200 characters.");
-        if (!mv && s.channel !== "form") return fail("The message is required."); if (mv.length > max) return fail(`The message is at most ${max} characters.`);
-        const ph = findPlaceholder(sv) || findPlaceholder(mv); if (ph) return fail(`There's a leftover placeholder: ${ph}`);
-        if (!confirm(`Save the new message for step '${s.ref}'?`)) return;
-        simpleStepWrite(s, save, fail, subj ? { subject: sv, message: mv || null } : { message: mv || null }, { status: "planned" }, "Message saved");
-      });
-    }
-    view.stepForms.set(s.id, node); render();
-  }
-  async function simpleStepWrite(s, btn, fail, patch, where, okText) {
-    const key = `step:${s.id}`; if (busy.has(key)) return;
-    busy.add(key); btn.disabled = true;
-    const r = await stepUpdate(s.id, patch, where);
-    busy.delete(key); btn.disabled = false;
-    if (r.error) return fail(SAVE_FAILED);
-    if (!r.rows.length) return changedElsewhere(s);
-    replaceStep(r.rows[0]); view.stepForms.delete(s.id); setStepNote(s.id, true, okText);
-  }
-  async function unskipStep(f, s) {
-    const key = `step:${s.id}`; if (busy.has(key)) return;
-    busy.add(key); render();
-    const r = await stepUpdate(s.id, { status: "planned", skip_reason: null }, { status: "skipped" });
-    busy.delete(key);
-    if (r.error) return setStepNote(s.id, false, SAVE_FAILED, () => unskipStep(f, s));
-    if (!r.rows.length) return changedElsewhere(s);
-    replaceStep(r.rows[0]); setStepNote(s.id, true, "Planned again");
-  }
-  // Mark done: 1) the step, only if still planned; 2) the touch; 3) link them. A failed touch puts the step back to planned.
-  async function markDone(f, s, v, btn, fail) {
-    const key = `step:${s.id}`; if (busy.has(key)) return;
-    busy.add(key); btn.disabled = true;
-    const prev = { status: "planned", done_on: null, outcome: s.outcome, documents: s.documents, form_url: s.form_url, note: s.note };
-    const patch = { status: "done", done_on: v.date, outcome: v.outcome, documents: v.documents, note: v.note };
-    if (v.form_url !== undefined) patch.form_url = v.form_url;
-    const done = () => { busy.delete(key); btn.disabled = false; };
-    const r = await stepUpdate(s.id, patch, { status: "planned" });
-    if (r.error) { done(); return fail(SAVE_FAILED); }
-    if (!r.rows.length) { done(); return changedElsewhere(s); }
-    replaceStep(r.rows[0]);
-    let tr; try { tr = await sb.from("outreach_touches").insert({ user_id: await getUserId(), firm_id: f.id, kind: s.channel, happened_on: v.date, note: v.note }).select(TOUCH_COLS).single(); } catch (e) { tr = { error: e }; }
-    if (tr.error || !tr.data) {
-      const back = await stepUpdate(s.id, prev, { status: "done" });
-      done(); view.stepForms.delete(s.id);
-      if (back.error || !back.rows.length) return setStepNote(s.id, false, `Couldn't log the touch, and couldn't put the step back: step '${s.ref}' is marked done on ${fmtDay(v.date)} with no touch. Use Undo on it, then mark it done again.`);
-      replaceStep(back.rows[0]);
-      return setStepNote(s.id, false, "Couldn't log the touch, so the step is planned again.", () => { view.stepNotes.delete(s.id); openStepForm(f, stepsOf(f.id).find((x) => x.id === s.id), "done"); });
-    }
-    const t = normTouch(tr.data); data.touches.push(t); regroup();
-    const link = await stepUpdate(s.id, { touch_id: t.id });
-    done(); view.stepForms.delete(s.id);
-    if (link.error || !link.rows.length) return setStepNote(s.id, false, "Done, and the touch is logged, but they couldn't be linked. Retry links them. If you leave this page, the step will show a 'Link the logged entry' button.", () => relink(f, s.id, t.id));
-    replaceStep(link.rows[0]); setStepNote(s.id, true, "Saved");
-  }
-  // "Link the logged entry": link this firm's lowest-id unlinked touch of the step's channel on its done date; if there's none, create one and link it.
-  // If linking fails after creating a touch, the created touch is deleted again.
-  async function linkLogged(f, s) {
-    const key = `link:${s.id}`; if (busy.has(key)) return;
-    busy.add(key); view.stepNotes.delete(s.id); render();
-    const retry = () => { view.stepNotes.delete(s.id); const cur = stepsOf(f.id).find((x) => x.id === s.id); if (cur) linkLogged(f, cur); };
-    const fail = (text, withRetry = true) => { busy.delete(key); setStepNote(s.id, false, text, withRetry ? retry : undefined); };
-    const linked = new Set((data.steps || []).filter((x) => x.touch_id !== null).map((x) => x.touch_id));
-    let t = touchesOf(f.id).filter((x) => x.kind === s.channel && x.happened_on === s.done_on && !linked.has(x.id)).sort((a, b) => a.id - b.id)[0] || null;
-    let created = false;
-    if (!t) {
-      let r; try { r = await sb.from("outreach_touches").insert({ user_id: await getUserId(), firm_id: f.id, kind: s.channel, happened_on: s.done_on, note: s.note || null }).select(TOUCH_COLS).single(); } catch (e) { r = { error: e }; }
-      if (r.error || !r.data) return fail("Couldn't create the history entry. Nothing changed.");
-      t = normTouch(r.data); data.touches.push(t); regroup(); created = true;
-    }
-    const label = `${KIND_LABEL[t.kind] || t.kind} · ${fmtDay(t.happened_on)}`;
-    const r = await stepUpdate(s.id, { touch_id: t.id }, { status: "done" });
-    if (r.error || !r.rows.length) {
-      if (created) {
-        let d; try { d = await sb.from("outreach_touches").delete().eq("id", t.id); } catch (e) { d = { error: e }; }
-        if (d.error) return fail(`Couldn't link the entry, and couldn't remove the '${label}' entry just created: it's in the history, not linked, and step '${s.ref}' is still done with no entry. Retry links it.`);
-        data.touches = data.touches.filter((x) => x.id !== t.id); regroup();
-      }
-      if (!r.error) { busy.delete(key); return changedElsewhere(s); }
-      return fail("Couldn't link the entry. Nothing changed.");
-    }
-    busy.delete(key); replaceStep(r.rows[0]);
-    setStepNote(s.id, true, created ? `Created a history entry ('${label}') and linked it to step '${s.ref}'.` : `Linked the existing history entry '${label}' to step '${s.ref}'.`);
-  }
-  async function relink(f, stepId, touchId) {
-    const r = await stepUpdate(stepId, { touch_id: touchId });
-    if (r.error || !r.rows.length) return setStepNote(stepId, false, "Still couldn't link the touch to the step.", () => relink(f, stepId, touchId));
-    replaceStep(r.rows[0]); setStepNote(stepId, true, "Saved");
-  }
-  // Undo: delete the linked touch, then reset the step to planned.
-  async function undoStep(f, s, touchGone = false) {
-    const key = `step:${s.id}`; if (busy.has(key)) return;
-    busy.add(key); render();
-    if (s.touch_id && !touchGone) {
-      let d; try { d = await sb.from("outreach_touches").delete().eq("id", s.touch_id); } catch (e) { d = { error: e }; }
-      if (d.error) { busy.delete(key); return setStepNote(s.id, false, "Couldn't undo: the touch couldn't be deleted. Nothing changed.", () => undoStep(f, s)); }
-      data.touches = data.touches.filter((t) => t.id !== s.touch_id); regroup();
-    }
-    const r = await stepUpdate(s.id, { status: "planned", done_on: null, outcome: null, documents: [], touch_id: null }, { status: "done" });
-    busy.delete(key);
-    if (r.error) return setStepNote(s.id, false, `The touch was deleted, but step '${s.ref}' is still marked done. Retry resets it.`, () => undoStep(f, s, true));
-    if (!r.rows.length) return changedElsewhere(s);
-    replaceStep(r.rows[0]); setStepNote(s.id, true, "Planned again");
-  }
-  // Deleting a touch from the history. A touch linked to a step: 1) reset the step (only if still linked to this touch); 2) delete the touch;
-  // if 2 fails, put the step back exactly as it was.
-  async function deleteTouch(f, t, confirmed = false) {
-    const key = `touch:${t.id}`; if (busy.has(key)) return;
-    const label = `${KIND_LABEL[t.kind] || t.kind} · ${fmtDay(t.happened_on)}`;
-    const step = (data.steps || []).find((s) => s.touch_id === t.id) || null;
-    if (!confirmed && !confirm(step ? `Delete '${label}'? This also marks the step '${step.ref}' as planned again` : `Delete '${label}'? The firm's status and follow-up date will be recalculated`)) return;
-    busy.add(key); view.notes.delete(f.id); render();
-    const note = (ok, text, retry) => { busy.delete(key); view.notes.set(f.id, { ok, text, retry }); render(); };
-    const before = step ? { status: step.status, done_on: step.done_on, outcome: step.outcome, documents: step.documents, touch_id: t.id } : null;
-    if (step) {
-      const r = await stepUpdate(step.id, { status: "planned", done_on: null, outcome: null, documents: [], touch_id: null }, { touch_id: t.id });
-      if (r.error) return note(false, `Couldn't delete '${label}'. Nothing changed.`, () => deleteTouch(f, t, true));
-      if (!r.rows.length) { busy.delete(key); await loadSteps(); return note(false, `Step '${step.ref}' was changed elsewhere, so nothing was deleted. The plan was reloaded.`); }
-      replaceStep(r.rows[0]);
-    }
-    let d; try { d = await sb.from("outreach_touches").delete().eq("id", t.id); } catch (e) { d = { error: e }; }
-    if (d.error) {
-      if (step) {
-        const back = await stepUpdate(step.id, before);
-        if (back.error || !back.rows.length) return note(false, `Couldn't delete '${label}', and couldn't put step '${step.ref}' back: the touch still exists, but step '${step.ref}' is now planned and no longer linked to it. Mark the step done again, or delete the touch again.`, () => deleteTouch(f, t, true));
-        replaceStep(back.rows[0]);
-      }
-      return note(false, `Couldn't delete '${label}'. Nothing changed.`, () => deleteTouch(f, t, true));
-    }
-    data.touches = data.touches.filter((x) => x.id !== t.id); regroup();
-    note(true, step ? `Deleted '${label}'; step '${step.ref}' is planned again.` : `Deleted '${label}'.`);
-  }
-  // ---- people, deals and documents on the card ----
-  async function toggleVerified(f, col, i) {
-    const key = `${col}:${f.id}:${i}`; if (busy.has(key)) return;
-    const list = (Array.isArray(f[col]) ? f[col] : []).map((x) => ({ ...x }));
-    list[i].verified = list[i].verified !== true;
-    busy.add(key); render();
-    let r; try { r = await sb.from("outreach_firms").update({ [col]: list }).eq("id", f.id); } catch (e) { r = { error: e }; }
-    busy.delete(key);
-    if (r.error) { view.notes.set(f.id, { ok: false, text: SAVE_FAILED, retry: () => { view.notes.delete(f.id); toggleVerified(f, col, i); } }); return render(); }
-    f[col] = list; view.notes.set(f.id, { ok: true, text: "Saved" }); render();
-  }
-  function verifiedToggle(f, col, i, on) {
-    return el("button", { type: "button", class: "btn toggle", "aria-pressed": on ? "true" : "false", text: on ? "Verified" : "Not verified", disabled: busy.has(`${col}:${f.id}:${i}`), onclick: () => toggleVerified(f, col, i) });
-  }
-  function peopleSection(f) {
-    const people = Array.isArray(f.people) ? f.people : [];
-    if (!people.length) return null;
-    return el("section", { class: "people", "data-section": "people" }, [el("h3", { text: "People" }), el("ul", { class: "plist" }, people.map((p, i) => {
-      const em = p.email && EMAIL_RE.test(String(p.email).trim()) ? String(p.email).trim() : null;
-      return el("li", null, [
-        el("div", { class: "p-name", text: p.name + (p.role ? ` · ${p.role}` : "") + (p.alumnus ? " · alumnus" : "") }),
-        p.email ? el("div", null, [em ? el("a", { class: "link", href: `mailto:${em}`, text: em }) : el("span", { text: String(p.email) }), el("span", { class: "p-badge", text: ` (${p.email_status || "unknown"})` })]) : null,
-        el("div", { class: "p-links" }, [p.linkedin ? linkOrText(p.linkedin, "LinkedIn") : null, p.source ? linkOrText(p.source, "Source") : null]),
-        verifiedToggle(f, "people", i, p.verified === true),
-      ]);
-    }))]);
-  }
-  function dealsSection(f) {
-    const deals = Array.isArray(f.deals) ? f.deals : [];
-    if (!deals.length) return null;
-    return el("section", { class: "deals", "data-section": "deals" }, [el("h3", { text: "Recent deals" }), el("ul", { class: "plist" }, deals.map((d, i) => el("li", null, [
-      el("div", { class: "p-name", text: d.title + (d.date ? ` · ${d.date}` : "") }), d.source ? el("div", { class: "p-links" }, [linkOrText(d.source, "Source")]) : null, verifiedToggle(f, "deals", i, d.verified === true)])))]);
-  }
-  function docsSection(f, today) {
-    const rows = stepsOf(f.id).filter((s) => s.status === "done" && ((Array.isArray(s.documents) && s.documents.length) || s.form_url));
-    if (!rows.length) return null;
-    return el("section", { class: "docs", "data-section": "documents" }, [el("h3", { text: "Documents and forms submitted" }), el("ul", { class: "plist" }, rows.map((s) => el("li", null, [
-      el("div", { text: `${s.ref} · ${fmtDay(s.done_on, today)}${Array.isArray(s.documents) && s.documents.length ? ` · ${s.documents.join(", ")}` : ""}` }),
-      s.form_url && s.channel === "form" ? linkOrText(s.form_url, "Form") : null])))]);
   }
 
   // ---- toolbar ----
   $("search").addEventListener("input", (e) => { view.q = e.target.value; render(); });
   $("f-priority").addEventListener("change", (e) => { view.priority = e.target.value; render(); });
-  $("f-type").addEventListener("change", (e) => { view.type = e.target.value; render(); });
   $("f-sort").addEventListener("change", (e) => { view.sort = e.target.value; render(); });
-  $("add-open").addEventListener("click", () => openFirmForm(null));
+  $("add-open").addEventListener("click", openAdd);
   $("import-open").addEventListener("click", openImport);
-  $("plan-open").addEventListener("click", openPlan);
 
-  window.Firms = { BANK_HOLIDAYS, FOLLOW_UP_DAYS, OVERDUE_DAYS, NO_RESPONSE_DAYS, londonToday, addDays, isBusinessDay, businessDaysAfter, businessDaysBetween, fmtDay,
-                   firmState, summary, dueOrder, SORTS, safeUrl, safeEmail, parsePaste, guessMapping, planImport, mapType, mapPriority, mapRoute, firmPayload, validateFirm, data, view,
-                   PLAN_MAX_CHARS, STEPS_MAX_NEW, STEPS_MAX_TOTAL, MAILTO_MAX, LINKEDIN_NOTE_MAX, SAMPLE_PLAN, validatePack, planDates, jsonErrorAt, findPlaceholder, mergeFirm, stepPayload, mailtoFor,
-                   matchingPerson, stepWarnings, nextBusinessDay, linkLogged };
+  window.Firms = { BANK_HOLIDAYS, SUGGEST_DAYS, PAGE_SIZE, IMPORT_BATCH, IMPORT_MAX_ROWS, NOTE_MAX, STATUSES, londonToday, addDays, isBusinessDay, businessDaysAfter, fmtDay, dayDiff,
+                   isDue, followDate, followText, sentText, summary, sorter, matches, quickApply, suggestDate, firmPayload, validateFirm, safeUrl, safeEmail,
+                   parsePaste, guessMapping, mapPriority, mapStatus, parseSheetDate, planImport, data, view };
 
   let started = false;
   sb.auth.onAuthStateChange((event, session) => {
     document.getElementById("login-gate").style.display = session ? "none" : "block";
     document.getElementById("app-content").style.display = session ? "block" : "none";
-    if (session && !started) { started = true; render(); loadFirms(); loadTouches(); loadSteps(); }
+    if (session && !started) { started = true; render(); loadFirms(); }
   });
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
