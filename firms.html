@@ -373,8 +373,7 @@
   const STATUSES = [["not_started", "Not started"], ["waiting", "Waiting"], ["replied", "Replied"], ["call_booked", "Call booked"], ["no_response", "No response"], ["dead_end", "Dead end"]];
   const STATUS_LABEL = Object.fromEntries(STATUSES);
   const STATUS_ORDER = Object.fromEntries(STATUSES.map(([k], i) => [k, i]));
-  const ACTIVE = new Set(["waiting", "replied", "call_booked"]);   // statuses that can have a follow-up due
-  const CLOSED = new Set(["no_response", "dead_end"]);             // no follow-up is shown for these
+  const CLOSED = new Set(["no_response", "dead_end"]);   // no follow-up is shown or counted for these
   const MIN_DATE = "2000-01-01";
   const dayDiff = (a, b) => { const [y1, m1, d1] = ymd(a), [y2, m2, d2] = ymd(b); return Math.round((Date.UTC(y1, m1 - 1, d1) - Date.UTC(y2, m2 - 1, d2)) / 86400000); };
   function validDate(s) {
@@ -384,7 +383,8 @@
   }
   function addYears(s, n) { const [y, m, d] = ymd(s); return new Date(Date.UTC(y + n, m - 1, d)).toISOString().slice(0, 10); }
   const maxFollowUp = (today) => addYears(today, 2);
-  const isDue = (f, today) => !!f.next_follow_up_on && f.next_follow_up_on <= today && ACTIVE.has(f.status);
+  // Due: an open follow-up date that has arrived. The same firms show "Follow-up due today" / "overdue", sort first, and are counted.
+  const isDue = (f, today) => !!f.next_follow_up_on && f.next_follow_up_on <= today && !CLOSED.has(f.status);
   // The date a firm's follow-up counts as, for display and sorting: none for No response and Dead end.
   const followDate = (f) => (f.next_follow_up_on && !CLOSED.has(f.status) ? f.next_follow_up_on : null);
   function followText(f, today) {
