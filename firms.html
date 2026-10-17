@@ -166,6 +166,30 @@
   .import-table th, .import-table td { text-align: left; padding: 6px; border-bottom: 1px solid #EFE8DA; vertical-align: top; overflow-wrap: anywhere; }
   .table-wrap { overflow-x: auto; max-width: 100%; }
   .problems { font-size: 14px; padding-left: 18px; }
+  .reasoning { font-size: 14px; color: #1A1A18; margin: 12px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .plan ol.steps { list-style: none; padding: 0; margin: 6px 0 0; }
+  .step { border: 1px solid #E3DAC4; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; overflow-wrap: anywhere; }
+  .step-head { font-weight: 700; }
+  .step-line { margin-top: 2px; }
+  .step-overdue { margin-top: 2px; color: #8A3A2E; font-weight: 700; }
+  .step-msg summary, .help summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: #6F5439; font-weight: 600; }
+  .step-subject { font-weight: 600; margin: 4px 0; }
+  .step-body { white-space: pre-wrap; overflow-wrap: anywhere; background: #F8F4EA; border-radius: 8px; padding: 8px 10px; }
+  .step-tools, .step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .step-note { font-size: 13px; color: #5A5650; }
+  .step-warn { font-size: 13px; font-weight: 700; color: #8A3A2E; }
+  .link-btn { display: inline-flex; align-items: center; text-decoration: none; }
+  label.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; }
+  label.check input { width: 22px; height: 22px; margin: 0; }
+  .plist { list-style: none; padding: 0; margin: 6px 0 0; font-size: 14px; }
+  .plist li { padding: 8px 0; border-bottom: 1px solid #EFE8DA; overflow-wrap: anywhere; }
+  .p-name { font-weight: 600; }
+  .p-badge { color: #5A5650; }
+  .p-links { display: flex; flex-wrap: wrap; gap: 0 14px; }
+  .btn.toggle[aria-pressed="true"] { background: #2F6B4F; border-color: #2F6B4F; color: #FFFFFF; }
+  .help-pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; background: #F8F4EA; border-radius: 8px; padding: 10px; margin: 6px 0; }
+  .timeline li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+  .timeline .touch-del { margin-left: auto; }
 
   /* --- mobile (phone-width) nav + body spacing: as on the other pages --- */
   @media (max-width: 640px) {
@@ -252,11 +276,13 @@
   <select class="input" id="f-sort" aria-label="Sort"><option value="due">Sort: Due first</option><option value="priority">Sort: Priority</option><option value="name">Sort: Name</option><option value="newest">Sort: Newest</option></select>
   <button type="button" class="btn primary" id="add-open">Add firm</button>
   <button type="button" class="btn" id="import-open">Import</button>
+  <button type="button" class="btn" id="plan-open">Paste plan</button>
 </div>
 <div class="chips" id="chips" role="group" aria-label="Status"></div>
 
 <div class="card" id="firm-form-card" hidden></div>
 <div class="card" id="import-card" hidden></div>
+<div class="card" id="plan-card" hidden></div>
 
 <div id="touches-banner" class="banner" hidden></div>
 <div id="list"></div>
@@ -276,6 +302,11 @@
   const PAGE_SIZE = 1000;          // PostgREST returns at most 1000 rows per request: load in pages of this size
   const IMPORT_BATCH = 100;        // rows per insert request when importing
   const IMPORT_MAX_ROWS = 300;     // the most data rows one import accepts
+  const PLAN_MAX_CHARS = 60000;    // the longest plan block the plan import accepts
+  const STEPS_MAX_NEW = 6;         // steps in one plan block
+  const STEPS_MAX_TOTAL = 12;      // steps one firm can have in all
+  const MAILTO_MAX = 1800;         // the longest "Open in Mail" link; a longer message is copied instead
+  const LINKEDIN_NOTE_MAX = 300;   // LinkedIn's limit for a connection request note
   // England and Wales bank holidays, 2026 to 2028. Source: https://www.gov.uk/bank-holidays.json ("england-and-wales"), fetched 16 Oct 2026.
   // The list ends in 2028: extend it from the same feed before 2029.
   const BANK_HOLIDAYS = [
@@ -398,11 +429,15 @@
       if (rows.length < PAGE_SIZE) return out;
     }
   }
-  const FIRM_COLS = "id, created_at, name, firm_type, priority, route, website, location, lead_name, lead_role, lead_email, lead_linkedin, cv_version, notes, closed";
+  const FIRM_COLS = "id, created_at, name, firm_type, priority, route, website, location, lead_name, lead_role, lead_email, lead_linkedin, cv_version, notes, closed, size, summary, reasoning, people, deals, documents";
   const TOUCH_COLS = "id, firm_id, kind, happened_on, note";
-  const normFirm = (f) => ({ ...f, id: Number(f.id), priority: Number(f.priority) });
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const normFirm = (f) => ({ ...f, id: Number(f.id), priority: Number(f.priority), people: arr(f.people), deals: arr(f.deals), documents: arr(f.documents) });
+  const STEP_COLS = "id, firm_id, position, ref, channel, target, purpose, subject, message, after_ref, offset_business_days, planned_on, status, done_on, outcome, skip_reason, documents, form_url, note, touch_id";
+  const normStep = (s) => ({ ...s, id: Number(s.id), firm_id: Number(s.firm_id), position: Number(s.position), offset_business_days: s.offset_business_days === null || s.offset_business_days === undefined ? null : Number(s.offset_business_days),
+                             touch_id: s.touch_id === null || s.touch_id === undefined ? null : Number(s.touch_id), documents: arr(s.documents) });
   const normTouch = (t) => ({ ...t, id: Number(t.id), firm_id: Number(t.firm_id) });
-  const data = { firms: null, firmsErr: false, touches: null, touchesErr: false };
+  const data = { firms: null, firmsErr: false, touches: null, touchesErr: false, steps: null, stepsErr: false };
   let byFirm = new Map();
   function regroup() {
     byFirm = new Map();
@@ -414,6 +449,18 @@
     catch (e) { console.error("[firms] couldn't load firms", e && e.code); data.firmsErr = true; }
     render();
   }
+  let stepsBy = new Map();
+  function regroupSteps() {
+    stepsBy = new Map();
+    for (const st of data.steps || []) { if (!stepsBy.has(st.firm_id)) stepsBy.set(st.firm_id, []); stepsBy.get(st.firm_id).push(st); }
+    for (const list of stepsBy.values()) list.sort((a, b) => a.position - b.position || a.id - b.id);
+  }
+  async function loadSteps() {
+    data.stepsErr = false; data.steps = null; render();
+    try { data.steps = (await pageAll("outreach_steps", STEP_COLS)).map(normStep); regroupSteps(); }
+    catch (e) { console.error("[firms] couldn't load the plans", e && e.code); data.stepsErr = true; }
+    render();
+  }
   async function loadTouches() {
     data.touchesErr = false; data.touches = null; render();
     try { data.touches = (await pageAll("outreach_touches", TOUCH_COLS)).map(normTouch); regroup(); }
@@ -422,7 +469,7 @@
   }
 
   // ---- view state ----
-  const view = { q: "", chip: "all", priority: "", type: "", sort: "due", open: new Set(), showAll: new Set(), forms: new Map(), notes: new Map() };
+  const view = { q: "", chip: "all", priority: "", type: "", sort: "due", open: new Set(), showAll: new Set(), forms: new Map(), notes: new Map(), stepForms: new Map(), stepNotes: new Map() };
   const CHIPS = [["all", "All"], ["not_started", "Not started"], ["waiting", "Waiting"], ["due", "Follow-up due"], ["replied", "Replied"], ["closed", "Closed"]];
   const CHIP_TEST = { all: () => true, not_started: (s) => !s.closed && !s.last, waiting: isWaiting, due: isDue, replied: isReplied, closed: (s) => !!s.closed };
   const TYPE_LABEL = { boutique: "Boutique", investor: "Investor", other: "Other" };
@@ -492,6 +539,8 @@
     const card = el("div", { class: "firm", "data-firm": String(f.id) }, [head]);
     if (!open) return card;
     const body = el("div", { class: "firm-body" });
+    if (f.reasoning) body.append(el("p", { class: "reasoning", text: f.reasoning }));
+    for (const sec of [planSection(f, today), peopleSection(f), dealsSection(f), docsSection(f, today)]) if (sec) body.append(sec);
     const em = safeEmail(f.lead_email);
     body.append(el("div", { class: "details" }, [
       detail("Lead", f.lead_name ? el("span", { text: f.lead_name + (f.lead_role ? ` · ${f.lead_role}` : "") }) : (f.lead_role ? el("span", { text: f.lead_role }) : null)),
@@ -509,7 +558,8 @@
     else if (!ts.length) body.append(el("p", { class: "msg", text: "Nothing logged yet." }));
     else {
       const all = view.showAll.has(f.id), shownT = all ? ts : ts.slice(0, RECENT_TOUCHES_SHOWN);
-      body.append(el("ul", { class: "timeline" }, shownT.map((t) => el("li", null, [el("span", { text: `${fmtDay(t.happened_on, today)} · ${KIND_LABEL[t.kind] || t.kind}` }), t.note ? el("div", { class: "tnote", text: t.note }) : null]))));
+      body.append(el("ul", { class: "timeline" }, shownT.map((t) => el("li", { "data-touch": String(t.id) }, [el("span", { text: `${fmtDay(t.happened_on, today)} · ${KIND_LABEL[t.kind] || t.kind}` }), t.note ? el("div", { class: "tnote", text: t.note }) : null,
+        el("button", { type: "button", class: "btn touch-del", text: "Delete", "aria-label": `Delete ${KIND_LABEL[t.kind] || t.kind} on ${fmtDay(t.happened_on, today)}`, disabled: busy.has(`touch:${t.id}`), onclick: () => deleteTouch(f, t) })]))));
       if (ts.length > RECENT_TOUCHES_SHOWN) body.append(el("button", { type: "button", class: "btn", text: all ? "Show fewer" : `Show all ${ts.length}`, onclick: () => { all ? view.showAll.delete(f.id) : view.showAll.add(f.id); render(); } }));
     }
     body.append(el("h3", { text: "Log" }));
@@ -521,7 +571,7 @@
     const form = view.forms.get(f.id);
     if (form) body.append(form.node);
     const note = view.notes.get(f.id);
-    if (note) body.append(el("p", { class: note.ok ? "ok" : "err", text: note.text, role: "status" }));
+    if (note) body.append(el("p", { class: note.ok ? "ok" : "err", text: note.text, role: "status" }, note.retry ? [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: () => { view.notes.delete(f.id); note.retry(); } })] : []));
     body.append(el("div", { class: "row-actions" }, [
       el("button", { type: "button", class: "btn", text: "Edit", onclick: () => openFirmForm(f) }),
       el("button", { type: "button", class: "btn danger", text: "Delete firm", onclick: () => deleteFirm(f) }),
@@ -683,7 +733,7 @@
       }
       closeFirmForm(); if (f) view.notes.set(f.id, { ok: true, text: "Saved" }); render();
     });
-    show(card, true); show($("import-card"), false);
+    show(card, true); show($("import-card"), false); show($("plan-card"), false);
     card.scrollIntoView({ block: "nearest" });
   }
   function closeFirmForm() { firmForm = null; $("firm-form-card").replaceChildren(); show($("firm-form-card"), false); }
@@ -782,7 +832,7 @@
     return out;
   }
   const imp = { text: "", parsed: null, mapping: null, plan: null, failed: null, busy: false, result: null };
-  function openImport() { closeFirmForm(); show($("import-card"), true); renderImport(); $("import-card").scrollIntoView({ block: "nearest" }); }
+  function openImport() { closeFirmForm(); show($("plan-card"), false); show($("import-card"), true); renderImport(); $("import-card").scrollIntoView({ block: "nearest" }); }
   function renderImport() {
     const card = $("import-card"), parts = [el("h2", { text: "Import firms" })];
     const ta = el("textarea", { class: "input", id: "import-text", "aria-label": "Paste your spreadsheet here, including the header row", placeholder: "Paste your spreadsheet here, including the header row" });
@@ -853,6 +903,682 @@
     renderImport(); render();
   }
 
+
+  // ======== per-firm plans: the plan block (validatePack, planDates), the import, the steps timeline ========
+  const CHANNELS = ["linkedin_request", "linkedin_message", "email", "form", "follow_up"];
+  const CHANNEL_LABEL = { linkedin_request: "LinkedIn request", linkedin_message: "LinkedIn message", email: "Email", form: "Form", follow_up: "Follow-up" };
+  const MESSAGE_MAX = { linkedin_request: LINKEDIN_NOTE_MAX, linkedin_message: 1500, email: 4000, follow_up: 4000, form: 4000 };
+  const REF_RE = /^[a-z][a-z0-9_]{0,19}$/;
+  const PLACEHOLDER_RES = [/\[[^\]]{1,40}\]/, /\{\{[^}]*\}\}/, /\b(?:XXX|TBC)\b/i];
+  const KNOWN_KEYS = {
+    root: ["version", "mode", "firm", "people", "deals", "reasoning", "steps", "documents"],
+    firm: ["name", "type", "priority", "website", "location", "size", "summary", "cv_version"],
+    person: ["name", "role", "email", "email_status", "linkedin", "alumnus", "source"],
+    deal: ["title", "date", "source"],
+    step: ["id", "channel", "target", "purpose", "subject", "message", "form_url", "planned_on", "after", "offset_business_days"],
+  };
+  function findPlaceholder(s) { for (const re of PLACEHOLDER_RES) { const m = re.exec(String(s || "")); if (m) return m[0]; } return null; }
+  function validDate(s) {
+    if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    const [y, m, d] = ymd(s), t = new Date(Date.UTC(y, m - 1, d));
+    return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+  }
+  function nextBusinessDay(s) { let d = s; while (!isBusinessDay(d)) d = addDays(d, 1); return d; }
+  // Where a JSON text stops being valid: { pos, msg }, or null. Used only to name the line and column (browsers word JSON.parse errors differently).
+  function jsonErrorAt(s) {
+    let i = 0;
+    const ws = () => { while (i < s.length && " \t\n\r".includes(s[i])) i++; };
+    const fail = (msg) => { throw { pos: i, msg }; };
+    function value() {
+      ws(); const c = s[i];
+      if (c === "{") return obj();
+      if (c === "[") return arr();
+      if (c === '"') return str();
+      if (c === "-" || (c >= "0" && c <= "9")) return num();
+      for (const w of ["true", "false", "null"]) if (s.startsWith(w, i)) { i += w.length; return; }
+      fail(i >= s.length ? "the block ends too early" : `unexpected ${JSON.stringify(c)}`);
+    }
+    function obj() {
+      i++; ws(); if (s[i] === "}") { i++; return; }
+      for (;;) {
+        ws(); if (s[i] !== '"') fail("expected a quoted key"); str(); ws();
+        if (s[i] !== ":") fail('expected ":"'); i++; value(); ws();
+        if (s[i] === ",") { i++; continue; } if (s[i] === "}") { i++; return; } fail('expected "," or "}"');
+      }
+    }
+    function arr() {
+      i++; ws(); if (s[i] === "]") { i++; return; }
+      for (;;) { value(); ws(); if (s[i] === ",") { i++; continue; } if (s[i] === "]") { i++; return; } fail('expected "," or "]"'); }
+    }
+    function str() {
+      i++;
+      while (i < s.length) { const c = s[i]; if (c === '"') { i++; return; } if (c === "\\") { i += 2; continue; } if (c < " ") fail("a line break or control character inside a string (write \\n)"); i++; }
+      fail("a string isn't closed");
+    }
+    function num() { const m = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/.exec(s.slice(i)); if (!m) fail("a bad number"); i += m[0].length; }
+    try { value(); ws(); if (i < s.length) fail("extra text after the block"); return null; }
+    catch (e) { if (e && typeof e.pos === "number") return e; throw e; }
+  }
+  // Planned dates for a block's steps (pure): the first step's date moves to the next business day if needed; a step with after gets
+  // businessDaysAfter(its parent's date, offset). existingSteps supplies refs for append mode.
+  function planDates(steps, existingSteps = [], today = londonToday()) {
+    const dates = [], warnings = [], byRef = new Map(existingSteps.map((s) => [s.ref, s.planned_on]));
+    steps.forEach((s, i) => {
+      let d = null;
+      if (s && s.planned_on) {
+        d = s.planned_on;
+        if (!isBusinessDay(d)) {
+          if (i === 0) { const moved = nextBusinessDay(d); warnings.push({ index: i, msg: `${fmtDay(d, today)} isn't a business day, so the plan starts on ${fmtDay(moved, today)}` }); d = moved; }
+          else warnings.push({ index: i, msg: `${fmtDay(d, today)} isn't a business day` });
+        }
+      } else if (s && s.after_ref && byRef.get(s.after_ref)) d = businessDaysAfter(byRef.get(s.after_ref), s.offset_business_days);
+      dates.push(d);
+      if (s && s.ref && d) byRef.set(s.ref, d);
+    });
+    return { dates, warnings };
+  }
+  // Checks a pasted plan block (pure: no DOM, nothing executed). existing = { firms, steps } as loaded.
+  function validatePack(text, today = londonToday(), existing = { firms: [], steps: [] }) {
+    const errors = [], warnings = [];
+    const err = (path, msg) => errors.push({ path, msg }), warn = (path, msg) => warnings.push({ path, msg });
+    const out = { errors, warnings, mode: "replace", firm: null, match: null, people: [], deals: [], documents: [], reasoning: null, steps: [] };
+    let src = String(text === null || text === undefined ? "" : text);
+    if (src.length > PLAN_MAX_CHARS) { err("(block)", `is ${src.length.toLocaleString("en-GB")} characters; the most is ${PLAN_MAX_CHARS.toLocaleString("en-GB")}`); return out; }
+    src = src.replace(/^﻿/, "");
+    const lines = src.split(/\r\n|\r|\n/); let top = 0;
+    while (lines.length && lines[0].trim() === "") { lines.shift(); top++; }
+    while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
+    if (lines.length && /^\s*```(?:json)?\s*$/i.test(lines[0])) {
+      lines.shift(); top++;
+      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
+      if (lines.length && /^\s*```\s*$/.test(lines[lines.length - 1])) lines.pop();
+    }
+    const body = lines.join("\n");
+    if (!body.trim()) { err("(block)", "is empty: paste the plan block"); return out; }
+    let pack;
+    try { pack = JSON.parse(body); }
+    catch (e) {
+      const at = jsonErrorAt(body) || { pos: body.length, msg: "not valid JSON" };
+      const before = body.slice(0, at.pos).split("\n");
+      err("(json)", `isn't valid JSON at line ${before.length + top}, column ${before[before.length - 1].length + 1}: ${at.msg}`);
+      return out;
+    }
+    if (!pack || typeof pack !== "object" || Array.isArray(pack)) { err("(block)", "must be one JSON object, { … }"); return out; }
+    const unknown = (o, keys, path) => { for (const k of Object.keys(o)) if (!keys.includes(k)) warn(path ? `${path}.${k}` : k, "unknown key, ignored"); };
+    const text_ = (o, k, path, opt = {}) => {
+      const v = o[k], p = path ? `${path}.${k}` : k;
+      if (v === undefined || v === null || v === "") { if (opt.required) err(p, "is required"); return null; }
+      if (typeof v !== "string") { err(p, "must be text"); return null; }
+      const t = v.trim();
+      if (!t) { if (opt.required) err(p, "is required"); return null; }
+      if (opt.max && t.length > opt.max) { err(p, `is ${t.length} characters; the most is ${opt.max}`); return null; }
+      if (opt.url && !/^https?:\/\//i.test(t)) { err(p, "must start with https:// or http://"); return null; }
+      if (opt.email && !EMAIL_RE.test(t)) { err(p, "isn't a valid email address"); return null; }
+      return t;
+    };
+    const list = (k, max) => {
+      const v = pack[k];
+      if (v === undefined || v === null) return [];
+      if (!Array.isArray(v)) { err(k, "must be a list, [ … ]"); return []; }
+      if (v.length > max) err(k, `has ${v.length} entries; the most is ${max}`);
+      return v.slice(0, max);
+    };
+    unknown(pack, KNOWN_KEYS.root, "");
+    if (pack.version !== 1) err("version", "must be 1");
+    if (pack.mode !== undefined && pack.mode !== "replace" && pack.mode !== "append") err("mode", 'must be "replace" or "append"');
+    out.mode = pack.mode === "append" ? "append" : "replace";
+    const f = pack.firm;
+    if (!f || typeof f !== "object" || Array.isArray(f)) err("firm", "is required: an object with at least a name");
+    else {
+      unknown(f, KNOWN_KEYS.firm, "firm");
+      const firm = { name: text_(f, "name", "firm", { max: 80, required: true }), firm_type: "boutique", priority: 2, website: text_(f, "website", "firm", { max: 300, url: true }),
+                     location: text_(f, "location", "firm", { max: 80 }), size: text_(f, "size", "firm", { max: 40 }), summary: text_(f, "summary", "firm", { max: 600 }), cv_version: text_(f, "cv_version", "firm", { max: 60 }) };
+      if (f.type !== undefined && f.type !== null && f.type !== "") { if (["boutique", "investor", "other"].includes(f.type)) firm.firm_type = f.type; else err("firm.type", 'must be "boutique", "investor" or "other"'); }
+      if (f.priority !== undefined && f.priority !== null) { if (Number.isInteger(f.priority) && f.priority >= 1 && f.priority <= 3) firm.priority = f.priority; else err("firm.priority", "must be 1, 2 or 3"); }
+      out.firm = firm;
+    }
+    list("people", 10).forEach((p, i) => {
+      const path = `people[${i}]`;
+      if (!p || typeof p !== "object" || Array.isArray(p)) { err(path, "must be an object"); return; }
+      unknown(p, KNOWN_KEYS.person, path);
+      let es = "unknown";
+      if (p.email_status !== undefined && p.email_status !== null && p.email_status !== "") { if (["found", "guessed", "unknown"].includes(p.email_status)) es = p.email_status; else err(`${path}.email_status`, 'must be "found", "guessed" or "unknown"'); }
+      if (p.alumnus !== undefined && p.alumnus !== null && typeof p.alumnus !== "boolean") err(`${path}.alumnus`, "must be true or false");
+      out.people.push({ name: text_(p, "name", path, { max: 80, required: true }), role: text_(p, "role", path, { max: 120 }), email: text_(p, "email", path, { email: true }), email_status: es,
+                        linkedin: text_(p, "linkedin", path, { url: true }), alumnus: p.alumnus === true, source: text_(p, "source", path, { url: true }), verified: false });
+    });
+    list("deals", 10).forEach((d, i) => {
+      const path = `deals[${i}]`;
+      if (!d || typeof d !== "object" || Array.isArray(d)) { err(path, "must be an object"); return; }
+      unknown(d, KNOWN_KEYS.deal, path);
+      const date = text_(d, "date", path, { max: 20 });
+      if (date && !(/^\d{4}$/.test(date) || (/^\d{4}-(0[1-9]|1[0-2])$/.test(date)) || validDate(date))) err(`${path}.date`, "must be YYYY, YYYY-MM or YYYY-MM-DD");
+      out.deals.push({ title: text_(d, "title", path, { max: 200, required: true }), date, source: text_(d, "source", path, { url: true }), verified: false });
+    });
+    out.reasoning = text_(pack, "reasoning", "", { max: 1500 });
+    list("documents", 10).forEach((v, i) => {
+      if (typeof v !== "string" || !v.trim()) err(`documents[${i}]`, "must be text"); else if (v.trim().length > 80) err(`documents[${i}]`, `is ${v.trim().length} characters; the most is 80`); else out.documents.push(v.trim());
+    });
+    // the existing firm, matched by name (case-insensitive), and its steps
+    const match = out.firm && out.firm.name ? (existing.firms || []).find((x) => nameKey(x.name) === nameKey(out.firm.name)) || null : null;
+    out.match = match;
+    const old = match ? (existing.steps || []).filter((s) => s.firm_id === match.id) : [];
+    const oldRefs = new Map(old.map((s) => [s.ref, s]));
+    const rawSteps = pack.steps;
+    if (!Array.isArray(rawSteps) || !rawSteps.length) err("steps", `must list 1 to ${STEPS_MAX_NEW} steps`);
+    else if (rawSteps.length > STEPS_MAX_NEW) err("steps", `has ${rawSteps.length} steps; the most is ${STEPS_MAX_NEW}`);
+    const steps = Array.isArray(rawSteps) ? rawSteps.slice(0, STEPS_MAX_NEW) : [];
+    const seen = new Set(), items = [];
+    steps.forEach((s, i) => {
+      const path = `steps[${i}]`;
+      if (!s || typeof s !== "object" || Array.isArray(s)) { err(path, "must be an object"); items.push(null); return; }
+      unknown(s, KNOWN_KEYS.step, path);
+      const e2 = (k, m) => err(`${path}.${k}`, m);
+      const id = s.id;
+      if (typeof id !== "string" || !REF_RE.test(id)) e2("id", "must start with a lowercase letter and use only a–z, 0–9 and _, at most 20 characters");
+      else if (seen.has(id)) e2("id", `"${id}" is used twice`);
+      else if (out.mode === "append" && oldRefs.has(id)) e2("id", `"${id}" is already a step of ${match.name}`);
+      const ch = s.channel;
+      if (!CHANNELS.includes(ch)) e2("channel", `must be one of ${CHANNELS.join(", ")}`);
+      const needSubject = ch === "email" || ch === "follow_up";
+      const target = text_(s, "target", path, { max: 160 }), purpose = text_(s, "purpose", path, { max: 300 });
+      const subject = text_(s, "subject", path, { max: 200, required: needSubject });
+      const message = text_(s, "message", path, { max: MESSAGE_MAX[ch] || 4000, required: ch !== "form" });
+      for (const [k, v] of [["subject", subject], ["message", message]]) { const ph = v && findPlaceholder(v); if (ph) e2(k, `has a leftover placeholder: ${ph}`); }
+      const form_url = text_(s, "form_url", path, { max: 300, url: true });
+      if (form_url && ch !== "form") e2("form_url", "is only for form steps");
+      const hasPlanned = s.planned_on !== undefined && s.planned_on !== null && s.planned_on !== "";
+      const hasAfter = s.after !== undefined && s.after !== null && s.after !== "";
+      let planned = null, after = null, offset = null;
+      if (hasPlanned && hasAfter) e2("planned_on", "use planned_on or after, not both");
+      else if (i === 0 && !hasPlanned) e2("planned_on", "is required on the first step (YYYY-MM-DD)");
+      else if (hasPlanned) { if (validDate(s.planned_on)) planned = s.planned_on; else e2("planned_on", "must be a date, YYYY-MM-DD"); }
+      else if (!hasAfter) e2("after", "is needed when there's no planned_on (with offset_business_days)");
+      else {
+        if (typeof s.after !== "string") e2("after", "must be a step id");
+        else if (seen.has(s.after)) after = s.after;
+        else if (steps.slice(i + 1).some((x) => x && x.id === s.after)) e2("after", `points to "${s.after}", a later step; it must point to an earlier one`);
+        else if (out.mode === "append" && oldRefs.has(s.after)) after = s.after;
+        else e2("after", `points to "${s.after}", which isn't an earlier step`);
+        const o = s.offset_business_days;
+        if (o === undefined || o === null) e2("offset_business_days", "is required with after");
+        else if (!Number.isInteger(o) || o < 0 || o > 40) e2("offset_business_days", "must be a whole number from 0 to 40");
+        else offset = o;
+      }
+      if (typeof id === "string" && REF_RE.test(id)) seen.add(id);
+      items.push({ ref: typeof id === "string" ? id : null, channel: ch, target, purpose, subject, message, form_url, planned_on: planned, after_ref: after, offset_business_days: offset });
+    });
+    if (match && out.mode === "replace" && old.some((s) => s.status === "done"))
+      err("mode", `${match.name} already has steps marked done, so replacing its plan would lose them. Use "mode": "append" to add steps instead`);
+    if (match && out.mode === "append" && old.length + steps.length > STEPS_MAX_TOTAL)
+      err("steps", `would give ${match.name} ${old.length + steps.length} steps; the most is ${STEPS_MAX_TOTAL}`);
+    if (!match && out.mode === "append" && out.firm && out.firm.name) warn("mode", `no firm called ${out.firm.name} yet, so it will be created`);
+    const pd = planDates(items, out.mode === "append" ? old : [], today);
+    pd.warnings.forEach((w) => warn(`steps[${w.index}].planned_on`, w.msg));
+    items.forEach((s, i) => {
+      if (!s) return;
+      s.planned_on = pd.dates[i];
+      if (s.planned_on && s.planned_on < today) warn(`steps[${i}].planned_on`, `${fmtDay(s.planned_on, today)} is before today`);
+    });
+    out.steps = items;
+    return out;
+  }
+  // What a plan does to an existing firm: fill only empty fields, merge people (by name) and deals (by title), add new documents.
+  const emptyVal = (v) => v === null || v === undefined || (typeof v === "string" && !v.trim());
+  function mergeFirm(match, v) {
+    const changes = {}, filled = [];
+    for (const col of ["website", "location", "size", "summary", "cv_version"]) if (v.firm && !emptyVal(v.firm[col]) && emptyVal(match[col])) { changes[col] = v.firm[col]; filled.push(col); }
+    if (!emptyVal(v.reasoning) && emptyVal(match.reasoning)) { changes.reasoning = v.reasoning; filled.push("reasoning"); }
+    const people = Array.isArray(match.people) ? match.people : [], deals = Array.isArray(match.deals) ? match.deals : [], docs = Array.isArray(match.documents) ? match.documents : [];
+    const pk = new Set(people.map((p) => nameKey(p.name))), dk = new Set(deals.map((d) => nameKey(d.title))), ck = new Set(docs.map(nameKey));
+    const newP = v.people.filter((p) => !pk.has(nameKey(p.name)) && pk.add(nameKey(p.name)));
+    const newD = v.deals.filter((d) => !dk.has(nameKey(d.title)) && dk.add(nameKey(d.title)));
+    const newC = v.documents.filter((c) => !ck.has(nameKey(c)) && ck.add(nameKey(c)));
+    if (newP.length) changes.people = [...people, ...newP];
+    if (newD.length) changes.deals = [...deals, ...newD];
+    if (newC.length) changes.documents = [...docs, ...newC];
+    return { changes, filled, peopleNew: newP.length, peopleKept: people.length, dealsNew: newD.length, dealsKept: deals.length, docsNew: newC.length };
+  }
+  const STEP_PAYLOAD_KEYS = ["user_id", "firm_id", "position", "ref", "channel", "target", "purpose", "subject", "message", "after_ref", "offset_business_days", "planned_on", "form_url"];
+  function stepPayload(s, userId_, firmId, position) {
+    const p = { user_id: userId_, firm_id: firmId, position, ref: s.ref, channel: s.channel, target: s.target, purpose: s.purpose, subject: s.subject, message: s.message,
+                after_ref: s.after_ref, offset_business_days: s.offset_business_days, planned_on: s.planned_on, form_url: s.form_url };
+    for (const k of STEP_PAYLOAD_KEYS) if (p[k] === "" || p[k] === undefined) p[k] = null;
+    return p;
+  }
+  const RESTORE_KEYS = ["user_id", "firm_id", "position", "ref", "channel", "target", "purpose", "subject", "message", "after_ref", "offset_business_days", "planned_on", "status", "done_on",
+                        "outcome", "skip_reason", "documents", "form_url", "note", "touch_id"];
+
+  // ---- the plan panel ----
+  const SAMPLE_PLAN = `{"version":1,"firm":{"name":"Example Test Partners","type":"boutique","priority":2,"website":"https://example.com","location":"London","size":"11-50","summary":"A fictional firm used to test the plan import.","cv_version":"Boutique M&A"},"people":[{"name":"Alex Example","role":"Partner","email":"alex.example@example.com","email_status":"guessed","linkedin":"https://www.linkedin.com/in/example","alumnus":true,"source":"https://example.com/team"}],"deals":[{"title":"Advised a fictional company on its sale","date":"2026-09","source":"https://example.com/deals"}],"reasoning":"Test data: LinkedIn first because the contact is an alumnus, then a short email, then one follow-up.","steps":[{"id":"s1","channel":"linkedin_request","target":"Alex Example","purpose":"Warm connection before the email","planned_on":"2026-10-20","message":"Hi Alex, I'm a Lancaster Economics and Finance student interested in M&A advisory. I'd be glad to connect."},{"id":"s2","channel":"email","target":"Alex Example","purpose":"Cold email","after":"s1","offset_business_days":2,"subject":"Test email subject","message":"This is a fictional test message with no placeholders."},{"id":"s3","channel":"follow_up","target":"Alex Example","purpose":"The one follow-up","after":"s2","offset_business_days":5,"subject":"Re: Test email subject","message":"This is a fictional test follow-up."}],"documents":["CV: Boutique M&A"]}`;
+  const PLAN_SHAPE = `{ "version": 1, "mode": "replace" | "append" (default replace),
+  "firm": { name (required, 1..80), type (boutique|investor|other, default boutique), priority (1..3, default 2),
+            website (http/https), location (<=80), size (<=40), summary (<=600), cv_version (<=60) },
+  "people": [ up to 10 of { name (1..80), role (<=120), email (a valid address or empty),
+              email_status (found|guessed|unknown, default unknown), linkedin (http/https or empty),
+              alumnus (true/false, default false), source (http/https or empty) } ],
+  "deals": [ up to 10 of { title (1..200), date (YYYY, YYYY-MM or YYYY-MM-DD), source (http/https or empty) } ],
+  "reasoning": (<=1500),
+  "steps": [ 1..6 of { id (a–z first, then a–z, 0–9, _; at most 20; unique),
+             channel (linkedin_request|linkedin_message|email|form|follow_up),
+             target (<=160), purpose (<=300), subject (<=200; required for email and follow_up),
+             message (required except for form; at most 300 for linkedin_request, 1500 for
+                      linkedin_message, 4000 for email and follow_up),
+             form_url (http/https; form steps only),
+             planned_on (YYYY-MM-DD)  OR  after (an earlier step id) with offset_business_days (0..40) } ],
+  "documents": [ up to 10 texts, each <=80 ] }
+
+The first step needs planned_on. A [placeholder], {{placeholder}}, XXX or TBC left in a subject or
+message is an error. Unknown keys are ignored with a warning. A Markdown code fence around the block is fine.`;
+  const plan = { text: "", result: null, busy: false, done: false, msg: null };
+  function openPlan() { closeFirmForm(); show($("import-card"), false); show($("plan-card"), true); renderPlan(); $("plan-card").scrollIntoView({ block: "nearest" }); }
+  function renderPlan() {
+    const card = $("plan-card"), parts = [el("h2", { text: "Paste a plan" })];
+    parts.push(el("details", { class: "help" }, [el("summary", { text: "Plan format" }),
+      el("pre", { class: "help-pre", text: PLAN_SHAPE }), el("p", { class: "msg", text: "A sample block (fictional data):" }), el("pre", { class: "help-pre", text: JSON.stringify(JSON.parse(SAMPLE_PLAN), null, 2) })]));
+    const ta = el("textarea", { class: "input", id: "plan-text", "aria-label": "Plan block", placeholder: "Paste the plan block here" });
+    ta.value = plan.text;
+    ta.addEventListener("input", () => { plan.text = ta.value; if (plan.done) { plan.done = false; plan.result = null; plan.msg = null; renderPlan(); $("plan-text").focus(); } });
+    parts.push(el("label", { class: "field", for: "plan-text", text: "Plan block" }), ta,
+      el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", id: "plan-check", text: "Check", disabled: plan.busy, onclick: () => {
+        plan.text = $("plan-text").value; plan.done = false; plan.msg = null;
+        if (!data.firms || !data.steps) { plan.result = null; plan.msg = { ok: false, text: "Your firms and plans haven't loaded yet, so the block can't be checked against them. Retry them first." }; return renderPlan(); }
+        plan.result = validatePack(plan.text, londonToday(), { firms: data.firms || [], steps: data.steps || [] }); renderPlan();
+      } }), el("button", { type: "button", class: "btn", text: "Close", onclick: () => show(card, false) })]));
+    const r = plan.result;
+    if (r) {
+      parts.push(el("h3", { text: r.errors.length ? `${plural(r.errors.length, "error", "errors")} (nothing can be imported until they're fixed)` : "No errors" }));
+      if (r.errors.length) parts.push(el("ul", { class: "problems", id: "plan-errors" }, r.errors.map((e) => el("li", { class: "err", text: `${e.path}: ${e.msg}` }))));
+      if (r.warnings.length) parts.push(el("h3", { text: plural(r.warnings.length, "warning", "warnings") }), el("ul", { class: "problems", id: "plan-warnings" }, r.warnings.map((w) => el("li", { text: `${w.path}: ${w.msg}` }))));
+      if (r.firm && r.firm.name) {
+        const lines = [];
+        if (r.match) {
+          const m = mergeFirm(r.match, r);
+          lines.push(`Existing firm: ${r.match.name} (matched by name). Mode: ${r.mode}.`);
+          lines.push(m.filled.length ? `Will fill the empty fields: ${m.filled.join(", ")}.` : "No firm fields will change (filled fields are never overwritten).");
+          lines.push(`People: ${m.peopleNew} new, ${m.peopleKept} already there. Deals: ${m.dealsNew} new, ${m.dealsKept} already there. Documents: ${m.docsNew} new.`);
+          const old = (data.steps || []).filter((s) => s.firm_id === r.match.id);
+          if (r.mode === "replace") lines.push(old.length ? `Replaces its ${plural(old.length, "planned or skipped step", "planned or skipped steps")}.` : "It has no steps yet.");
+          else lines.push(`Adds ${plural(r.steps.length, "step", "steps")} after its ${plural(old.length, "step", "steps")}.`);
+        } else {
+          lines.push(`New firm: ${r.firm.name}. People: ${r.people.length}. Deals: ${r.deals.length}. Documents: ${r.documents.length}.`);
+        }
+        parts.push(el("div", { id: "plan-summary" }, lines.map((t) => el("p", { text: t }))));
+      }
+      if (r.steps.length) {
+        parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table", id: "plan-steps" }, [
+          el("thead", null, [el("tr", null, ["Step", "Channel", "Planned", "Timing"].map((h) => el("th", { text: h })))]),
+          el("tbody", null, r.steps.filter(Boolean).map((s) => el("tr", null, [el("td", { text: s.ref || "?" }), el("td", { text: CHANNEL_LABEL[s.channel] || String(s.channel) }),
+            el("td", { text: s.planned_on ? fmtDay(s.planned_on) : "—" }), el("td", { text: s.after_ref ? `${s.offset_business_days} business days after ${s.after_ref}` : "fixed date" })]))),
+        ])]));
+      }
+      parts.push(el("div", { class: "row-actions" }, [el("button", { type: "button", class: "btn primary", id: "plan-import", text: plan.busy ? "Importing…" : "Import",
+        disabled: !!r.errors.length || plan.busy || plan.done, onclick: () => runPlanImport(r) })]));
+    }
+    if (plan.msg) parts.push(el("p", { class: plan.msg.ok ? "ok" : "err", id: "plan-result", role: "status", text: plan.msg.text }));
+    card.replaceChildren(...parts);
+  }
+  // Inserting steps, deleting them and putting them back, each returning { ok, rows }.
+  async function insertSteps(rows) { let r; try { r = await sb.from("outreach_steps").insert(rows).select(STEP_COLS); } catch (e) { r = { error: e }; } return { ok: !r.error && !!r.data, rows: r.data || [] }; }
+  async function deleteStepsById(ids) { if (!ids.length) return true; let r; try { r = await sb.from("outreach_steps").delete().in("id", ids); } catch (e) { r = { error: e }; } return !r.error; }
+  async function runPlanImport(r) {
+    if (plan.busy || plan.done || r.errors.length) return;
+    plan.busy = true; plan.msg = null; renderPlan();
+    const finish = (ok, text) => { plan.busy = false; plan.done = ok; plan.msg = { ok, text }; renderPlan(); render(); };
+    const uid = await getUserId().catch(() => null);
+    if (!r.match) {   // a new firm, then its steps; if the steps fail, the firm is removed again
+      let fr;
+      try {
+        fr = await sb.from("outreach_firms").insert({ user_id: uid, name: r.firm.name, firm_type: r.firm.firm_type, priority: r.firm.priority, website: r.firm.website, location: r.firm.location,
+          size: r.firm.size, summary: r.firm.summary, cv_version: r.firm.cv_version, reasoning: r.reasoning, people: r.people, deals: r.deals, documents: r.documents }).select(FIRM_COLS).single();
+      } catch (e) { fr = { error: e }; }
+      if (fr.error || !fr.data) return finish(false, fr.error && fr.error.code === "23505" ? `${DUP_NAME}: reload the page so the plan matches it.` : "Couldn't create the firm. Nothing was imported.");
+      const firm = normFirm(fr.data);
+      const ins = await insertSteps(r.steps.map((s, i) => stepPayload(s, uid, firm.id, i + 1)));
+      if (!ins.ok) {
+        let gone; try { gone = await sb.from("outreach_firms").delete().eq("id", firm.id); } catch (e) { gone = { error: e }; }
+        if (gone.error) { data.firms.push(firm); return finish(false, `Couldn't save the plan's steps, and couldn't remove the new firm again: ${firm.name} now exists with no plan. Delete it from its card, or paste the plan again with "mode": "append".`); }
+        return finish(false, "Couldn't save the plan's steps, so the new firm was removed again. Nothing was imported.");
+      }
+      data.firms.push(firm); data.steps.push(...ins.rows.map(normStep)); regroupSteps(); view.open.add(firm.id);
+      return finish(true, `Imported ${firm.name} with ${plural(ins.rows.length, "step", "steps")}.`);
+    }
+    // an existing firm: (replace) remove its planned and skipped steps, add the new steps, then fill its empty fields
+    const firm = r.match, merge = mergeFirm(firm, r);
+    const old = (data.steps || []).filter((s) => s.firm_id === firm.id);
+    const removed = r.mode === "replace" ? old.filter((s) => s.status === "planned" || s.status === "skipped") : [];
+    if (r.mode === "replace" && removed.length !== old.length) return finish(false, `${firm.name} has steps marked done, so its plan can't be replaced. Use "mode": "append".`);
+    if (removed.length) {
+      let dr; try { dr = await sb.from("outreach_steps").delete().eq("firm_id", firm.id).in("status", ["planned", "skipped"]); } catch (e) { dr = { error: e }; }
+      if (dr.error) return finish(false, "Couldn't remove the old plan. Nothing was imported.");
+    }
+    const startPos = r.mode === "append" ? old.reduce((m, s) => Math.max(m, s.position), 0) : 0;
+    const putBack = async () => {
+      if (!removed.length) return true;
+      const ok = await insertSteps(removed.map((s) => Object.fromEntries(RESTORE_KEYS.map((k) => [k, k === "user_id" ? uid : s[k] === undefined ? null : s[k]]))));
+      if (ok.ok) { data.steps = data.steps.filter((s) => !removed.includes(s)).concat(ok.rows.map(normStep)); regroupSteps(); }
+      return ok.ok;
+    };
+    const lost = () => removed.map((s) => `${s.ref} (${fmtDay(s.planned_on)})`).join(", ");
+    const ins = await insertSteps(r.steps.map((s, i) => stepPayload(s, uid, firm.id, startPos + i + 1)));
+    if (!ins.ok) {
+      if (removed.length) data.steps = data.steps.filter((s) => !removed.includes(s));
+      if (await putBack()) return finish(false, removed.length ? "Couldn't save the new steps. The previous plan was put back; nothing was imported." : "Couldn't save the new steps. Nothing was imported.");
+      regroupSteps();
+      return finish(false, `Couldn't save the new steps, and couldn't put back the previous plan: ${firm.name} has lost its ${plural(removed.length, "planned or skipped step", "planned or skipped steps")} (${lost()}). Paste the plan again to recreate them.`);
+    }
+    const newRows = ins.rows.map(normStep);
+    if (Object.keys(merge.changes).length) {
+      let ur; try { ur = await sb.from("outreach_firms").update(merge.changes).eq("id", firm.id); } catch (e) { ur = { error: e }; }
+      if (ur.error) {
+        const undone = await deleteStepsById(newRows.map((s) => s.id));
+        if (removed.length) data.steps = data.steps.filter((s) => !removed.includes(s));
+        const back = undone && await putBack();
+        regroupSteps();
+        if (undone && back) return finish(false, "Couldn't update the firm, so the import was undone. Nothing changed.");
+        if (!undone) { data.steps.push(...newRows); regroupSteps(); return finish(false, `Couldn't update the firm, and couldn't undo the import: ${firm.name} has the new steps (${newRows.map((s) => s.ref).join(", ")}) but its details weren't filled in.`); }
+        return finish(false, `Couldn't update the firm; the new steps were removed, but the previous plan couldn't be put back: ${firm.name} has lost ${lost()}.`);
+      }
+      Object.assign(firm, merge.changes);
+    }
+    data.steps = data.steps.filter((s) => !removed.includes(s)).concat(newRows); regroupSteps(); view.open.add(firm.id);
+    finish(true, `Imported ${plural(newRows.length, "step", "steps")} for ${firm.name}${merge.filled.length ? `, and filled ${merge.filled.join(", ")}` : ""}.`);
+  }
+
+  // ---- steps on the card ----
+  const OUTCOMES = { linkedin_request: [["", "None"], ["accepted", "Accepted"], ["ignored", "Ignored"]], email: [["", "None"], ["bounced", "Bounced"]], follow_up: [["", "None"], ["bounced", "Bounced"]],
+                     form: [["", "None"], ["acknowledged", "Acknowledged"]] };
+  const MAILTO_EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  const stepsOf = (id) => stepsBy.get(id) || [];
+  function matchingPerson(f, target) {
+    const t = String(target || "").toLowerCase();
+    return (Array.isArray(f.people) ? f.people : []).find((p) => p && p.name && t.includes(String(p.name).toLowerCase())) || null;
+  }
+  // The "Open in Mail" link: the To address only for a valid email of the person named in the target; subject and body percent-encoded, line breaks as CRLF.
+  function mailtoFor(f, step) {
+    const p = matchingPerson(f, step.target);
+    const to = p && typeof p.email === "string" && MAILTO_EMAIL_RE.test(p.email.trim()) ? p.email.trim() : "";
+    const enc = (s) => encodeURIComponent(String(s || "").replace(/\r\n|\r|\n/g, "\r\n"));
+    const href = `mailto:${to}?subject=${enc(step.subject)}&body=${enc(step.message)}`;
+    return { href, to, tooLong: href.length > MAILTO_MAX };
+  }
+  function stepWarnings(f, step) {
+    const w = [], p = matchingPerson(f, step.target);
+    if (p && (p.verified !== true || p.email_status === "guessed")) w.push("Contact not verified");
+    if (!(Array.isArray(f.deals) ? f.deals : []).some((d) => d && d.verified === true)) w.push("No verified deal on file");
+    return w;
+  }
+  const busy = new Set();   // keys of writes in progress ("step:12", "touch:5", "people:3:0")
+  function stepNote(id) { const n = view.stepNotes.get(id); return n ? el("p", { class: n.ok ? "ok" : "err", role: "status", text: n.text }, n.retry ? [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: n.retry })] : []) : null; }
+  function setStepNote(id, ok, text, retry) { view.stepNotes.set(id, { ok, text, retry }); render(); }
+  async function copyText(id, text, what) {
+    try { await navigator.clipboard.writeText(text); setStepNote(id, true, `${what} copied`); }
+    catch (e) { setStepNote(id, false, `Couldn't copy the ${what.toLowerCase()}: select it in the message and copy it instead.`); }
+  }
+  function planSection(f, today) {
+    const sec = el("section", { class: "plan", "data-section": "plan" });
+    if (data.stepsErr) {
+      sec.append(el("p", { class: "err", text: "Couldn't load the plan." }, [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: loadSteps })]));
+      return sec;
+    }
+    const steps = stepsOf(f.id);
+    if (!data.steps || !steps.length) return null;
+    sec.append(el("h3", { text: "Plan" }));
+    sec.append(el("ol", { class: "steps" }, steps.map((s) => stepItem(f, s, today))));
+    return sec;
+  }
+  function stepItem(f, s, today) {
+    const status = s.status === "done" ? "Done" : s.status === "skipped" ? `Skipped: ${s.skip_reason || "no reason given"}` : "Planned";
+    const li = el("li", { class: "step", "data-step": String(s.id) }, [
+      el("div", { class: "step-head", text: `${s.ref} · ${CHANNEL_LABEL[s.channel] || s.channel} · ${status}` }),
+      s.target ? el("div", { class: "step-line", text: `To: ${s.target}` }) : null,
+      s.purpose ? el("div", { class: "step-line", text: `Why: ${s.purpose}` }) : null,
+      el("div", { class: "step-line", text: `Planned ${fmtDay(s.planned_on, today)}` + (s.status === "done" ? ` · Done ${fmtDay(s.done_on, today)}${s.outcome ? ` · ${s.outcome}` : ""}` : "") }),
+    ]);
+    if (s.status === "planned" && s.planned_on < today) {
+      const n = businessDaysBetween(s.planned_on, today);
+      if (n >= 1) li.append(el("div", { class: "step-overdue", text: `Overdue by ${plural(n, "business day", "business days")}` }));
+    }
+    if (s.subject || s.message) {
+      li.append(el("details", { class: "step-msg" }, [el("summary", { text: "Message" }),
+        s.subject ? el("div", { class: "step-subject", text: `Subject: ${s.subject}` }) : null, el("div", { class: "step-body", text: s.message || "" })]));
+    }
+    const tools = el("div", { class: "step-tools" });
+    if (s.message) tools.append(el("button", { type: "button", class: "btn", text: "Copy message", onclick: () => copyText(s.id, s.message, "Message") }));
+    if ((s.channel === "email" || s.channel === "follow_up") && s.subject) tools.append(el("button", { type: "button", class: "btn", text: "Copy subject", onclick: () => copyText(s.id, s.subject, "Subject") }));
+    if (s.channel === "email" || s.channel === "follow_up") {
+      const m = mailtoFor(f, s);
+      if (m.tooLong) tools.append(el("button", { type: "button", class: "btn", text: "Open in Mail", disabled: true }), el("span", { class: "step-note", text: "Too long for Open in Mail; use Copy" }));
+      else tools.append(el("a", { class: "btn link-btn", href: m.href, text: "Open in Mail" }));
+    }
+    if (s.channel === "linkedin_request" || s.channel === "linkedin_message") tools.append(el("span", { class: "step-note counter", text: `${(s.message || "").length} / ${MESSAGE_MAX[s.channel]}` }));
+    if (s.channel === "form" && safeUrl(s.form_url)) tools.append(el("a", { class: "btn link-btn", href: safeUrl(s.form_url), target: "_blank", rel: "noopener noreferrer", text: "Open form" }));
+    for (const w of stepWarnings(f, s)) tools.append(el("span", { class: "step-warn", text: w }));
+    li.append(tools);
+    const acts = el("div", { class: "step-actions" }), dis = busy.has(`step:${s.id}`);
+    if (s.status === "planned") {
+      acts.append(el("button", { type: "button", class: "btn primary", text: "Mark done", disabled: dis, onclick: () => openStepForm(f, s, "done") }),
+                  el("button", { type: "button", class: "btn", text: "Skip", disabled: dis, onclick: () => openStepForm(f, s, "skip") }),
+                  el("button", { type: "button", class: "btn", text: "Reschedule", disabled: dis, onclick: () => openStepForm(f, s, "reschedule") }),
+                  el("button", { type: "button", class: "btn", text: "Edit message", disabled: dis, onclick: () => openStepForm(f, s, "edit") }));
+    } else if (s.status === "done") acts.append(el("button", { type: "button", class: "btn", text: "Undo", disabled: dis, onclick: () => undoStep(f, s) }));
+    else acts.append(el("button", { type: "button", class: "btn", text: "Unskip", disabled: dis, onclick: () => unskipStep(f, s) }));
+    li.append(acts);
+    const form = view.stepForms.get(s.id);
+    if (form) li.append(form);
+    const note = stepNote(s.id);
+    if (note) li.append(note);
+    return li;
+  }
+  function replaceStep(row) {
+    const n = normStep(row), i = data.steps.findIndex((x) => x.id === n.id);
+    if (i >= 0) data.steps[i] = n; else data.steps.push(n);
+    regroupSteps(); return n;
+  }
+  async function stepUpdate(id, patch, where = {}) {
+    let q = sb.from("outreach_steps").update(patch).eq("id", id);
+    for (const [k, v] of Object.entries(where)) q = q.eq(k, v);
+    let r; try { r = await q.select(STEP_COLS); } catch (e) { r = { error: e }; }
+    return r.error ? { error: r.error } : { rows: r.data || [] };
+  }
+  async function changedElsewhere(s) { view.stepForms.delete(s.id); await loadSteps(); setStepNote(s.id, false, "This step was already changed elsewhere, so the plan was reloaded. Check it and try again."); }
+  function dateInput(value, min, max) { return el("input", { class: "input", type: "date", value, min, max: max || null, "aria-label": "Date" }); }
+  function openStepForm(f, s, kind) {
+    view.stepNotes.delete(s.id);
+    const today = londonToday(), err = el("p", { class: "err", hidden: true, role: "alert" });
+    const fail = (t) => { err.textContent = t; show(err, true); };
+    const cancel = el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => { view.stepForms.delete(s.id); render(); } });
+    let node;
+    if (kind === "done") {
+      const date = dateInput(today, MIN_DATE, today);
+      const outcome = OUTCOMES[s.channel] ? el("select", { class: "input", "aria-label": "Outcome" }, OUTCOMES[s.channel].map(([v, t]) => el("option", { value: v, text: t }))) : null;
+      const docs = (Array.isArray(f.documents) ? f.documents : []).map((d) => el("input", { type: "checkbox", value: d }));
+      const formUrl = s.channel === "form" ? el("input", { class: "input", type: "url", maxlength: "300", value: s.form_url || "", "aria-label": "Form URL" }) : null;
+      const note = el("input", { class: "input", type: "text", maxlength: "500", autocomplete: "off", "aria-label": "Note (optional)" });
+      const save = el("button", { type: "button", class: "btn primary", text: "Save" });
+      node = el("div", { class: "inline-form", "data-form": "step-done" }, [el("div", { text: `Mark ${s.ref} done`, style: "font-weight: 700" }),
+        el("label", { class: "field", text: "Date" }), date,
+        outcome ? el("label", { class: "field", text: "Outcome" }) : null, outcome,
+        docs.length ? el("div", { class: "field", text: "Documents attached" }) : null, ...docs.map((c) => el("label", { class: "check" }, [c, el("span", { text: c.value })])),
+        formUrl ? el("label", { class: "field", text: "Form URL" }) : null, formUrl,
+        el("label", { class: "field", text: "Note (optional)" }), note, err, el("div", { class: "row-actions" }, [save, cancel])]);
+      save.addEventListener("click", () => {
+        const d = date.value, t2 = londonToday(), fu = formUrl ? formUrl.value.trim() : "";
+        if (!validDate(d) || d < MIN_DATE || d > t2) return fail("Choose a date from 1 Jan 2000 to today.");
+        if (fu && !/^https?:\/\//i.test(fu)) return fail("The form URL must start with https:// or http://");
+        markDone(f, s, { date: d, outcome: outcome && outcome.value ? outcome.value : null, documents: docs.filter((c) => c.checked).map((c) => c.value),
+                         form_url: formUrl ? (fu || null) : undefined, note: note.value.trim() || null }, save, fail);
+      });
+    } else if (kind === "skip") {
+      const reason = el("input", { class: "input", type: "text", maxlength: "300", autocomplete: "off", "aria-label": "Reason for skipping" });
+      const save = el("button", { type: "button", class: "btn primary", text: "Skip step" });
+      node = el("div", { class: "inline-form", "data-form": "step-skip" }, [el("label", { class: "field", text: "Why skip it? (required)" }), reason, err, el("div", { class: "row-actions" }, [save, cancel])]);
+      save.addEventListener("click", () => {
+        const why = reason.value.trim();
+        if (!why) return fail("Give a reason."); if (why.length > 300) return fail("At most 300 characters.");
+        simpleStepWrite(s, save, fail, { status: "skipped", skip_reason: why }, { status: "planned" }, "Skipped");
+      });
+    } else if (kind === "reschedule") {
+      const date = dateInput(s.planned_on >= today ? s.planned_on : today, today, null);
+      const hint = el("p", { class: "step-warn", hidden: true });
+      date.addEventListener("input", () => { const ok = !validDate(date.value) || isBusinessDay(date.value); hint.textContent = ok ? "" : `${fmtDay(date.value)} isn't a business day (a weekend or a bank holiday). You can still use it.`; show(hint, !ok); });
+      const save = el("button", { type: "button", class: "btn primary", text: "Save date" });
+      node = el("div", { class: "inline-form", "data-form": "step-reschedule" }, [el("label", { class: "field", text: "New date" }), date, hint, err, el("div", { class: "row-actions" }, [save, cancel])]);
+      save.addEventListener("click", () => {
+        if (!validDate(date.value) || date.value < londonToday()) return fail("Choose today or a later date.");
+        simpleStepWrite(s, save, fail, { planned_on: date.value }, { status: "planned" }, "Rescheduled");
+      });
+    } else {
+      const needSubject = s.channel === "email" || s.channel === "follow_up";
+      const subj = needSubject ? el("input", { class: "input", type: "text", maxlength: "200", value: s.subject || "", "aria-label": "Subject" }) : null;
+      const msg = el("textarea", { class: "input", maxlength: String(MESSAGE_MAX[s.channel] || 4000), "aria-label": "Message" }); msg.value = s.message || "";
+      const save = el("button", { type: "button", class: "btn primary", text: "Save message" });
+      node = el("div", { class: "inline-form", "data-form": "step-edit" }, [subj ? el("label", { class: "field", text: "Subject" }) : null, subj, el("label", { class: "field", text: "Message" }), msg, err,
+        el("div", { class: "row-actions" }, [save, cancel])]);
+      save.addEventListener("click", () => {
+        const sv = subj ? subj.value.trim() : null, mv = msg.value.trim(), max = MESSAGE_MAX[s.channel] || 4000;
+        if (subj && !sv) return fail("The subject is required."); if (sv && sv.length > 200) return fail("The subject is at most 200 characters.");
+        if (!mv && s.channel !== "form") return fail("The message is required."); if (mv.length > max) return fail(`The message is at most ${max} characters.`);
+        const ph = findPlaceholder(sv) || findPlaceholder(mv); if (ph) return fail(`There's a leftover placeholder: ${ph}`);
+        if (!confirm(`Save the new message for step '${s.ref}'?`)) return;
+        simpleStepWrite(s, save, fail, subj ? { subject: sv, message: mv || null } : { message: mv || null }, { status: "planned" }, "Message saved");
+      });
+    }
+    view.stepForms.set(s.id, node); render();
+  }
+  async function simpleStepWrite(s, btn, fail, patch, where, okText) {
+    const key = `step:${s.id}`; if (busy.has(key)) return;
+    busy.add(key); btn.disabled = true;
+    const r = await stepUpdate(s.id, patch, where);
+    busy.delete(key); btn.disabled = false;
+    if (r.error) return fail(SAVE_FAILED);
+    if (!r.rows.length) return changedElsewhere(s);
+    replaceStep(r.rows[0]); view.stepForms.delete(s.id); setStepNote(s.id, true, okText);
+  }
+  async function unskipStep(f, s) {
+    const key = `step:${s.id}`; if (busy.has(key)) return;
+    busy.add(key); render();
+    const r = await stepUpdate(s.id, { status: "planned", skip_reason: null }, { status: "skipped" });
+    busy.delete(key);
+    if (r.error) return setStepNote(s.id, false, SAVE_FAILED, () => unskipStep(f, s));
+    if (!r.rows.length) return changedElsewhere(s);
+    replaceStep(r.rows[0]); setStepNote(s.id, true, "Planned again");
+  }
+  // Mark done: 1) the step, only if still planned; 2) the touch; 3) link them. A failed touch puts the step back to planned.
+  async function markDone(f, s, v, btn, fail) {
+    const key = `step:${s.id}`; if (busy.has(key)) return;
+    busy.add(key); btn.disabled = true;
+    const prev = { status: "planned", done_on: null, outcome: s.outcome, documents: s.documents, form_url: s.form_url, note: s.note };
+    const patch = { status: "done", done_on: v.date, outcome: v.outcome, documents: v.documents, note: v.note };
+    if (v.form_url !== undefined) patch.form_url = v.form_url;
+    const done = () => { busy.delete(key); btn.disabled = false; };
+    const r = await stepUpdate(s.id, patch, { status: "planned" });
+    if (r.error) { done(); return fail(SAVE_FAILED); }
+    if (!r.rows.length) { done(); return changedElsewhere(s); }
+    replaceStep(r.rows[0]);
+    let tr; try { tr = await sb.from("outreach_touches").insert({ user_id: await getUserId(), firm_id: f.id, kind: s.channel, happened_on: v.date, note: v.note }).select(TOUCH_COLS).single(); } catch (e) { tr = { error: e }; }
+    if (tr.error || !tr.data) {
+      const back = await stepUpdate(s.id, prev, { status: "done" });
+      done(); view.stepForms.delete(s.id);
+      if (back.error || !back.rows.length) return setStepNote(s.id, false, `Couldn't log the touch, and couldn't put the step back: step '${s.ref}' is marked done on ${fmtDay(v.date)} with no touch. Use Undo on it, then mark it done again.`);
+      replaceStep(back.rows[0]);
+      return setStepNote(s.id, false, "Couldn't log the touch, so the step is planned again.", () => { view.stepNotes.delete(s.id); openStepForm(f, stepsOf(f.id).find((x) => x.id === s.id), "done"); });
+    }
+    const t = normTouch(tr.data); data.touches.push(t); regroup();
+    const link = await stepUpdate(s.id, { touch_id: t.id });
+    done(); view.stepForms.delete(s.id);
+    if (link.error || !link.rows.length) return setStepNote(s.id, false, `Done, and the touch is logged, but they couldn't be linked, so Undo won't remove the touch.`, () => relink(f, s.id, t.id));
+    replaceStep(link.rows[0]); setStepNote(s.id, true, "Saved");
+  }
+  async function relink(f, stepId, touchId) {
+    const r = await stepUpdate(stepId, { touch_id: touchId });
+    if (r.error || !r.rows.length) return setStepNote(stepId, false, "Still couldn't link the touch to the step.", () => relink(f, stepId, touchId));
+    replaceStep(r.rows[0]); setStepNote(stepId, true, "Saved");
+  }
+  // Undo: delete the linked touch, then reset the step to planned.
+  async function undoStep(f, s, touchGone = false) {
+    const key = `step:${s.id}`; if (busy.has(key)) return;
+    busy.add(key); render();
+    if (s.touch_id && !touchGone) {
+      let d; try { d = await sb.from("outreach_touches").delete().eq("id", s.touch_id); } catch (e) { d = { error: e }; }
+      if (d.error) { busy.delete(key); return setStepNote(s.id, false, "Couldn't undo: the touch couldn't be deleted. Nothing changed.", () => undoStep(f, s)); }
+      data.touches = data.touches.filter((t) => t.id !== s.touch_id); regroup();
+    }
+    const r = await stepUpdate(s.id, { status: "planned", done_on: null, outcome: null, documents: [], touch_id: null }, { status: "done" });
+    busy.delete(key);
+    if (r.error) return setStepNote(s.id, false, `The touch was deleted, but step '${s.ref}' is still marked done. Retry resets it.`, () => undoStep(f, s, true));
+    if (!r.rows.length) return changedElsewhere(s);
+    replaceStep(r.rows[0]); setStepNote(s.id, true, "Planned again");
+  }
+  // Deleting a touch from the history. A touch linked to a step: 1) reset the step (only if still linked to this touch); 2) delete the touch;
+  // if 2 fails, put the step back exactly as it was.
+  async function deleteTouch(f, t, confirmed = false) {
+    const key = `touch:${t.id}`; if (busy.has(key)) return;
+    const label = `${KIND_LABEL[t.kind] || t.kind} · ${fmtDay(t.happened_on)}`;
+    const step = (data.steps || []).find((s) => s.touch_id === t.id) || null;
+    if (!confirmed && !confirm(step ? `Delete '${label}'? This also marks the step '${step.ref}' as planned again` : `Delete '${label}'? The firm's status and follow-up date will be recalculated`)) return;
+    busy.add(key); view.notes.delete(f.id); render();
+    const note = (ok, text, retry) => { busy.delete(key); view.notes.set(f.id, { ok, text, retry }); render(); };
+    const before = step ? { status: step.status, done_on: step.done_on, outcome: step.outcome, documents: step.documents, touch_id: t.id } : null;
+    if (step) {
+      const r = await stepUpdate(step.id, { status: "planned", done_on: null, outcome: null, documents: [], touch_id: null }, { touch_id: t.id });
+      if (r.error) return note(false, `Couldn't delete '${label}'. Nothing changed.`, () => deleteTouch(f, t, true));
+      if (!r.rows.length) { busy.delete(key); await loadSteps(); return note(false, `Step '${step.ref}' was changed elsewhere, so nothing was deleted. The plan was reloaded.`); }
+      replaceStep(r.rows[0]);
+    }
+    let d; try { d = await sb.from("outreach_touches").delete().eq("id", t.id); } catch (e) { d = { error: e }; }
+    if (d.error) {
+      if (step) {
+        const back = await stepUpdate(step.id, before);
+        if (back.error || !back.rows.length) return note(false, `Couldn't delete '${label}', and couldn't put step '${step.ref}' back: the touch still exists, but step '${step.ref}' is now planned and no longer linked to it. Mark the step done again, or delete the touch again.`, () => deleteTouch(f, t, true));
+        replaceStep(back.rows[0]);
+      }
+      return note(false, `Couldn't delete '${label}'. Nothing changed.`, () => deleteTouch(f, t, true));
+    }
+    data.touches = data.touches.filter((x) => x.id !== t.id); regroup();
+    note(true, step ? `Deleted '${label}'; step '${step.ref}' is planned again.` : `Deleted '${label}'.`);
+  }
+  // ---- people, deals and documents on the card ----
+  async function toggleVerified(f, col, i) {
+    const key = `${col}:${f.id}:${i}`; if (busy.has(key)) return;
+    const list = (Array.isArray(f[col]) ? f[col] : []).map((x) => ({ ...x }));
+    list[i].verified = list[i].verified !== true;
+    busy.add(key); render();
+    let r; try { r = await sb.from("outreach_firms").update({ [col]: list }).eq("id", f.id); } catch (e) { r = { error: e }; }
+    busy.delete(key);
+    if (r.error) { view.notes.set(f.id, { ok: false, text: SAVE_FAILED, retry: () => { view.notes.delete(f.id); toggleVerified(f, col, i); } }); return render(); }
+    f[col] = list; view.notes.set(f.id, { ok: true, text: "Saved" }); render();
+  }
+  function verifiedToggle(f, col, i, on) {
+    return el("button", { type: "button", class: "btn toggle", "aria-pressed": on ? "true" : "false", text: on ? "Verified" : "Not verified", disabled: busy.has(`${col}:${f.id}:${i}`), onclick: () => toggleVerified(f, col, i) });
+  }
+  function peopleSection(f) {
+    const people = Array.isArray(f.people) ? f.people : [];
+    if (!people.length) return null;
+    return el("section", { class: "people", "data-section": "people" }, [el("h3", { text: "People" }), el("ul", { class: "plist" }, people.map((p, i) => {
+      const em = p.email && EMAIL_RE.test(String(p.email).trim()) ? String(p.email).trim() : null;
+      return el("li", null, [
+        el("div", { class: "p-name", text: p.name + (p.role ? ` · ${p.role}` : "") + (p.alumnus ? " · alumnus" : "") }),
+        p.email ? el("div", null, [em ? el("a", { class: "link", href: `mailto:${em}`, text: em }) : el("span", { text: String(p.email) }), el("span", { class: "p-badge", text: ` (${p.email_status || "unknown"})` })]) : null,
+        el("div", { class: "p-links" }, [p.linkedin ? linkOrText(p.linkedin, "LinkedIn") : null, p.source ? linkOrText(p.source, "Source") : null]),
+        verifiedToggle(f, "people", i, p.verified === true),
+      ]);
+    }))]);
+  }
+  function dealsSection(f) {
+    const deals = Array.isArray(f.deals) ? f.deals : [];
+    if (!deals.length) return null;
+    return el("section", { class: "deals", "data-section": "deals" }, [el("h3", { text: "Recent deals" }), el("ul", { class: "plist" }, deals.map((d, i) => el("li", null, [
+      el("div", { class: "p-name", text: d.title + (d.date ? ` · ${d.date}` : "") }), d.source ? el("div", { class: "p-links" }, [linkOrText(d.source, "Source")]) : null, verifiedToggle(f, "deals", i, d.verified === true)])))]);
+  }
+  function docsSection(f, today) {
+    const rows = stepsOf(f.id).filter((s) => s.status === "done" && ((Array.isArray(s.documents) && s.documents.length) || s.form_url));
+    if (!rows.length) return null;
+    return el("section", { class: "docs", "data-section": "documents" }, [el("h3", { text: "Documents and forms submitted" }), el("ul", { class: "plist" }, rows.map((s) => el("li", null, [
+      el("div", { text: `${s.ref} · ${fmtDay(s.done_on, today)}${Array.isArray(s.documents) && s.documents.length ? ` · ${s.documents.join(", ")}` : ""}` }),
+      s.form_url && s.channel === "form" ? linkOrText(s.form_url, "Form") : null])))]);
+  }
+
   // ---- toolbar ----
   $("search").addEventListener("input", (e) => { view.q = e.target.value; render(); });
   $("f-priority").addEventListener("change", (e) => { view.priority = e.target.value; render(); });
@@ -860,15 +1586,18 @@
   $("f-sort").addEventListener("change", (e) => { view.sort = e.target.value; render(); });
   $("add-open").addEventListener("click", () => openFirmForm(null));
   $("import-open").addEventListener("click", openImport);
+  $("plan-open").addEventListener("click", openPlan);
 
   window.Firms = { BANK_HOLIDAYS, FOLLOW_UP_DAYS, OVERDUE_DAYS, NO_RESPONSE_DAYS, londonToday, addDays, isBusinessDay, businessDaysAfter, businessDaysBetween, fmtDay,
-                   firmState, summary, dueOrder, SORTS, safeUrl, safeEmail, parsePaste, guessMapping, planImport, mapType, mapPriority, mapRoute, firmPayload, validateFirm, data, view };
+                   firmState, summary, dueOrder, SORTS, safeUrl, safeEmail, parsePaste, guessMapping, planImport, mapType, mapPriority, mapRoute, firmPayload, validateFirm, data, view,
+                   PLAN_MAX_CHARS, STEPS_MAX_NEW, STEPS_MAX_TOTAL, MAILTO_MAX, LINKEDIN_NOTE_MAX, SAMPLE_PLAN, validatePack, planDates, jsonErrorAt, findPlaceholder, mergeFirm, stepPayload, mailtoFor,
+                   matchingPerson, stepWarnings, nextBusinessDay };
 
   let started = false;
   sb.auth.onAuthStateChange((event, session) => {
     document.getElementById("login-gate").style.display = session ? "none" : "block";
     document.getElementById("app-content").style.display = session ? "block" : "none";
-    if (session && !started) { started = true; render(); loadFirms(); loadTouches(); }
+    if (session && !started) { started = true; render(); loadFirms(); loadTouches(); loadSteps(); }
   });
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
