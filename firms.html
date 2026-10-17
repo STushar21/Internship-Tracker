@@ -171,6 +171,21 @@
   .import-table.preview th, .import-table.preview td { min-width: 8em; overflow-wrap: break-word; }
   .import-table.preview th:first-child, .import-table.preview td:first-child { min-width: 0; }
   .problems { font-size: 14px; padding-left: 18px; }
+  /* --- research --- */
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .acts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+  .btn.rbtn { white-space: nowrap; }
+  .snippet { margin: 6px 0 0; color: #5A5650; font-size: 14px; overflow-wrap: anywhere; }
+  .snip-label { font-weight: 600; color: #1A1A18; }
+  mark { background: #F3E3BC; color: #1A1A18; border-bottom: 2px solid #6F5439; padding: 0 1px; }
+  .research-panel h3 { margin: 0; }
+  .research-body { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 8px; padding: 10px 12px; margin-top: 10px; white-space: pre-wrap; overflow-wrap: anywhere;
+                   max-height: 70vh; overflow-y: auto; font-size: 15px; line-height: 1.5; color: #1A1A18; }
+  .research-body a { color: #6F5439; font-weight: 600; }
+  textarea.research-ta { min-height: calc(12 * 1.5em + 18px); max-height: 60vh; line-height: 1.5; overflow-y: auto; resize: vertical; overflow-wrap: anywhere; margin-top: 8px; }
+  .rcount { margin: 6px 0 0; }
+  .rcount.over { font-weight: 700; }
+  .rnotice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 14px; color: #1A1A18; }
   @media (min-width: 900px) {
     .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .ph { display: none; }
@@ -196,6 +211,7 @@
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grid2 { grid-template-columns: minmax(0, 1fr); }
     .toolbar select.input { flex: 1 1 140px; }
+    .research-body { max-height: 60vh; }
     /* Date inputs: the iOS rules from tracker.html and outreach.html, with min-height 44px as in gym.html */
     input[type="date"] {
       -webkit-appearance: none;
@@ -258,9 +274,10 @@
 <div class="stats" id="stats"></div>
 
 <div class="toolbar">
-  <input class="input search" id="search" type="search" placeholder="Search firms and notes" aria-label="Search firms and notes" autocomplete="off">
+  <input class="input search" id="search" type="search" placeholder="Search firms, notes and research" aria-label="Search firms, notes and research" autocomplete="off">
   <select class="input" id="f-priority" aria-label="Priority"><option value="">Priority: All</option><option value="1">Priority 1</option><option value="2">Priority 2</option><option value="3">Priority 3</option></select>
   <select class="input" id="f-sort" aria-label="Sort"><option value="follow">Sort: Follow-up date</option><option value="priority">Sort: Priority</option><option value="name">Sort: Name</option><option value="sent">Sort: Last sent</option><option value="status">Sort: Status</option></select>
+  <select class="input" id="f-research" aria-label="Research"><option value="">Research: All</option><option value="has">Has research</option><option value="none">No research</option></select>
   <button type="button" class="btn primary" id="add-open">Add firm</button>
   <button type="button" class="btn" id="import-open">Import</button>
 </div>
@@ -284,6 +301,9 @@
   const IMPORT_BATCH = 100;         // rows per insert request when importing
   const IMPORT_MAX_ROWS = 300;      // the most data rows one import accepts
   const NOTE_MAX = 120;             // "What was said" is at most this many characters
+  const RESEARCH_MAX = 30000;       // research text, in Unicode code points (Postgres char_length), as the database's check allows
+  const SNIPPET_RADIUS = 40;        // characters either side of a search match in a row's research snippet
+  const DRAFT_PREFIX = "stk_firm_research_draft_";   // + firm id: unsaved research text kept on this device while editing
   // England and Wales bank holidays, 2026 to 2028. Source: https://www.gov.uk/bank-holidays.json ("england-and-wales"), fetched 16 Oct 2026.
   // The list ends in 2028: extend it from the same feed before 2029.
   const BANK_HOLIDAYS = [
@@ -329,6 +349,61 @@
   const safeUrl = (v) => (typeof v === "string" && /^https?:\/\//i.test(v.trim()) ? v.trim() : null);
   const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
   const safeEmail = (v) => (typeof v === "string" && EMAIL_RE.test(v.trim()) ? v.trim() : null);
+
+  // ---- research text (pure functions) ----
+  // Length in Unicode code points, as Postgres char_length counts it (an emoji is 1; "e" plus a combining accent is 2).
+  const cpLength = (s) => Array.from(String(s ?? "")).length;
+  // \r\n and \r become \n, NULs go, each line loses trailing whitespace, and leading and trailing blank lines go (inner blank lines and indentation stay).
+  function normaliseResearch(s) {
+    const lines = String(s ?? "").replace(/\r\n?/g, "\n").replace(/\u0000/g, "").split("\n").map((l) => l.replace(/\s+$/, ""));
+    while (lines.length && lines[0] === "") lines.shift();
+    while (lines.length && lines[lines.length - 1] === "") lines.pop();
+    return lines.join("\n");
+  }
+  // Splits text into [{ text } | { url }]. Only http:// and https:// URLs are found (a run of non-space characters other than < > "),
+  // without trailing . , ; : ! ? and without a trailing ) ] } that has no opening partner inside the URL. No other scheme is ever a link.
+  const URL_RE = /https?:\/\/[^\s<>"]+/gi;
+  const OPENER = { ")": "(", "]": "[", "}": "{" };
+  const countOf = (s, c) => s.split(c).length - 1;
+  function trimUrl(u) {
+    for (;;) {
+      const c = u[u.length - 1];
+      if (".,;:!?".includes(c) || (OPENER[c] && countOf(u, c) > countOf(u, OPENER[c]))) u = u.slice(0, -1);
+      else return u;
+    }
+  }
+  function linkifyParts(s) {
+    const text = String(s ?? ""), parts = [], re = new RegExp(URL_RE.source, "gi");
+    let last = 0, m;
+    while ((m = re.exec(text))) {
+      const url = trimUrl(m[0]);
+      if (!/^https?:\/\/[^\s<>"]/i.test(url)) continue;
+      if (m.index > last) parts.push({ text: text.slice(last, m.index) });
+      parts.push({ url });
+      last = m.index + url.length; re.lastIndex = last;
+    }
+    if (last < text.length) parts.push({ text: text.slice(last) });
+    return parts;
+  }
+  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // The first case-insensitive match of query in text, with up to SNIPPET_RADIUS code points either side, cut at spaces where a word
+  // would be split, runs of whitespace shown as one space, and "…" where text was cut. null when there's no match.
+  function snippetFor(text, query) {
+    const q = String(query ?? "").trim(), t = String(text ?? "");
+    if (!q || !t) return null;
+    const m = new RegExp(escRe(q), "iu").exec(t);
+    if (!m) return null;
+    const chars = Array.from(t), ws = (c) => /\s/.test(c);
+    const ci = Array.from(t.slice(0, m.index)).length, ce = ci + Array.from(m[0]).length;
+    let start = Math.max(0, ci - SNIPPET_RADIUS), end = Math.min(chars.length, ce + SNIPPET_RADIUS);
+    if (start > 0 && !ws(chars[start - 1])) { let k = start; while (k < ci && !ws(chars[k])) k++; if (k < ci) start = k + 1; }
+    if (end < chars.length && !ws(chars[end])) { let k = end - 1; while (k >= ce && !ws(chars[k])) k--; if (k >= ce) end = k; }
+    const squash = (x) => x.replace(/\s+/g, " ");
+    let before = squash(chars.slice(start, ci).join("")).replace(/^ /, ""), after = squash(chars.slice(ce, end).join("")).replace(/ $/, "");
+    if (start > 0) before = "…" + before;
+    if (end < chars.length) after += "…";
+    return { before, match: m[0], after };
+  }
 
   // ---- paging ----
   let userId = null;
@@ -417,8 +492,10 @@
   const CHIPS = [["all", "All"], ...STATUSES, ["due", "Follow-up due"]];
   function matches(f, v, today) {
     const q = v.q.trim().toLowerCase();
-    if (q && ![f.name, f.last_note].some((x) => x && String(x).toLowerCase().includes(q))) return false;
+    if (q && ![f.name, f.last_note, f.research].some((x) => x && String(x).toLowerCase().includes(q))) return false;
     if (v.priority && f.priority !== Number(v.priority)) return false;
+    if (v.rfilter === "has" && !f.research) return false;
+    if (v.rfilter === "none" && f.research) return false;
     if (v.chip === "all") return true;
     if (v.chip === "due") return isDue(f, today);
     return f.status === v.chip;
@@ -434,7 +511,7 @@
   const suggestDate = (lastSent, n, today) => businessDaysAfter(validDate(lastSent) ? lastSent : today, n);
 
   // ---- data ----
-  const FIRM_COLS = "id, created_at, name, priority, website, lead_email, lead_linkedin, status, last_sent_on, last_note, next_follow_up_on";
+  const FIRM_COLS = "id, created_at, name, priority, website, lead_email, lead_linkedin, status, last_sent_on, last_note, next_follow_up_on, research, research_updated_at";
   const normFirm = (f) => ({ ...f, id: Number(f.id), priority: Number(f.priority) });
   const data = { firms: null, err: false };
   async function loadFirms() {
@@ -443,7 +520,7 @@
     catch (e) { console.error("[firms] couldn't load firms", e && e.code); data.err = true; }
     render();
   }
-  const view = { q: "", chip: "all", priority: "", sort: "follow", editing: null, notes: new Map() };
+  const view = { q: "", chip: "all", priority: "", rfilter: "", sort: "follow", editing: null, notes: new Map() };
   const DUP_NAME = "That firm is already in your list";
   const SAVE_FAILED = "Couldn't save. Check your connection, then Retry.";
   const nameKey = (s) => String(s || "").trim().toLowerCase();
@@ -500,7 +577,7 @@
   function renderChips() {
     $("chips").replaceChildren(...CHIPS.map(([k, label]) => el("button", { type: "button", class: "chip", "aria-pressed": view.chip === k ? "true" : "false", text: label, onclick: () => { view.chip = k; render(); } })));
   }
-  function clearFilters() { view.q = ""; view.chip = "all"; view.priority = ""; $("search").value = ""; $("f-priority").value = ""; render(); }
+  function clearFilters() { view.q = ""; view.chip = "all"; view.priority = ""; view.rfilter = ""; $("search").value = ""; $("f-priority").value = ""; $("f-research").value = ""; render(); }
   function linksOf(f) {
     const parts = [];
     if (f.website) { const u = safeUrl(f.website); parts.push(u ? el("a", { class: "link", href: u, target: "_blank", rel: "noopener noreferrer", text: "Website" }) : el("span", { class: "plain", text: f.website })); }
@@ -511,14 +588,20 @@
   function firmRow(f, today) {
     const fu = followText(f, today), status = STATUS_LABEL[f.status] || f.status;
     const editBtn = () => el("button", { type: "button", class: "btn", text: view.editing === f.id ? "Close" : "Edit", "aria-expanded": view.editing === f.id ? "true" : "false",
-      onclick: () => { for (const k of [...panels.keys()]) if (k !== "new") panels.delete(k); view.editing = view.editing === f.id ? null : f.id; view.notes.delete(f.id); render(); } });
+      onclick: () => {
+        if (view.editing !== f.id) { if (!okToSwitch()) return; discardOpen(); }
+        for (const k of [...panels.keys()]) if (k !== "new") panels.delete(k); view.editing = view.editing === f.id ? null : f.id; view.notes.delete(f.id); render(); } });
+    const researchBtn = () => el("button", { type: "button", class: "btn rbtn", "data-research-btn": String(f.id), "aria-expanded": rstate.id === f.id ? "true" : "false",
+      text: !f.research ? "Add research" : f.research_updated_at ? `Research · ${fmtDay(londonToday(Date.parse(f.research_updated_at)), today)}` : "Research",
+      onclick: () => openResearch(f) });
+    const sn = view.q.trim() && f.research ? snippetFor(f.research, view.q) : null;
     const li = el("li", { class: "row", "data-firm": String(f.id) }, [
       // phones (and narrow windows): stacked lines
       el("div", { class: "ph" }, [
         el("div", { class: "l1" }, [el("span", { class: "badge", text: `P${f.priority}` }), el("span", { class: "name", text: f.name }), el("span", { class: "status", text: status })]),
         el("div", { class: "l2 when", text: sentText(f, today) }),
         fu.text ? el("div", { class: "l3 follow" + (fu.tone ? " " + fu.tone : ""), text: fu.text }) : null,
-        linksOf(f), editBtn()]),
+        linksOf(f), el("div", { class: "btns" }, [editBtn(), researchBtn()])]),
       // 900px and wider: one row of columns
       el("div", { class: "dk row-grid" }, [
         el("div", null, [el("div", { class: "l1" }, [el("span", { class: "badge", text: `P${f.priority}` }), el("span", { class: "name", text: f.name })]), linksOf(f)]),
@@ -526,11 +609,13 @@
         el("div", { class: "when", text: f.last_sent_on ? fmtDay(f.last_sent_on, today) : "Not sent yet" }),
         el("div", { text: f.last_note || "" }),
         el("div", { class: "follow" + (fu.tone ? " " + fu.tone : ""), text: fu.text }),
-        el("div", null, [editBtn()])]),
+        el("div", { class: "acts" }, [editBtn(), researchBtn()])]),
     ]);
+    if (sn) li.append(el("p", { class: "snippet", "data-snippet": "1" }, [el("span", { class: "snip-label", text: "Research: " }), sn.before, el("mark", { text: sn.match }), sn.after]));
     const note = view.notes.get(f.id);
     if (note) li.append(el("p", { class: note.ok ? "ok" : "err", role: "status", text: note.text }, note.retry ? [" ", el("button", { type: "button", class: "btn", text: "Retry", onclick: note.retry })] : []));
     if (view.editing === f.id) li.append(editPanel(f));
+    if (rstate.id === f.id) li.append(researchPanel(f));
     return li;
   }
 
@@ -574,6 +659,7 @@
     const close = () => { panels.delete(key); if (f) { view.editing = null; render(); } else { show($("add-card"), false); $("add-card").replaceChildren(); } };
     const start = f || { status: "not_started", priority: 2 };
     for (const col of ["name", "status", "priority", "last_sent_on", "last_note", "next_follow_up_on", "website", "lead_email", "lead_linkedin"]) inputs[col].value = start[col] === null || start[col] === undefined ? "" : String(start[col]);
+    const initial = JSON.stringify(values());
     const count = () => { counter.textContent = `${inputs.last_note.value.length} / ${NOTE_MAX}`; };
     inputs.last_note.addEventListener("input", count); count();
     let busy = false;
@@ -609,7 +695,7 @@
       render();
     };
     save.addEventListener("click", doSave);
-    panels.set(key, { node, inputs });
+    panels.set(key, { node, inputs, dirty: () => JSON.stringify(values()) !== initial });
     return node;
   }
   function openAdd() {
@@ -620,17 +706,191 @@
     if (!confirm(`Delete ${f.name}? This can't be undone.`)) return;
     let r; try { r = await sb.from("outreach_firms").delete().eq("id", f.id); } catch (e) { r = { error: e }; }
     if (r.error) { view.notes.set(f.id, { ok: false, text: "Couldn't delete. Check your connection, then Retry.", retry: () => { view.notes.delete(f.id); deleteFirm(f); } }); render(); return; }
+    removeDraft(f.id); if (rstate.id === f.id) closeResearch();
     data.firms = data.firms.filter((x) => x.id !== f.id); panels.delete(f.id); view.editing = null; view.notes.delete(f.id); render();
   }
 
+  // ---- the research panel (one panel open at a time across Edit and Research) ----
+  const rstate = { id: null, mode: "view", ed: null, scroll: false, copyText: "", copyTimer: null };
+  const fmtN = (n) => n.toLocaleString("en-GB");
+  function fmtStamp(ms) {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+    return `${fmtDay(londonToday(ms))}, ${p.hour}:${p.minute}`;
+  }
+  function readDraft(id) {
+    try {
+      const raw = localStorage.getItem(DRAFT_PREFIX + id); if (raw === null) return null;
+      const d = JSON.parse(raw);
+      if (d && typeof d.text === "string" && typeof d.at === "number") return d;
+      localStorage.removeItem(DRAFT_PREFIX + id);
+    } catch (e) { /* unreadable: treated as no draft */ }
+    return null;
+  }
+  function removeDraft(id) { try { localStorage.removeItem(DRAFT_PREFIX + id); } catch (e) { /* nothing stored */ } }
+  const firmById = (id) => (data.firms || []).find((x) => x.id === id);
+  // The firm whose open panel has unsaved changes, if any.
+  function dirtyFirm() {
+    if (rstate.id !== null && rstate.ed && rstate.ed.dirty()) return firmById(rstate.id);
+    if (view.editing !== null) { const p = panels.get(view.editing); if (p && p.dirty()) return firmById(view.editing); }
+    return null;
+  }
+  function okToSwitch() { const f = dirtyFirm(); return !f || confirm(`Discard your unsaved changes to ${f.name}?`); }
+  function closeResearch() { if (rstate.ed) rstate.ed.stop(); rstate.id = null; rstate.mode = "view"; rstate.ed = null; }
+  // Closes whichever panel is open; a research editor's draft goes with it (the change was confirmed as discarded, or there was none).
+  function discardOpen() {
+    if (rstate.id !== null) { if (rstate.ed) removeDraft(rstate.id); closeResearch(); }
+    if (view.editing !== null) { panels.delete(view.editing); view.editing = null; }
+  }
+  function openResearch(f) {
+    if (rstate.id === f.id) {
+      if (rstate.ed && rstate.ed.dirty() && !confirm(`Discard your unsaved changes to ${f.name}?`)) return;
+      if (rstate.ed) removeDraft(f.id);
+      closeResearch(); render(); return;
+    }
+    if (!okToSwitch()) return;
+    discardOpen();
+    rstate.id = f.id; rstate.mode = f.research ? "view" : "edit"; rstate.scroll = !!view.q.trim(); rstate.copyText = "";
+    render();
+  }
+  function researchNodes(text, q) {
+    const qq = String(q || "").trim();
+    const marked = (s) => {
+      if (!qq) return [document.createTextNode(s)];
+      const re = new RegExp(escRe(qq), "giu"), out = []; let last = 0, m;
+      while ((m = re.exec(s))) { if (m.index > last) out.push(document.createTextNode(s.slice(last, m.index))); out.push(el("mark", { text: m[0] })); last = m.index + m[0].length; }
+      if (last < s.length) out.push(document.createTextNode(s.slice(last)));
+      return out;
+    };
+    const nodes = [];
+    for (const p of linkifyParts(text)) {
+      if (p.url) nodes.push(el("a", { href: p.url, target: "_blank", rel: "noopener noreferrer" }, marked(p.url)));
+      else nodes.push(...marked(p.text));
+    }
+    return nodes;
+  }
+  async function copyText(text) {
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); return true; } } catch (e) { /* falls back below */ }
+    try {
+      const t = el("textarea", { readonly: true, "aria-hidden": "true", style: "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;" });
+      t.value = text; document.body.append(t); t.select(); t.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy"); t.remove(); return !!ok;
+    } catch (e) { return false; }
+  }
+  function researchPanel(f) {
+    if (rstate.mode === "edit") { if (!rstate.ed || rstate.ed.id !== f.id) rstate.ed = researchEditor(f); return rstate.ed.node; }
+    const head = f.research && f.research_updated_at ? `Research · added ${fmtDay(londonToday(Date.parse(f.research_updated_at)))}` : "Research";
+    const copyMsg = el("span", { class: "hint", role: "status", "data-copymsg": "1", text: rstate.copyText });
+    const body = f.research ? el("div", { class: "research-body", tabindex: "0", "data-rbody": "1", "aria-label": `Research for ${f.name}` }, researchNodes(f.research, view.q))
+                            : el("p", { class: "hint", text: "No research saved." });
+    const copyBtn = f.research ? el("button", { type: "button", class: "btn", text: "Copy", onclick: async () => {
+      const ok = await copyText(f.research);
+      rstate.copyText = ok ? "Copied" : "Couldn't copy. Select the text and copy it by hand.";
+      const m = document.querySelector("[data-copymsg]"); if (m) m.textContent = rstate.copyText;
+      clearTimeout(rstate.copyTimer);
+      rstate.copyTimer = setTimeout(() => { rstate.copyText = ""; const m2 = document.querySelector("[data-copymsg]"); if (m2) m2.textContent = ""; }, ok ? 2000 : 6000);
+    } }) : null;
+    const node = el("div", { class: "edit-panel research-panel", "data-rpanel": String(f.id) }, [
+      el("h3", { text: head }),
+      el("div", { class: "row-actions" }, [copyBtn,
+        el("button", { type: "button", class: "btn", text: "Edit", onclick: () => { rstate.mode = "edit"; rstate.ed = null; render(); } }),
+        el("button", { type: "button", class: "btn", text: "Close", onclick: () => { closeResearch(); render(); } }), copyMsg]),
+      body]);
+    if (rstate.scroll) {
+      rstate.scroll = false;
+      requestAnimationFrame(() => { const m = node.querySelector("mark"); if (m) m.scrollIntoView({ block: "center" }); });
+    }
+    return node;
+  }
+  function researchEditor(f) {
+    const saved = f.research || "";
+    const ta = el("textarea", { class: "input research-ta", rows: "12", id: `research-${f.id}`, "aria-label": `Research for ${f.name}`, spellcheck: "true" });
+    const counter = el("p", { class: "hint rcount", "data-rcounter": "1", "aria-live": "polite" });
+    const notice = el("div", { class: "rnotice", "data-rnotice": "1", hidden: true });
+    const warnBox = el("p", { class: "err", "data-draftwarn": "1", hidden: true, role: "alert" });
+    const msg = el("p", { class: "err", "data-rmsg": "1", hidden: true, role: "alert" });
+    const save = el("button", { type: "button", class: "btn primary", text: "Save" });
+    const clr = f.research ? el("button", { type: "button", class: "btn danger", text: "Clear research" }) : null;
+    let busy = false, timer = null;
+    const grow = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight + 2}px`; };
+    const count = () => {
+      const n = cpLength(normaliseResearch(ta.value));
+      if (n > RESEARCH_MAX) { const k = n - RESEARCH_MAX; counter.textContent = `Over by ${fmtN(k)} ${k === 1 ? "character" : "characters"}`; counter.className = "err rcount over"; }
+      else { counter.textContent = `${fmtN(n)} / ${fmtN(RESEARCH_MAX)}`; counter.className = "hint rcount"; }
+      save.disabled = busy || n > RESEARCH_MAX;
+    };
+    const writeDraft = () => {
+      clearTimeout(timer); timer = null;
+      try {
+        if (ta.value === saved) localStorage.removeItem(DRAFT_PREFIX + f.id);
+        else localStorage.setItem(DRAFT_PREFIX + f.id, JSON.stringify({ text: ta.value, at: Date.now() }));
+        show(warnBox, false);
+      } catch (e) {
+        warnBox.textContent = "This text can't be kept on this device if the page closes (saving a draft failed). Save it before you leave.";
+        show(warnBox, true);
+      }
+    };
+    ta.addEventListener("input", () => { count(); grow(); clearTimeout(timer); timer = setTimeout(writeDraft, 500); });
+    ta.value = saved;
+    const draft = readDraft(f.id);
+    if (draft && draft.text !== saved) {
+      ta.value = draft.text;
+      notice.append(el("span", { text: `Restored unsaved text from ${fmtStamp(draft.at)}` }),
+        el("button", { type: "button", class: "btn", text: "Discard draft", onclick: () => { removeDraft(f.id); ta.value = saved; show(notice, false); count(); grow(); } }));
+      show(notice, true);
+    } else if (draft) removeDraft(f.id);
+    const finish = (payload) => { removeDraft(f.id); Object.assign(f, payload); rstate.ed = null; rstate.mode = "view"; if (!payload.research) rstate.copyText = ""; render(); };
+    const write = async (payload, again) => {
+      if (busy) return;
+      busy = true; save.disabled = true; if (clr) clr.disabled = true; show(msg, false);
+      clearTimeout(timer); timer = null;
+      let r; try { r = await sb.from("outreach_firms").update(payload).eq("id", f.id); } catch (e) { r = { error: e }; }
+      busy = false; if (clr) clr.disabled = false; count();
+      if (r.error) {
+        const text = r.error.code === "23514" ? `The database refused this text: research can be at most ${fmtN(RESEARCH_MAX)} characters. Nothing was saved.`
+                                               : "Couldn't save the research. Check your connection, then Retry.";
+        msg.replaceChildren(document.createTextNode(text + " "), el("button", { type: "button", class: "btn", text: "Retry", onclick: again }));
+        show(msg, true); writeDraft(); return;
+      }
+      finish(payload);
+    };
+    const doSave = () => {
+      const text = normaliseResearch(ta.value);
+      if (cpLength(text) > RESEARCH_MAX) return;
+      return write(text ? { research: text, research_updated_at: new Date(Date.now()).toISOString() } : { research: null, research_updated_at: null }, doSave);
+    };
+    const doClear = () => {
+      if (!confirm(`Clear the research for ${f.name}? This can't be undone.`)) return;
+      return write({ research: null, research_updated_at: null }, doClear);
+    };
+    save.addEventListener("click", doSave);
+    if (clr) clr.addEventListener("click", doClear);
+    const cancel = el("button", { type: "button", class: "btn", text: "Cancel", onclick: () => {
+      if (ta.value !== saved && !confirm(`Discard your unsaved changes to ${f.name}?`)) return;
+      clearTimeout(timer); timer = null; removeDraft(f.id);
+      rstate.ed = null; if (f.research) rstate.mode = "view"; else closeResearch();
+      render();
+    } });
+    const node = el("div", { class: "edit-panel research-panel", "data-rpanel": String(f.id), "data-rmode": "edit" }, [
+      el("h3", { text: f.research ? "Edit research" : "Add research" }), notice, ta, counter, warnBox, msg,
+      el("div", { class: "row-actions" }, [save, cancel, clr])]);
+    count();
+    requestAnimationFrame(grow);
+    return { id: f.id, node, ta, dirty: () => ta.value !== saved, flush: () => { if (timer) writeDraft(); }, stop: () => { clearTimeout(timer); timer = null; } };
+  }
+  const flushDraft = () => { if (rstate.ed) rstate.ed.flush(); };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushDraft(); });
+  window.addEventListener("pagehide", flushDraft);
+
   // ---- import ----
   const TARGETS = [["name", "Firm name"], ["priority", "Priority"], ["status", "Status"], ["last_sent_on", "Last email sent"], ["last_note", "What was said"], ["next_follow_up_on", "Next follow-up"],
-                   ["website", "Website"], ["lead_email", "Email"], ["lead_linkedin", "LinkedIn"], ["", "Ignore"]];
+                   ["website", "Website"], ["lead_email", "Email"], ["lead_linkedin", "LinkedIn"], ["research", "Research"], ["", "Ignore"]];
   const SYNONYMS = {
     name: ["company", "firm", "firm name", "company name", "name"], priority: ["p", "priority", "prio"], status: ["status", "stage", "outcome"],
     last_sent_on: ["last sent", "date sent", "emailed", "last email", "last email sent", "sent"], last_note: ["notes", "note", "comments", "comment", "response", "what was said"],
     next_follow_up_on: ["follow up", "next follow up", "next follow-up", "chase", "next action date", "follow up date", "next follow up date"],
     website: ["website", "url", "site"], lead_email: ["email", "e-mail", "email address"], lead_linkedin: ["linkedin", "linked in", "linkedin url"],
+    // "notes" is also What was said's synonym and that comes first: a Notes column becomes Research only when What was said is already mapped.
+    research: ["research", "notes", "background", "summary", "intel", "chatgpt", "chatgpt research", "research notes"],
   };
   const normHeader = (h) => String(h).trim().toLowerCase().replace(/[_\-]+/g, " ").replace(/\s+/g, " ");
   function guessMapping(headers) {
@@ -684,7 +944,7 @@
     const seen = new Map(), have = new Set(existing.map((f) => nameKey(f.name)));
     parsed.rows.forEach((cells, k) => {
       const rowNo = parsed.rowNos ? parsed.rowNos[k] : k + 2, raw = {};
-      mapping.forEach((col, j) => { if (col) raw[col] = String(cells[j] === undefined ? "" : cells[j]).trim(); });
+      mapping.forEach((col, j) => { if (col) { const c = String(cells[j] === undefined ? "" : cells[j]); raw[col] = col === "research" ? c : c.trim(); } });
       const warn = (t) => out.warnings.push({ rowNo, text: t });
       const v = { name: raw.name || "" };
       const p = mapPriority(raw.priority); v.priority = p.v; if (p.warn) warn(p.warn);
@@ -706,6 +966,12 @@
       }
       const em = raw.lead_email || ""; v.lead_email = null;
       if (em && EMAIL_RE.test(em) && em.length <= 200) v.lead_email = em; else if (em) warn(`email "${em}" isn't a valid address, dropped`);
+      v.research = null;
+      if (raw.research) {
+        const t = normaliseResearch(raw.research), n = cpLength(t);
+        if (n > RESEARCH_MAX) warn(`research is ${fmtN(n)} characters, over the ${fmtN(RESEARCH_MAX)} limit: research not imported (the rest of the row is)`);
+        else v.research = t || null;
+      }
       if (out.preview.length < 10) out.preview.push({ rowNo, vals: v });
       const reasons = [];
       if (!v.name) reasons.push("blank name"); else if (v.name.length > 80) reasons.push("name too long (max 80)");
@@ -754,7 +1020,8 @@
       parts.push(el("h3", { text: "Step 3: check and import" }));
       parts.push(el("p", { id: "import-summary", text: `${plural(p.valid.length, "row", "rows")} to import · ${plural(p.dups.length, "row", "rows")} skipped as duplicates · ${plural(p.problems.length, "row", "rows")} with problems · ${plural(p.warnings.length, "warning", "warnings")}` }));
       const cols = TARGETS.filter(([c]) => c && imp.mapping.includes(c));
-      const show_ = (c, val) => (val === null || val === undefined ? "" : c === "status" ? STATUS_LABEL[val] : String(val));
+      const show_ = (c, val) => (val === null || val === undefined ? "" : c === "status" ? STATUS_LABEL[val]
+        : c === "research" ? (cpLength(val) > 60 ? `${Array.from(val).slice(0, 60).join("")}… (${fmtN(cpLength(val))} characters)` : val) : String(val));
       parts.push(el("div", { class: "table-wrap" }, [el("table", { class: "import-table preview" }, [
         el("thead", null, [el("tr", null, [el("th", { text: "Row" }), ...cols.map(([, t]) => el("th", { text: t }))])]),
         el("tbody", null, p.preview.map((r) => el("tr", null, [el("td", { text: String(r.rowNo) }), ...cols.map(([c]) => el("td", { text: show_(c, r.vals[c]) }))]))),
@@ -773,12 +1040,14 @@
   async function runImport(rows) {
     if (imp.busy || !rows.length) return;
     imp.busy = true; renderImport();
-    const uid = await getUserId().catch(() => null), failed = [];
+    const uid = await getUserId().catch(() => null), failed = [], now = new Date(Date.now()).toISOString();
+    // Rows with research also send research and research_updated_at; other rows send exactly the board's columns.
+    const payloadOf = (x) => { const p = firmPayload({ ...x.vals, user_id: uid }); if (x.vals.research) { p.research = x.vals.research; p.research_updated_at = now; } return p; };
     let done = 0;
     for (let k = 0; k < rows.length; k += IMPORT_BATCH) {
       const batch = rows.slice(k, k + IMPORT_BATCH);
       let r;
-      try { r = await sb.from("outreach_firms").insert(batch.map((x) => firmPayload({ ...x.vals, user_id: uid }))).select(FIRM_COLS); } catch (e) { r = { error: e }; }
+      try { r = await sb.from("outreach_firms").insert(batch.map(payloadOf)).select(FIRM_COLS); } catch (e) { r = { error: e }; }
       if (r.error || !r.data) { failed.push(...batch); continue; }
       data.firms.push(...r.data.map(normFirm)); done += r.data.length;
     }
@@ -794,12 +1063,14 @@
   $("search").addEventListener("input", (e) => { view.q = e.target.value; render(); });
   $("f-priority").addEventListener("change", (e) => { view.priority = e.target.value; render(); });
   $("f-sort").addEventListener("change", (e) => { view.sort = e.target.value; render(); });
+  $("f-research").addEventListener("change", (e) => { view.rfilter = e.target.value; render(); });
   $("add-open").addEventListener("click", openAdd);
   $("import-open").addEventListener("click", openImport);
 
   window.Firms = { BANK_HOLIDAYS, SUGGEST_DAYS, PAGE_SIZE, IMPORT_BATCH, IMPORT_MAX_ROWS, NOTE_MAX, STATUSES, londonToday, addDays, isBusinessDay, businessDaysAfter, fmtDay, dayDiff,
                    isDue, followDate, followText, sentText, summary, sorter, matches, quickApply, suggestDate, firmPayload, validateFirm, safeUrl, safeEmail,
-                   parsePaste, guessMapping, mapPriority, mapStatus, parseSheetDate, planImport, data, view };
+                   parsePaste, guessMapping, mapPriority, mapStatus, parseSheetDate, planImport, data, view,
+                   RESEARCH_MAX, SNIPPET_RADIUS, DRAFT_PREFIX, cpLength, normaliseResearch, linkifyParts, snippetFor, rstate };
 
   let started = false;
   sb.auth.onAuthStateChange((event, session) => {
