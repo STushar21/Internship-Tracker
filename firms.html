@@ -178,6 +178,7 @@
   .step-tools, .step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
   .step-note { font-size: 13px; color: #5A5650; }
   .step-warn { font-size: 13px; font-weight: 700; color: #8A3A2E; }
+  .step-unlinked { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; padding: 8px 10px; border: 1px solid #8A3A2E; border-radius: 8px; color: #8A3A2E; font-size: 14px; font-weight: 600; }
   .link-btn { display: inline-flex; align-items: center; text-decoration: none; }
   label.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; }
   label.check input { width: 22px; height: 22px; margin: 0; }
@@ -1339,6 +1340,13 @@ message is an error. Unknown keys are ignored with a warning. A Markdown code fe
       const n = businessDaysBetween(s.planned_on, today);
       if (n >= 1) li.append(el("div", { class: "step-overdue", text: `Overdue by ${plural(n, "business day", "business days")}` }));
     }
+    // A done step with no linked history entry (whatever the cause): say so and offer the repair. Hidden while its own save or link runs.
+    if (s.status === "done" && s.touch_id === null && !busy.has(`step:${s.id}`) && !busy.has(`link:${s.id}`)) {
+      li.append(el("div", { class: "step-unlinked" }, [el("span", { text: "This step is marked done, but no history entry is linked to it." }),
+        el("button", { type: "button", class: "btn", text: "Link the logged entry", onclick: () => linkLogged(f, s) })]));
+    } else if (s.status === "done" && s.touch_id === null && busy.has(`link:${s.id}`)) {
+      li.append(el("div", { class: "step-unlinked" }, [el("button", { type: "button", class: "btn", text: "Linking…", disabled: true })]));
+    }
     if (s.subject || s.message) {
       li.append(el("details", { class: "step-msg" }, [el("summary", { text: "Message" }),
         s.subject ? el("div", { class: "step-subject", text: `Subject: ${s.subject}` }) : null, el("div", { class: "step-body", text: s.message || "" })]));
@@ -1487,8 +1495,37 @@ message is an error. Unknown keys are ignored with a warning. A Markdown code fe
     const t = normTouch(tr.data); data.touches.push(t); regroup();
     const link = await stepUpdate(s.id, { touch_id: t.id });
     done(); view.stepForms.delete(s.id);
-    if (link.error || !link.rows.length) return setStepNote(s.id, false, `Done, and the touch is logged, but they couldn't be linked, so Undo won't remove the touch.`, () => relink(f, s.id, t.id));
+    if (link.error || !link.rows.length) return setStepNote(s.id, false, "Done, and the touch is logged, but they couldn't be linked. Retry links them. If you leave this page, the step will show a 'Link the logged entry' button.", () => relink(f, s.id, t.id));
     replaceStep(link.rows[0]); setStepNote(s.id, true, "Saved");
+  }
+  // "Link the logged entry": link this firm's lowest-id unlinked touch of the step's channel on its done date; if there's none, create one and link it.
+  // If linking fails after creating a touch, the created touch is deleted again.
+  async function linkLogged(f, s) {
+    const key = `link:${s.id}`; if (busy.has(key)) return;
+    busy.add(key); view.stepNotes.delete(s.id); render();
+    const retry = () => { view.stepNotes.delete(s.id); const cur = stepsOf(f.id).find((x) => x.id === s.id); if (cur) linkLogged(f, cur); };
+    const fail = (text, withRetry = true) => { busy.delete(key); setStepNote(s.id, false, text, withRetry ? retry : undefined); };
+    const linked = new Set((data.steps || []).filter((x) => x.touch_id !== null).map((x) => x.touch_id));
+    let t = touchesOf(f.id).filter((x) => x.kind === s.channel && x.happened_on === s.done_on && !linked.has(x.id)).sort((a, b) => a.id - b.id)[0] || null;
+    let created = false;
+    if (!t) {
+      let r; try { r = await sb.from("outreach_touches").insert({ user_id: await getUserId(), firm_id: f.id, kind: s.channel, happened_on: s.done_on, note: s.note || null }).select(TOUCH_COLS).single(); } catch (e) { r = { error: e }; }
+      if (r.error || !r.data) return fail("Couldn't create the history entry. Nothing changed.");
+      t = normTouch(r.data); data.touches.push(t); regroup(); created = true;
+    }
+    const label = `${KIND_LABEL[t.kind] || t.kind} · ${fmtDay(t.happened_on)}`;
+    const r = await stepUpdate(s.id, { touch_id: t.id }, { status: "done" });
+    if (r.error || !r.rows.length) {
+      if (created) {
+        let d; try { d = await sb.from("outreach_touches").delete().eq("id", t.id); } catch (e) { d = { error: e }; }
+        if (d.error) return fail(`Couldn't link the entry, and couldn't remove the '${label}' entry just created: it's in the history, not linked, and step '${s.ref}' is still done with no entry. Retry links it.`);
+        data.touches = data.touches.filter((x) => x.id !== t.id); regroup();
+      }
+      if (!r.error) { busy.delete(key); return changedElsewhere(s); }
+      return fail("Couldn't link the entry. Nothing changed.");
+    }
+    busy.delete(key); replaceStep(r.rows[0]);
+    setStepNote(s.id, true, created ? `Created a history entry ('${label}') and linked it to step '${s.ref}'.` : `Linked the existing history entry '${label}' to step '${s.ref}'.`);
   }
   async function relink(f, stepId, touchId) {
     const r = await stepUpdate(stepId, { touch_id: touchId });
@@ -1591,7 +1628,7 @@ message is an error. Unknown keys are ignored with a warning. A Markdown code fe
   window.Firms = { BANK_HOLIDAYS, FOLLOW_UP_DAYS, OVERDUE_DAYS, NO_RESPONSE_DAYS, londonToday, addDays, isBusinessDay, businessDaysAfter, businessDaysBetween, fmtDay,
                    firmState, summary, dueOrder, SORTS, safeUrl, safeEmail, parsePaste, guessMapping, planImport, mapType, mapPriority, mapRoute, firmPayload, validateFirm, data, view,
                    PLAN_MAX_CHARS, STEPS_MAX_NEW, STEPS_MAX_TOTAL, MAILTO_MAX, LINKEDIN_NOTE_MAX, SAMPLE_PLAN, validatePack, planDates, jsonErrorAt, findPlaceholder, mergeFirm, stepPayload, mailtoFor,
-                   matchingPerson, stepWarnings, nextBusinessDay };
+                   matchingPerson, stepWarnings, nextBusinessDay, linkLogged };
 
   let started = false;
   sb.auth.onAuthStateChange((event, session) => {
