@@ -50,6 +50,12 @@
   .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
   /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
   #logout-btn { min-height: 44px; }
+  /* "← All games": under the nav and at the end of the Result card's game part */
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .back-link:hover { text-decoration: underline; }
+  .back-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .back-top { margin: -14px 0 4px; }
+  .back-result { margin-top: 12px; }
 
   /* --- balloon: run layer --- */
   .bl-count { font-size: 14px; font-weight: 600; color: #5A5650; text-align: center; font-variant-numeric: tabular-nums; }
@@ -162,6 +168,7 @@
   </div>
   <a href="advice.html" class="nav-link">Advice</a>
 </nav>
+<a class="back-link back-top" href="games.html">← All games</a>
 
 <div id="login-gate">
   <div class="mark">Reps</div>
@@ -472,7 +479,8 @@
       luck ? blEl("p", { class: "bl-note bl-luck", text: luck }) : null,
       blEl("details", { class: "bl-reveal", open: true },
         blEl("summary", { text: "Your balloons" }),
-        blEl("ul", { class: "bl-list" }, items.map((t) => blEl("li", { class: "bl-item", text: t })))));
+        blEl("ul", { class: "bl-list" }, items.map((t) => blEl("li", { class: "bl-item", text: t })))),
+      blEl("a", { class: "back-link back-result", href: "games.html", text: "← All games" }));
   }
 
   window.Balloon = { uniformInt, drawBurstPoints, newBalloon, applyPump, applyCollect, scoreOf, expectedPence, bestCollectRange, computeStats, luckLine, styleNote, revealLine, renderResult, money, scaleFor,

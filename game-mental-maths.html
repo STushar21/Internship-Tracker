@@ -50,6 +50,12 @@
   .num, .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
   /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
   #logout-btn { min-height: 44px; }
+  /* "← All games": under the nav and at the end of the Result card's game part */
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .back-link:hover { text-decoration: underline; }
+  .back-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .back-top { margin: -14px 0 4px; }
+  .back-result { margin-top: 12px; }
 
   /* --- mental maths: run layer --- */
   .mm-question { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: clamp(44px, 13vw, 96px); line-height: 1.1; text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -154,6 +160,7 @@
   </div>
   <a href="advice.html" class="nav-link">Advice</a>
 </nav>
+<a class="back-link back-top" href="games.html">← All games</a>
 
 <div id="login-gate">
   <div class="mark">Reps</div>
@@ -334,6 +341,7 @@
       const slow = answered.reduce((a, b) => (stats.ops[b].avgMs > stats.ops[a].avgMs ? b : a));
       box.append(mmEl("div", { class: "mm-slowest", text: `Slowest: ${MM_NAMES[slow]} (${secs(stats.ops[slow].avgMs)} per question)` }));
     }
+    box.append(mmEl("a", { class: "back-link back-result", href: "games.html", text: "← All games" }));
   }
   window.MentalMaths = { makeQuestion, createRun, renderResult, TOTAL_MS: MM_TOTAL_MS };
 

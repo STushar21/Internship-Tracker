@@ -50,6 +50,12 @@
   .gs-score, .gs-stat-num { font-variant-numeric: tabular-nums; }
   /* Game pages keep every tap target at 44px, Sign out included, at all widths. */
   #logout-btn { min-height: 44px; }
+  /* "← All games": under the nav and at the end of the Result card's game part */
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .back-link:hover { text-decoration: underline; }
+  .back-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .back-top { margin: -14px 0 4px; }
+  .back-result { margin-top: 12px; }
 
   /* --- multiple match: run layer --- */
   .mx-combo { display: inline-block; min-width: 44px; padding: 3px 12px; border-radius: 14px; background: #FFFFFF; border: 1px solid #8B6B49; color: #6F5439; font-weight: 700; font-size: 15px; text-align: center; font-variant-numeric: tabular-nums; }
@@ -168,6 +174,7 @@
   </div>
   <a href="advice.html" class="nav-link">Advice</a>
 </nav>
+<a class="back-link back-top" href="games.html">← All games</a>
 
 <div id="login-gate">
   <div class="mark">Reps</div>
@@ -450,7 +457,8 @@
         fact("Avg per card", stats.avgMs !== null ? secs(stats.avgMs) : "–")),
       mxEl("h3", { class: "mx-missed-title", text: "Missed cards" }));
     const misses = stats.cards.filter((c) => c.given !== c.answer);
-    if (!misses.length) { box.append(mxEl("div", { class: "mx-clean", text: "No misses. Clean run." })); return; }
+    const back = mxEl("a", { class: "back-link back-result", href: "games.html", text: "← All games" });
+    if (!misses.length) { box.append(mxEl("div", { class: "mx-clean", text: "No misses. Clean run." }), back); return; }
     box.append(mxEl("ul", { class: "mx-missed" }, misses.map((c) => {
       const card = CARD_BY_KEY.get(c.id);
       const sectorName = card ? card.sector.name : c.id;
@@ -459,7 +467,7 @@
         mxEl("div", { class: "mx-miss-head", text: `${sectorName} · ${def.label}` }),
         mxEl("div", { class: "mx-miss-line", text: `Shown ${formatValue(c.shown, def)} · ${c.given === null ? "Timed out" : `You said ${c.given === "high" ? "High" : "Low"}`} · Typical ${card ? fmtRange(card) : "–"}` }),
         card ? mxEl("div", { class: "mx-miss-reason", text: card.sector.reason }) : null);
-    })));
+    })), back);
   }
   window.MultipleMatch = { CARDS, valueGrid, makeValue, formatValue, makeDealer, computeWeights, multiplierFor, createRun, renderResult, loadHistory,
     get weights() { return mxWeights; }, GAME: MX_GAME, TOTAL_MS: MX_TOTAL_MS, CARD_MS: MX_CARD_MS, PENALTY_MS: MX_PENALTY_MS, LOCK_MS: MX_LOCK_MS };
