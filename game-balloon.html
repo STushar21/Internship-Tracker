@@ -58,7 +58,6 @@
   .back-result { margin-top: 12px; }
 
   /* --- balloon: run layer --- */
-  .bl-count { font-size: 14px; font-weight: 600; color: #5A5650; text-align: center; font-variant-numeric: tabular-nums; }
   .bl-box { width: 100%; height: clamp(150px, 34dvh, 280px); margin-top: 8px; display: flex; align-items: flex-end; justify-content: center; }
   .bl-svg { height: 100%; width: auto; display: block; transform-origin: 50% 100%; transition: transform 120ms ease-out; }
   @media (prefers-reduced-motion: reduce) { .bl-svg { transition: none; } }
@@ -191,7 +190,7 @@
     <h3>How to play</h3>
     <p>Press Pump to add 50p to the balloon. Press Collect to bank the pot and move to the next balloon. If the balloon bursts, you lose that balloon's pot but nothing you've already banked. Each balloon bursts at its own random point, and nothing tells you where.</p>
     <h3>Scoring</h3>
-    <p>Your score is the total you bank across the balloons. The run ends after the fifteenth balloon or at two minutes, whichever comes first, and the balloon in play when time runs out is lost.</p>
+    <p>Your score is the total you bank across the fifteen balloons. There's no time limit, so take as long as you like.</p>
     <h3>Best practice</h3>
     <ul>
       <li>There's no right level of risk, only a trade-off: each extra pump adds 50p, but raises the chance of losing everything in that balloon.</li>
@@ -224,7 +223,6 @@
   const PUMP_PENCE = 50;            // each pump adds this to the balloon's pot
   const BURST_MIN = 1;              // lowest burst point: the balloon bursts on this pump
   const BURST_MAX = 16;             // highest burst point; drawn uniformly from BURST_MIN..BURST_MAX
-  const RUN_CAP_MS = 120000;        // the run ends here even with balloons left
   const COLLECT_PAUSE_MS = 400;     // "Collected £X" shows this long; presses ignored
   const POP_PAUSE_MS = 700;         // the burst shape and "Burst! −£X lost" show this long; presses ignored
   const NEW_BALLOON_LOCK_MS = 250;  // presses ignored this long after a new balloon appears
@@ -259,7 +257,8 @@
     const src = u32 || cryptoU32;
     return Array.from({ length: n }, () => uniformInt(BURST_MIN, BURST_MAX, src));
   }
-  const newBalloon = (burstAt) => ({ burstAt, pumps: 0, outcome: "not_played", gainPence: 0 });
+  // outcome is null until the balloon is collected or bursts; a run only ends once all fifteen have an outcome.
+  const newBalloon = (burstAt) => ({ burstAt, pumps: 0, outcome: null, gainPence: 0 });
   // A pump: pumps + 1; on the burst point the pot ((pumps - 1) x PUMP_PENCE) is lost.
   function applyPump(b) {
     const pumps = b.pumps + 1;
@@ -283,14 +282,14 @@
   }
   const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
   function computeStats(balloons, elapsedMs, inputs) {
-    const started = balloons.filter((b) => b.outcome !== "not_played");
+    const started = balloons.filter((b) => b.outcome === "collected" || b.outcome === "burst");
     const collected = balloons.filter((b) => b.outcome === "collected");
     const avgBurstPointFaced = mean(started.map((b) => b.burstAt));
     const used = new Set(inputs);
     return {
       collected: collected.length,
       burst: balloons.filter((b) => b.outcome === "burst").length,
-      cutOff: balloons.some((b) => b.outcome === "cut_off"),
+      cutOff: false,   // kept for the stats' shape: there's no time limit, so no balloon is ever cut off
       played: started.length,
       totalPumps: balloons.reduce((t, b) => t + b.pumps, 0),
       avgCollectPumps: mean(collected.map((b) => b.pumps)),
@@ -330,11 +329,10 @@
     let idx = 0, phase = "ready", lockUntil = 0, pauseEnd = 0, done = false, raf = 0, banked = 0;
     const inputs = [];
 
-    const countEl = blEl("div", { class: "bl-count" });
     const box = blEl("div", { class: "bl-box" });
     const potEl = blEl("div", { class: "bl-pot", "aria-live": "polite" });
     const feedback = blEl("div", { class: "bl-feedback", role: "status" });
-    ctx.stage.replaceChildren(countEl, box, potEl, feedback);
+    ctx.stage.replaceChildren(box, potEl, feedback);
     let shape = balloonSvg();
 
     function button(action, label) {
@@ -346,28 +344,30 @@
     }
     ctx.pad.replaceChildren(blEl("div", { class: "bl-buttons" }, button("collect", "Collect"), button("pump", "Pump")));
 
+    // The shell's timer slot shows progress instead of time: "Balloon n of 15", with the bar at completed / 15.
+    const completed = () => balloons.filter((b) => b.outcome === "collected" || b.outcome === "burst").length;
+    function progress() { ctx.setTimer(`Balloon ${idx + 1} of ${BALLOONS}`, completed() / BALLOONS); }
     function showBalloon() {
       shape = balloonSvg();
       shape.style.transform = `scale(${scaleFor(0) / 1.5})`;
       box.replaceChildren(shape);
-      countEl.textContent = `Balloon ${idx + 1} of ${BALLOONS}`;
       potEl.textContent = money(0);
       feedback.textContent = ""; feedback.className = "bl-feedback";
-      balloons[idx].started = true;
       phase = "ready";
+      progress();
       lockUntil = clock.elapsedMs() + NEW_BALLOON_LOCK_MS;
     }
     function act(action, via) {
       if (done || !clock.running || phase !== "ready") return;
       const now = clock.elapsedMs();
-      if (now >= RUN_CAP_MS) { finish(); return; }
       if (now < lockUntil) return;
       inputs.push(via);
       const b = balloons[idx];
       if (action === "pump") {
         const r = applyPump(b);
-        balloons[idx] = { ...r.balloon, started: true };
+        balloons[idx] = r.balloon;
         if (r.burst) {
+          progress();
           box.replaceChildren(burstSvg());
           potEl.textContent = money(0);
           feedback.textContent = `Burst! −${money(r.lostPence)} lost`; feedback.className = "bl-feedback burst";
@@ -378,8 +378,9 @@
         }
       } else if (action === "collect") {
         const r = applyCollect(b);
-        balloons[idx] = { ...r.balloon, started: true };
+        balloons[idx] = r.balloon;
         banked += r.gainPence;
+        progress();
         ctx.setScore(money(banked));
         feedback.textContent = `Collected ${money(r.gainPence)}`; feedback.className = "bl-feedback collected";
         phase = "collect"; pauseEnd = now + COLLECT_PAUSE_MS;
@@ -390,7 +391,6 @@
       raf = requestAnimationFrame(frame);
       if (!clock.running) return; // paused: everything stays exactly as it is
       const now = clock.elapsedMs();
-      if (now >= RUN_CAP_MS) { finish(); return; }
       if ((phase === "pop" || phase === "collect") && now >= pauseEnd) {
         if (idx === BALLOONS - 1) { finish(); return; }
         idx++; showBalloon();
@@ -401,22 +401,13 @@
       done = true;
       cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onDocKey);
-      // the balloon in play at the cap is lost; balloons never shown stay 'not_played'
-      const final = balloons.map((b) => {
-        const { started, ...rest } = b;
-        if (started && rest.outcome === "not_played") return { ...rest, outcome: "cut_off", gainPence: 0 };
-        return rest;
-      });
-      const elapsed = Math.min(clock.elapsedMs(), RUN_CAP_MS);
-      const stats = computeStats(final, elapsed, inputs);
-      ctx.finish({ score: scoreOf(final), stats });
+      // only reached after the fifteenth balloon, so every balloon is collected or burst
+      const stats = computeStats(balloons, clock.elapsedMs(), inputs);
+      ctx.finish({ score: scoreOf(balloons), stats });
     }
     function tick() {
       if (done) return;
-      const rem = Math.max(0, RUN_CAP_MS - clock.elapsedMs());
-      const s = Math.ceil(rem / 1000);
-      ctx.setTimer(`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`, rem / RUN_CAP_MS);
-      if (rem <= 0) finish();
+      progress();   // no time limit: an idle run never ends by itself
     }
     // The shell passes only e.key to onKey, so auto-repeat can't be seen there: the game
     // listens for keydown itself (while the layer is open and the clock runs) and skips
@@ -459,7 +450,6 @@
   function revealLine(b, i) {
     if (b.outcome === "collected") return `${i + 1} · collected at ${b.pumps} · would have burst at ${b.burstAt}`;
     if (b.outcome === "burst") return `${i + 1} · burst at ${b.burstAt}`;
-    if (b.outcome === "cut_off") return `${i + 1} · cut off at ${b.pumps} pumps · would have burst at ${b.burstAt}`;
     return null;
   }
   function renderResult(box, summary) {
@@ -484,7 +474,7 @@
   }
 
   window.Balloon = { uniformInt, drawBurstPoints, newBalloon, applyPump, applyCollect, scoreOf, expectedPence, bestCollectRange, computeStats, luckLine, styleNote, revealLine, renderResult, money, scaleFor,
-    GAME: BL_GAME, BALLOONS, PUMP_PENCE, BURST_MIN, BURST_MAX, RUN_CAP_MS, COLLECT_PAUSE_MS, POP_PAUSE_MS, NEW_BALLOON_LOCK_MS, TYPICAL_BURST, LUCK_THRESHOLD };
+    GAME: BL_GAME, BALLOONS, PUMP_PENCE, BURST_MIN, BURST_MAX, COLLECT_PAUSE_MS, POP_PAUSE_MS, NEW_BALLOON_LOCK_MS, TYPICAL_BURST, LUCK_THRESHOLD };
 
   // --- Auth gate: locked when signed out; the shell mounts once per session ---
   let mounted = false;
