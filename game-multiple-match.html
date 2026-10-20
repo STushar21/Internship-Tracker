@@ -89,6 +89,7 @@
   .mx-miss-line { color: #1A1A18; margin-top: 2px; font-variant-numeric: tabular-nums; }
   .mx-miss-reason { color: #5A5650; margin-top: 2px; font-size: 13px; }
   .mx-clean { font-size: 14px; color: #1A1A18; margin-top: 4px; }
+  .mx-lost { margin: 12px 0 0; font-size: 14px; color: #1A1A18; }
 
   .top-nav {
     position: sticky; top: 16px; z-index: 100;
@@ -197,7 +198,7 @@
     <h3>How to play</h3>
     <p>A card shows a sector, a metric and a value, such as 'Cybersecurity, EV/Revenue 4.1x'. Tap High if the value is above that sector's typical range and Low if it's below. The value is always clearly outside the range. You have about 3.5 seconds per card, and after each one the typical range appears briefly at the bottom.</p>
     <h3>Scoring</h3>
-    <p>Each correct call scores points equal to your combo multiplier: ×1 to start, ×2 after three in a row, ×3 after six and ×4 after nine. A wrong call or a timeout resets the combo and costs 2 seconds.</p>
+    <p>Each correct call scores points equal to your combo multiplier: ×1 to start, ×2 after three in a row, ×3 after six and ×4 after nine. A wrong call resets the combo and costs 2 points, and your score never goes below 0. A timeout resets the combo. The 45 seconds never change.</p>
     <h3>Best practice</h3>
     <ul>
       <li>Place the sector first: recurring-revenue, high-margin sectors sit at the top, and cyclical, capital-heavy ones sit at the bottom.</li>
@@ -225,8 +226,10 @@
   // only deals cards, generates values, scores answers and builds the result.
   // All timing uses the shell's run clock (pause-aware), never Date.now().
   // ---------------------------------------------------------------------------
-  const MX_GAME = "multiple_match_v2"; // the old game saved under "multiple_match" with another deck
-  const MX_TOTAL_MS = 45000, MX_CARD_MS = 3500, MX_PENALTY_MS = 2000, MX_LOCK_MS = 150;
+  // v3 (Oct 2026): a fixed 45 seconds, and a wrong call costs 2 points. The v2 board took 2 seconds off the clock per mistake,
+  // so its scores aren't comparable; its rows stay in game_scores unused. The first version saved under "multiple_match".
+  const MX_GAME = "multiple_match_v3";
+  const MX_TOTAL_MS = 45000, MX_CARD_MS = 3500, MX_WRONG_POINTS = 2, MX_LOCK_MS = 150;
   const DECK = window.STK_BENCHMARK_DECK;
   const METRICS = DECK.METRICS;
   const CARDS = DECK.sectors.flatMap((s) => s.metrics.map((m) => ({ key: `${s.id}:${m.id}`, sector: s, metric: m, def: METRICS[m.id] })));
@@ -356,7 +359,7 @@
   // ---- the run ----
   function createRun(ctx, rnd) {
     const dealer = makeDealer(mxWeights, rnd);
-    let score = 0, combo = 0, bestCombo = 0, penalty = 0, done = false;
+    let score = 0, combo = 0, bestCombo = 0, pointsGained = 0, pointsLost = 0, done = false;
     let current = null, shownAt = 0, answered = false;
     let correct = 0, wrong = 0, timeouts = 0;
     const cards = [];
@@ -374,7 +377,7 @@
     const highBtn = mxEl("button", { type: "button", class: "mx-btn", "data-answer": "high", text: "HIGH", onclick: () => answer("high") });
     ctx.pad.replaceChildren(lastEl, mxEl("div", { class: "mx-buttons" }, lowBtn, highBtn));
 
-    const remaining = () => MX_TOTAL_MS - clock.elapsedMs() - penalty;
+    const remaining = () => MX_TOTAL_MS - clock.elapsedMs();   // fixed: mistakes never shorten the run
     function show() {
       current = dealer.next();
       shownAt = clock.elapsedMs();
@@ -386,6 +389,7 @@
     }
     function answer(given) {
       if (done || !clock.running || !current || answered) return;
+      if (clock.elapsedMs() >= MX_TOTAL_MS) { finish(); return; } // the 45 seconds are up: this call isn't scored
       if (given !== null && clock.elapsedMs() - shownAt < MX_LOCK_MS) return; // double-tap guard
       answered = true;
       const ms = Math.min(MX_CARD_MS, Math.round(clock.elapsedMs() - shownAt));
@@ -393,10 +397,14 @@
       cards.push({ id: current.card.key, shown: current.value, answer: current.dir, given, ms });
       if (ok) {
         correct++; combo++; bestCombo = Math.max(bestCombo, combo);
-        score += multiplierFor(combo);
+        const m = multiplierFor(combo);
+        score += m; pointsGained += m;
       } else {
-        if (given === null) timeouts++; else wrong++;
-        combo = 0; penalty += MX_PENALTY_MS;
+        // A wrong call loses MX_WRONG_POINTS, but never takes the score below 0: pointsLost counts what was actually taken,
+        // so score = pointsGained - pointsLost at every moment. A timeout only resets the combo.
+        if (given === null) timeouts++;
+        else { wrong++; const lost = Math.min(MX_WRONG_POINTS, score); score -= lost; pointsLost += lost; }
+        combo = 0;
         dealer.miss(current);
       }
       ctx.setScore(String(score));
@@ -417,6 +425,7 @@
         bestCombo,
         avgMs: n ? Math.round(cards.reduce((t, c) => t + c.ms, 0) / n) : null,
         cards,
+        pointsGained, pointsLost,
       };
       mxHistory = [stats, ...mxHistory].slice(0, 10);
       mxWeights = computeWeights(mxHistory);
@@ -429,7 +438,7 @@
       if (rem <= 0) { finish(); return; }
       const used = clock.elapsedMs() - shownAt;
       barFill.style.width = `${Math.max(0, 1 - used / MX_CARD_MS) * 100}%`;
-      if (used >= MX_CARD_MS) answer(null); // timeout counts as wrong
+      if (used >= MX_CARD_MS) answer(null); // a timeout: the combo resets and the card comes back, but no points are lost
     }
     function onKey(key) {
       if (key === "ArrowLeft") { answer("low"); return true; }
@@ -439,7 +448,7 @@
     ctx.setScore("0");
     show();
     tick();
-    return { onKey, tick, destroy() { done = true; }, debug: { get current() { return current; }, get combo() { return combo; }, get penalty() { return penalty; }, get score() { return score; }, dealer } };
+    return { onKey, tick, destroy() { done = true; }, debug: { get current() { return current; }, get combo() { return combo; }, get pointsGained() { return pointsGained; }, get pointsLost() { return pointsLost; }, get score() { return score; }, dealer } };
   }
 
   // ---- result card ----
@@ -455,6 +464,7 @@
         fact("Best combo", String(stats.bestCombo)),
         fact("Accuracy", `${Math.round(stats.accuracy * 100)}%`),
         fact("Avg per card", stats.avgMs !== null ? secs(stats.avgMs) : "–")),
+      mxEl("p", { class: "mx-lost", text: `Mistakes cost you ${stats.pointsLost} ${stats.pointsLost === 1 ? "point" : "points"}.` }),
       mxEl("h3", { class: "mx-missed-title", text: "Missed cards" }));
     const misses = stats.cards.filter((c) => c.given !== c.answer);
     const back = mxEl("a", { class: "back-link back-result", href: "games.html", text: "← All games" });
@@ -470,7 +480,7 @@
     })), back);
   }
   window.MultipleMatch = { CARDS, valueGrid, makeValue, formatValue, makeDealer, computeWeights, multiplierFor, createRun, renderResult, loadHistory,
-    get weights() { return mxWeights; }, GAME: MX_GAME, TOTAL_MS: MX_TOTAL_MS, CARD_MS: MX_CARD_MS, PENALTY_MS: MX_PENALTY_MS, LOCK_MS: MX_LOCK_MS };
+    get weights() { return mxWeights; }, GAME: MX_GAME, TOTAL_MS: MX_TOTAL_MS, CARD_MS: MX_CARD_MS, WRONG_POINTS: MX_WRONG_POINTS, LOCK_MS: MX_LOCK_MS };
 
   // --- Auth gate: locked when signed out; the shell mounts once per session ---
   let mounted = false;
