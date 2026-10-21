@@ -68,8 +68,9 @@
     background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 8px;
     padding: 16px; display: flex; gap: 10px; margin-bottom: 28px;
   }
-  form input { flex: 1; background: #F6F6F3; border: 1px solid #D8DADD; border-radius: 6px; padding: 10px 12px; font-size: 14px; color: #1A1A18; font-family: inherit; }
-  form button { background: #8B6B49; border: none; border-radius: 6px; padding: 10px 20px; font-weight: 600; color: #FFFFFF; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  form input { flex: 1; background: #F6F6F3; border: 1px solid #D8DADD; border-radius: 6px; padding: 10px 12px; font-size: 16px; color: #1A1A18; font-family: inherit; min-height: 44px; }
+  form button { background: #8B6B49; border: none; border-radius: 6px; padding: 10px 20px; font-weight: 600; color: #FFFFFF; cursor: pointer; font-family: inherit; white-space: nowrap; min-height: 44px; }
+  /* the name input and Add habit share one height (at least 44px), side by side where they fit and stacked on the narrowest phones */
 
   .habit-card { background: #FFFFFF; border: 1px solid #D8DADD; border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; }
   .habit-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -77,7 +78,6 @@
   .habit-right { display: flex; align-items: center; gap: 12px; }
   .habit-streak { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: #6F5439; font-weight: 700; }
   .flame { display: block; flex-shrink: 0; }
-  .freeze-label { font-size: 11px; color: #6F5439; font-weight: 600; white-space: nowrap; }   /* 6.99:1 on white */
   .today-toggle {
     width: 34px; height: 34px; border-radius: 8px; border: 1px solid #D8DADD;
     background: #F6F6F3; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -85,6 +85,15 @@
   }
   .today-toggle.done { background: #8B6B49; border-color: #8B6B49; color: #FFFFFF; }
   .archive-link { background: none; border: none; color: #5A5650; font-size: 11px; cursor: pointer; padding: 0; }
+  /* 44px hit areas with the same look and layout: an invisible ::before around each button. The toggle's 34x34 box gets
+     44x44 (6px extra on the left, 4px on the right, so it stays 8px clear of Archive); Archive's is 44px tall, its own width. */
+  .today-toggle, .archive-link { position: relative; }
+  .today-toggle::before { content: ""; position: absolute; top: -6px; bottom: -6px; left: -7px; right: -5px; }
+  .archive-link::before { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - 22px); height: 44px; }
+  .freeze-slot:empty, .next-freeze:empty { display: none; }
+  .freeze-ind { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #5A5650; white-space: nowrap; }   /* 7.29:1 on white */
+  .snowflake { display: block; flex-shrink: 0; }
+  .next-freeze { font-size: 12px; color: #5A5650; margin-top: 6px; }   /* 7.29:1 on white */
 
   .streak-grid { display: flex; gap: 3px; flex-wrap: wrap; }
   .day-cell { width: 16px; height: 16px; border-radius: 3px; background: #F1EBDC; border: 1px solid #E3DAC4; }
@@ -106,6 +115,9 @@
     #habit_name { min-width: 0; }
     .day-cell { width: 12px; height: 12px; }
     .habit-top { flex-wrap: wrap; gap: 8px; }
+  }
+  @media (max-width: 369px) {
+    form { flex-direction: column; }
   }
 </style>
 </head>
@@ -170,6 +182,13 @@
     return v === null || v === undefined ? "" : String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
+  // Freeze bank: each habit earns a freeze every FREEZE_EVERY streak days and keeps them until a missed day spends one.
+  // FREEZE_CAP null means no cap. FREEZE_BANK_START is the first day the bank rules apply; streaks up to then are taken
+  // from the old one-freeze rule (legacyStreak), so no current streak drops because of the change.
+  const FREEZE_EVERY = 7;
+  const FREEZE_CAP = null;
+  const FREEZE_BANK_START = "2026-10-22";
+
   let allHabits = [];
   let allCompletions = []; // { habit_id, completed_date }
 
@@ -212,10 +231,11 @@
     return dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0") + "-" + String(dt.getDate()).padStart(2,"0");
   }
 
+  // The old rule, kept unchanged (only renamed from computeStreak) because computeFreezes starts from it.
   // Pure: same doneDates + today always gives the same result. Walks backward from
   // today (or yesterday, if today is still pending). One isolated missed day per
   // streak is frozen — it doesn't count, but doesn't break the streak either.
-  function computeStreak(doneDates, today) {
+  function legacyStreak(doneDates, today) {
     let day = doneDates.has(today) ? today : shiftDay(today, -1);
     let streak = 0;
     let freezeUsed = false;
@@ -232,6 +252,61 @@
       day = shiftDay(day, -1);
     }
     return { streak, freezeUsed, frozenDates };
+  }
+
+  // 'YYYY-MM-DD' one calendar day after the given one, stepped with Date.UTC on year, month, day (never 24-hour steps).
+  function nextDay(ds) {
+    const [y, m, d] = ds.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  }
+  const capBank = (n, cap) => (cap === null ? n : Math.min(n, cap));
+  // Pure. doneDates: one habit's completed 'YYYY-MM-DD' dates; today: today's date (still pending if not done).
+  // Before startDate the old rule decides, and the bank only shows floor(streak / FREEZE_EVERY). From startDate on, the
+  // streak and bank carry over from the old rule on the morning of startDate, then each day is walked in order: a done
+  // day adds 1 (and a freeze at every multiple of FREEZE_EVERY); a missed day spends a freeze (bridged: it doesn't add
+  // to the streak) or, with an empty bank, ends the streak; today, if not done yet, is pending and never a miss.
+  function computeFreezes(doneDates, today, startDate = FREEZE_BANK_START, cap = FREEZE_CAP) {
+    if (today < startDate) {
+      const old = legacyStreak(doneDates, today);
+      return { streak: old.streak, bank: capBank(Math.floor(old.streak / FREEZE_EVERY), cap), frozenDates: old.frozenDates.slice(), daysToNext: FREEZE_EVERY - (old.streak % FREEZE_EVERY) };
+    }
+    const before = new Set(Array.from(doneDates).filter((d) => d < startDate));
+    const start = legacyStreak(before, startDate);
+    let streak = start.streak, bank = capBank(Math.floor(start.streak / FREEZE_EVERY), cap), frozenDates = start.frozenDates.slice();
+    for (let d = startDate; d <= today; d = nextDay(d)) {
+      if (doneDates.has(d)) {
+        streak += 1;
+        if (streak % FREEZE_EVERY === 0) bank = capBank(bank + 1, cap);
+      } else if (d === today) {
+        break;
+      } else if (streak === 0) {
+        // nothing to protect yet
+      } else if (bank > 0) {
+        bank -= 1; frozenDates.push(d);
+      } else {
+        streak = 0; frozenDates = [];
+      }
+    }
+    return { streak, bank, frozenDates, daysToNext: FREEZE_EVERY - (streak % FREEZE_EVERY) };
+  }
+
+  // The freeze indicator (built with DOM nodes and textContent): a snowflake and "2 freezes", read as "2 freezes in the bank".
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  function freezeIndicator(bank) {
+    const words = bank + (bank === 1 ? " freeze" : " freezes");
+    const group = document.createElement("span");
+    group.className = "freeze-ind";
+    group.setAttribute("role", "img");
+    group.setAttribute("aria-label", words + " in the bank");
+    const svg = document.createElementNS(SVG_NS, "svg");
+    for (const [k, v] of [["class", "snowflake"], ["width", "14"], ["height", "14"], ["viewBox", "0 0 24 24"], ["aria-hidden", "true"], ["focusable", "false"]]) svg.setAttribute(k, v);
+    const path = document.createElementNS(SVG_NS, "path");
+    for (const [k, v] of [["d", "M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"], ["fill", "none"], ["stroke", "#5A5650"], ["stroke-width", "2"], ["stroke-linecap", "round"], ["stroke-linejoin", "round"]]) path.setAttribute(k, v);
+    svg.appendChild(path);
+    const text = document.createElement("span");
+    text.textContent = words;
+    group.append(svg, text);
+    return group;
   }
 
   function flameIcon(streak) {
@@ -252,10 +327,13 @@
       return;
     }
 
+    const results = [];
     list.innerHTML = allHabits.map(h => {
       const doneDates = new Set(allCompletions.filter(c => c.habit_id === h.id).map(c => c.completed_date));
       const isDoneToday = doneDates.has(todayStr());
-      const { streak, freezeUsed, frozenDates } = computeStreak(doneDates, todayStr());
+      const result = computeFreezes(doneDates, todayStr()); // this habit's own completions only
+      const { streak, frozenDates } = result;
+      results.push(result);
 
       const cells = [];
       let gridHasFrozen = false;
@@ -273,15 +351,24 @@
             <span class="habit-name">${esc(h.name)}</span>
             <div class="habit-right">
               <span class="habit-streak">${flameIcon(streak)}<span aria-hidden="true">${streak > 0 ? streak : "—"}</span></span>
-              ${streak > 0 ? `<span class="freeze-label">${freezeUsed ? "Freeze used" : "Freeze ready"}</span>` : ""}
+              <span class="freeze-slot"></span>
               <button type="button" class="today-toggle ${isDoneToday ? "done" : ""}" data-toggle="${esc(h.id)}">&#10003;</button>
               <button type="button" class="archive-link" data-archive="${esc(h.id)}">Archive</button>
             </div>
           </div>
           ${gridHasFrozen ? `<div class="grid-legend">Dashed square = freeze used</div>` : ""}
           <div class="streak-grid">${cells.join("")}</div>
+          <div class="next-freeze"></div>
         </div>`;
     }).join("");
+    // The freeze indicator and the next-freeze line, filled with DOM nodes (nothing from the data goes through innerHTML here).
+    list.querySelectorAll(".habit-card").forEach((card, i) => {
+      const r = results[i];
+      if (r.streak > 0) {
+        card.querySelector(".freeze-slot").appendChild(freezeIndicator(r.bank));
+        card.querySelector(".next-freeze").textContent = "Next freeze after " + r.daysToNext + (r.daysToNext === 1 ? " more day" : " more days");
+      }
+    });
   }
 
   function showActionError(what, err) {
