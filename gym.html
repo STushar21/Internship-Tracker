@@ -64,6 +64,10 @@
   #login-gate a { color: #6F5439; }
   .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
   #logout-btn { background: none; border: 1px solid #D8DADD; color: #5A5650; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; min-height: 44px; }
+  /* "Progress →" sits at the left of the Sign out bar; at 44px it keeps the bar 44px tall, so nothing below moves */
+  .progress-link { margin-right: auto; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; color: #6F5439; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .progress-link:hover { text-decoration: underline; }
+  .progress-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
 
   /* --- gym --- */
   .gym { max-width: 720px; margin: 0 auto; }
@@ -246,7 +250,7 @@
 </div>
 
 <div id="app-content" style="display:none;">
-<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+<div class="logout-bar"><a class="progress-link" href="gym-progress.html">Progress →</a><button id="logout-btn" type="button">Sign out</button></div>
 <div class="gym">
 
 <div class="warn" id="storage-warn" role="alert" hidden>This workout can't be saved on this device. Finish it before you leave the page.</div>
