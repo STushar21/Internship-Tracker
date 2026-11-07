@@ -11,7 +11,13 @@
      line(container, spec)        draws an SVG line chart into container; returns
                                   { select(i), destroy() }
        spec = { points: [{ x, y, label }], rolling: array | null, best: array | null,
-                yFormat(n) -> string, ariaLabel: string, onSelect(index) }
+                yFormat(n) -> string, ariaLabel: string, onSelect(index),
+                highlight: array of booleans | undefined (v2) }
+       A highlighted point gets a second ring around its dot (the page says what it means).
+       Without spec.highlight the drawing is exactly v1's.
+     sparkline(container, values, opts)   (v2) a small inline SVG (default 96×28): a thin line
+                                  through the finite values and a filled circle on the last
+                                  one; opts = { width, height, ariaLabel }; returns { destroy() }
        Dots for every point, a faint line joining them, a thick solid rolling-average
        line, a dashed best-so-far line and a ringed circle on the selected point. Tap or
        click selects the nearest point (onSelect is called; select() from code is not).
@@ -82,7 +88,7 @@
     let geom = null, svg = null, lastW = -1, lastH = -1, dead = false;
 
     function series(arr) { return Array.isArray(arr) && arr.length === points.length ? arr : null; }
-    const rolling = series(spec.rolling), best = series(spec.best);
+    const rolling = series(spec.rolling), best = series(spec.best), highlight = series(spec.highlight);
 
     function draw() {
       if (dead) return;
@@ -132,6 +138,11 @@
       const xs = points.map((_, i) => xOf(i));
       points.forEach((p, i) => { if (isNum(p.y)) dots.append(sv("circle", { cx: xs[i].toFixed(1), cy: yOf(p.y).toFixed(1), r: 3.5 })); });
       s.append(dots);
+      if (highlight) {
+        const hl = sv("g", { "data-series": "highlight", fill: "none", stroke: COLOURS.best, "stroke-width": 1.5 });
+        points.forEach((p, i) => { if (highlight[i] === true && isNum(p.y)) hl.append(sv("circle", { cx: xs[i].toFixed(1), cy: yOf(p.y).toFixed(1), r: 6.5 })); });
+        s.append(hl);
+      }
       const ring = sv("circle", { r: 9, fill: "none", stroke: COLOURS.best, "stroke-width": 2, "data-part": "selected-ring" });
       const dot = sv("circle", { r: 6, fill: COLOURS.point, "data-part": "selected-dot" });
       s.append(ring, dot);
@@ -186,5 +197,29 @@
     };
   }
 
-  window.StkCharts = Object.freeze({ niceTicks, rollingAverage, bestSoFar, nearestIndex, line });
+  // A sparkline: x by position in values (so a missing value is bridged), y scaled to the finite values' range; a flat or
+  // single-value series sits in the middle. Halving before subtracting keeps huge values finite.
+  function sparkline(container, values, opts) {
+    const o = opts || {}, W = isNum(o.width) && o.width > 0 ? o.width : 96, H = isNum(o.height) && o.height > 0 ? o.height : 28, pad = 3;
+    const vals = Array.isArray(values) ? values : [];
+    const pts = [];
+    vals.forEach((v, i) => { if (isNum(v)) pts.push([i, v]); });
+    let lo = Infinity, hi = -Infinity;
+    for (const [, v] of pts) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    const xOf = (i) => (vals.length <= 1 ? W - pad : pad + (i / (vals.length - 1)) * (W - 2 * pad));
+    const yOf = (v) => {
+      const span = hi / 2 - lo / 2, t = span > 0 ? (v / 2 - lo / 2) / span : 0.5;
+      return pad + (1 - (isNum(t) ? t : 0.5)) * (H - 2 * pad);
+    };
+    const s = sv("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": o.ariaLabel || "", class: "stk-sparkline" });
+    s.style.display = "inline-block";
+    s.style.verticalAlign = "middle";
+    if (pts.length >= 2) s.append(sv("polyline", { points: pts.map(([i, v]) => `${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" "), fill: "none",
+      stroke: COLOURS.point, "stroke-width": 1.5, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    if (pts.length) { const [i, v] = pts[pts.length - 1]; s.append(sv("circle", { cx: xOf(i).toFixed(1), cy: yOf(v).toFixed(1), r: 2.5, fill: COLOURS.rolling })); }
+    container.append(s);
+    return { destroy() { s.remove(); } };
+  }
+
+  window.StkCharts = Object.freeze({ niceTicks, rollingAverage, bestSoFar, nearestIndex, line, sparkline });
 })();
