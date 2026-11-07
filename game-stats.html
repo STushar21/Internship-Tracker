@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Game stats — STK</title>
+<style>
+  [hidden] { display: none !important; }
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --ink-faint: #948E7A;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+    --gold-soft: rgba(139,107,73,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  h2 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; margin: 0 0 8px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; }
+  #logout-btn { min-height: 44px; min-width: 44px; }
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .back-link:hover { text-decoration: underline; }
+  .back-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .back-top { margin: -14px 0 4px; }
+
+  /* --- game stats --- */
+  .st-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 14px; }
+  .st-tab, .st-chip, .st-btn {
+    min-height: 44px; padding: 0 16px; border: 1px solid #8B6B49; border-radius: 8px; background: #FFFFFF;
+    color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .st-tab[aria-selected="true"], .st-chip[aria-pressed="true"] { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
+  .st-tab:focus-visible, .st-chip:focus-visible, .st-btn:focus-visible, .st-link:focus-visible { outline: 2px solid #1A1A18; outline-offset: 2px; }
+  .st-btn:disabled { color: #5A5650; border-color: #B8AE98; cursor: default; }
+  .st-note { font-size: 13px; line-height: 1.5; color: #5A5650; margin: 0 0 12px; }
+  .st-card { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 16px; margin: 0 0 14px; min-width: 0; }
+  .st-state { font-size: 15px; color: #1A1A18; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .st-link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 4px; }
+  .st-link:hover { text-decoration: underline; }
+  .st-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+  @media (min-width: 700px) { .st-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .st-sum { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 12px 14px; min-width: 0; }
+  .st-sum-label { font-size: 12px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+  .st-sum-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 24px; margin: 2px 0 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .st-sum-sub { font-size: 13px; color: #5A5650; margin: 2px 0 0; overflow-wrap: anywhere; }
+  .st-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+  .st-chart { width: 100%; min-width: 0; overflow: hidden; }
+  .st-legend, .st-trend { font-size: 13px; line-height: 1.5; color: #5A5650; margin: 10px 0 0; }
+  .st-readout { font-size: 15px; font-weight: 600; margin: 10px 0 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .st-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+  .st-table-wrap { overflow-x: auto; margin: 12px 0 0; }
+  .st-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .st-table caption { text-align: left; font-size: 13px; color: #5A5650; padding: 0 0 6px; }
+  .st-table th, .st-table td { text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid #E3DAC4; overflow-wrap: anywhere; }
+  .st-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #5A5650; }
+  .st-insights { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 640px) { .st-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .st-ins { border: 1px solid #E3DAC4; border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .st-ins-title { font-size: 14px; font-weight: 600; margin: 0; }
+  .st-ins-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; margin: 2px 0 0; overflow-wrap: anywhere; }
+  .st-ins-desc, .st-ins-count { font-size: 13px; color: #5A5650; margin: 2px 0 0; }
+  .st-strip-wrap { display: inline-block; margin: 10px 0 0; }
+  .st-strip-head, .st-strip { display: grid; grid-template-columns: repeat(7, 24px); gap: 5px; }
+  .st-strip-head span { font-size: 12px; color: #5A5650; text-align: center; }
+  .st-strip { margin-top: 4px; }
+  .st-cell { width: 24px; height: 24px; border-radius: 5px; }
+  .st-cell.played { background: #8B6B49; }
+  .st-cell.unplayed { border: 2px solid #7C818B; background: #FFFFFF; }
+  .st-cell.future { visibility: hidden; }
+  .st-strip-range { font-size: 13px; color: #5A5650; margin: 8px 0 0; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; border-bottom: 2px solid transparent; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    h1 { font-size: 26px; }
+    .st-card { padding: 14px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html" class="active">Games</a>
+      <a href="gym.html">Gym</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+<a class="back-link back-top" href="games.html">← All games</a>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to see your game stats.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Game stats</h1>
+<p class="sub">Your score history for each game: the trend, your best and how often you play.</p>
+
+<div class="st-tabs" role="tablist" aria-label="Games" id="tabs"></div>
+
+<div id="panel" role="tabpanel">
+  <p class="st-note" id="mm-note" hidden>Scores before 20 October used different rules and aren't shown.</p>
+  <div class="st-card st-state" id="state" role="status"></div>
+
+  <div id="main" hidden>
+    <div class="st-summary">
+      <div class="st-sum" id="sum-best"><p class="st-sum-label">Best</p><p class="st-sum-value" data-v></p><p class="st-sum-sub" data-s></p></div>
+      <div class="st-sum" id="sum-latest"><p class="st-sum-label">Latest run</p><p class="st-sum-value" data-v></p><p class="st-sum-sub" data-s></p></div>
+      <div class="st-sum" id="sum-compare"><p class="st-sum-label">Compare</p><p class="st-sum-value" data-v></p><p class="st-sum-sub" data-s></p></div>
+      <div class="st-sum" id="sum-plays"><p class="st-sum-label">Plays</p><p class="st-sum-value" data-v></p><p class="st-sum-sub" data-s></p></div>
+    </div>
+
+    <section class="st-card" aria-labelledby="chart-title">
+      <h2 id="chart-title">Scores</h2>
+      <div class="st-chips" role="group" aria-label="Range" id="chips">
+        <button type="button" class="st-chip" data-range="last10" aria-pressed="false">Last 10 runs</button>
+        <button type="button" class="st-chip" data-range="days30" aria-pressed="false">Last 30 days</button>
+        <button type="button" class="st-chip" data-range="all" aria-pressed="true">All runs</button>
+      </div>
+      <p class="st-trend" id="range-empty" hidden></p>
+      <div id="chart-area">
+        <div class="st-chart" id="chart"></div>
+        <p class="st-trend" id="trend-note" hidden>Trend appears after 5 runs</p>
+        <p class="st-legend" id="legend"></p>
+        <p class="st-readout" id="readout" aria-live="polite"></p>
+        <div class="st-steps">
+          <button type="button" class="st-btn" id="prev-btn">Previous</button>
+          <button type="button" class="st-btn" id="next-btn">Next</button>
+          <button type="button" class="st-btn" id="table-toggle" aria-expanded="false" aria-controls="table-wrap">Show data as a table</button>
+        </div>
+        <div class="st-table-wrap" id="table-wrap" hidden>
+          <table class="st-table" id="data-table">
+            <caption id="table-caption"></caption>
+            <thead><tr><th scope="col">Run</th><th scope="col">Date</th><th scope="col">Score</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="st-card" id="insights-card" aria-labelledby="insights-title" hidden>
+      <h2 id="insights-title">Insights</h2>
+      <p class="sub" id="insights-sub"></p>
+      <div class="st-insights" id="insights"></div>
+    </section>
+  </div>
+</div>
+
+<section class="st-card" id="strip-card" aria-labelledby="strip-title">
+  <h2 id="strip-title">Play calendar</h2>
+  <p class="sub">The last 12 weeks, all games. Filled squares are days you played; outlined squares are days you didn't.</p>
+  <div class="st-state" id="strip-state" role="status"></div>
+  <div class="st-strip-wrap" id="strip-wrap" hidden>
+    <div class="st-strip-head" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+    <div class="st-strip" id="strip" role="img"></div>
+    <p class="st-strip-range" id="strip-range"></p>
+  </div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="stk-charts.js?v=1"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Game stats: for the signed-in user, each game's runs (one game_scores row each) as a summary,
+  // a chart (the shared StkCharts script), a table and insight cards, plus a 12-week play calendar across all games.
+  // Read-only. Every dynamic string is set with textContent or built as DOM nodes; no HTML strings.
+  // ---------------------------------------------------------------------------
+  const GAMES = [
+    { key: "mental_maths", slug: "mental-maths", name: "Mental maths", page: "game-mental-maths.html" },
+    { key: "multiple_match_v3", slug: "multiple-match", name: "Multiple Match", page: "game-multiple-match.html" }, // v3 only: v2 used other rules
+    { key: "arrows_v1", slug: "arrows", name: "Arrows", page: "game-arrows.html" },
+    { key: "balloon_v1", slug: "balloon", name: "Balloon", page: "game-balloon.html", money: true }, // Balloon stores pence
+    { key: "memory_tiles_v1", slug: "memory-tiles", name: "Memory tiles", page: "game-memory-tiles.html" },
+  ];
+  const PAGE_SIZE = 1000;      // PostgREST returns at most 1000 rows per request
+  const ROLL_WINDOW = 5;       // the chart's rolling average, and the run count from which trends show
+  const TABLE_ROWS = 20;
+  const COMPARE_MIN = 6;       // runs needed before the Compare card shows
+  const COMPARE_MAX = 10;
+  const INSIGHT_MIN = 3;       // valid runs an insight card needs
+  const STRIP_WEEKS = 12;
+
+  // ---- dates: the hub's rule. "Today" is the London calendar date; days are stepped with Date.UTC ----
+  const londonFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+  const londonDate = (ms) => londonFmt.format(new Date(ms));
+  function addDays(ymd, n) {
+    const [y, m, d] = ymd.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+  }
+  const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
+  function validYmd(s) {
+    const m = typeof s === "string" ? YMD.exec(s) : null;
+    return !!m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toISOString().slice(0, 10) === s;
+  }
+  const mondayIndex = (ymd) => { const [y, m, d] = ymd.split("-").map(Number); return (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7; };
+  // A run's day: its played_date (the London date the shell saved, which the hub's streak also uses), else the London date of created_at.
+  function dayOf(row) {
+    if (validYmd(row.played_date)) return row.played_date;
+    const t = Date.parse(row.created_at);
+    return isFinite(t) ? londonDate(t) : null;
+  }
+  const dayFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  const dayFmtYear = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  function fmtDay(ymd, today) {
+    if (!validYmd(ymd)) return "";
+    const [y, m, d] = ymd.split("-").map(Number), dt = new Date(Date.UTC(y, m - 1, d));
+    return (today && ymd.slice(0, 4) === today.slice(0, 4) ? dayFmt : dayFmtYear).format(dt).replace(",", "");
+  }
+
+  // ---- numbers: Intl en-GB; averages to one decimal; never "NaN", "undefined" or "null" ----
+  const isNum = (v) => typeof v === "number" && isFinite(v);
+  const nfScore = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 });
+  const nf0 = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
+  const nf1 = new Intl.NumberFormat("en-GB", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const nf2 = new Intl.NumberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sci = new Intl.NumberFormat("en-GB", { notation: "scientific", maximumFractionDigits: 1 });
+  function fmtN(v, nf) {
+    if (!isNum(v)) return "—";
+    const x = v === 0 ? 0 : v; // no "-0"
+    return Math.abs(x) >= 1e15 ? sci.format(x) : nf.format(x);
+  }
+  const money = (p) => (isNum(p) ? "£" + fmtN(Math.round(p) / 100, nf2) : "—");   // the hub's format, pence to pounds
+  function fmtScore(game, v) { return game.money ? money(v) : fmtN(v, nfScore); }
+  function fmtAvgScore(game, v) { return game.money ? (isNum(v) ? "£" + fmtN(v / 100, nf2) : "—") : fmtN(v, nf1); }
+  const plural = (n, one, many) => `${fmtN(n, nf0)} ${n === 1 ? one : many}`;
+  const MINUS = "−";
+  const signed = (v, nf) => (v < 0 ? MINUS + fmtN(-v, nf) : "+" + fmtN(v, nf));
+
+  // ---- data ----
+  // Rows (ordered by created_at, then id) to runs: rows with a finite numeric score, numbered 1.. in that order.
+  function toRuns(rows) {
+    const out = [];
+    for (const r of rows) {
+      const score = typeof r.score === "number" ? r.score : NaN;
+      if (!isNum(score)) continue;
+      out.push({ n: out.length + 1, id: r.id, score, day: dayOf(r), stats: r.stats && typeof r.stats === "object" && !Array.isArray(r.stats) ? r.stats : null });
+    }
+    return out;
+  }
+  async function fetchPaged(build) {
+    const out = [];
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await build().range(from, from + PAGE_SIZE - 1);
+      if (error) throw error;
+      const page = data || [];
+      out.push(...page);
+      if (page.length < PAGE_SIZE) return out;
+    }
+  }
+  const loadRuns = (userId, key) => fetchPaged(() => sb.from("game_scores").select("id, score, played_date, created_at, stats")
+    .eq("user_id", userId).eq("game", key).order("created_at", { ascending: true }).order("id", { ascending: true })).then(toRuns);
+
+  // ---- the numbers on the page ----
+  function bestRun(runs) {   // the highest score; ties go to the earliest run
+    let b = null;
+    for (const r of runs) if (!b || r.score > b.score) b = r;
+    return b;
+  }
+  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  // Compare: the average of the last N runs against the N before them, N = min(10, floor(runs / 2)), from 6 runs.
+  function compare(scores) {
+    const n = scores.length;
+    if (n < COMPARE_MIN) return null;
+    const N = Math.min(COMPARE_MAX, Math.floor(n / 2));
+    const last = mean(scores.slice(n - N)), before = mean(scores.slice(n - 2 * N, n - N));
+    return { N, last, before, dir: last > before ? "up" : last < before ? "down" : "level", diff: last - before };
+  }
+  function compareText(game, c) {
+    if (c.dir === "level") return "Level";
+    return `${c.dir === "up" ? "Up" : "Down"} ${game.money ? "£" + fmtN(Math.abs(c.diff) / 100, nf2) : fmtN(Math.abs(c.diff), nf1)} on the ${c.N} before`;
+  }
+  function plays7(runs, today) {
+    const from = addDays(today, -6);
+    return runs.filter((r) => r.day && r.day >= from && r.day <= today).length;
+  }
+  function rangeRuns(runs, range, today) {
+    if (range === "last10") return runs.slice(-10);
+    if (range === "days30") { const from = addDays(today, -29); return runs.filter((r) => r.day && r.day >= from && r.day <= today); }
+    return runs.slice();
+  }
+  const RANGE_WORDS = { last10: "your last 10 runs", days30: "the last 30 days", all: "all runs" };
+
+  // ---- insight cards: only fields in every run of the current key; a run counts when its value is a finite number ----
+  const at = (o, path) => { let v = o; for (const k of path) { if (!v || typeof v !== "object") return undefined; v = v[k]; } return v; };
+  const secs = (ms) => `${fmtN(ms / 1000, nf1)} s`;
+  const pct = (x) => `${fmtN(x * 100, nf1)}%`;
+  const slower = (ms, what) => (ms === 0 ? `No difference ${what}` : `${fmtN(Math.abs(ms), nf1)} ms ${ms > 0 ? "slower" : "faster"} ${what}`);
+  const OPS = [["add", "Addition"], ["sub", "Subtraction"], ["mul", "Multiplication"], ["div", "Division"]];
+  const INSIGHTS = {
+    mental_maths: [
+      { id: "avg-time", title: "Average answer time", desc: "Time per correct answer, averaged over runs", get: (s) => s.avgMs, agg: "mean", fmt: (v) => `${secs(v)} per answer` },
+      ...OPS.map(([op, label]) => ({ id: `op-${op}`, title: label, desc: `Time per ${label.toLowerCase()} answer, averaged over runs`, get: (s) => at(s, ["ops", op, "avgMs"]), agg: "mean", fmt: (v) => `${secs(v)} per answer` })),
+    ],
+    multiple_match_v3: [
+      { id: "accuracy", title: "Accuracy", desc: "Correct calls out of the cards you answered or let time out", get: (s) => s.accuracy, agg: "mean", fmt: pct },
+      { id: "best-combo", title: "Best combo", desc: "Your longest run of correct calls", get: (s) => s.bestCombo, agg: "max", fmt: (v) => `${fmtN(v, nfScore)} in a row` },
+      { id: "decision", title: "Decision time", desc: "Time per card, averaged over runs", get: (s) => s.avgMs, agg: "mean", fmt: (v) => `${secs(v)} per card` },
+      { id: "points-lost", title: "Points lost to mistakes", desc: "Average per run", get: (s) => s.pointsLost, agg: "mean", fmt: (v) => `${fmtN(v, nf1)} per run` },
+      { id: "timeouts", title: "Timeouts", desc: "Cards that ran out of time, average per run", get: (s) => s.timeouts, agg: "mean", fmt: (v) => `${fmtN(v, nf1)} per run` },
+    ],
+    arrows_v1: [
+      { id: "accuracy", title: "Accuracy", desc: "Correct answers out of all answers", get: (s) => s.accuracy, agg: "mean", fmt: pct },
+      { id: "reaction", title: "Reaction time", desc: "Median time on correct answers, averaged over runs", get: (s) => s.medianMs, agg: "mean", fmt: (v) => `${fmtN(v, nf1)} ms` },
+      { id: "red-cost", title: "Red arrow cost", desc: "Red median minus black median", get: (s) => s.redCostMs, agg: "mean", fmt: (v) => slower(v, "on red arrows") },
+      { id: "disagree-cost", title: "Disagreeing arrows cost", desc: "When the outer arrows point the other way", get: (s) => s.disagreeCostMs, agg: "mean", fmt: (v) => slower(v, "when they disagree") },
+    ],
+    balloon_v1: [
+      { id: "collect-pumps", title: "Pumps before collecting", desc: "Average pumps on the balloons you collected", get: (s) => s.avgCollectPumps, agg: "mean", fmt: (v) => `${fmtN(v, nf1)} pumps` },
+      { id: "burst", title: "Balloons burst", desc: "Average per run", get: (s) => s.burst, agg: "mean", fmt: (v) => `${fmtN(v, nf1)} per run` },
+      { id: "luck", title: "Luck", desc: "Your balloons' average burst point against the typical one", get: (s) => s.luckDelta, agg: "mean",
+        fmt: (v) => (v === 0 ? "Exactly typical" : `${signed(v, nf1)} burst points ${v > 0 ? "above" : "below"} typical`) },
+    ],
+    memory_tiles_v1: [
+      { id: "longest", title: "Longest sequence solved", desc: "Your best across these runs", get: (s) => s.longestSolved, agg: "max", fmt: (v) => plural(v, "tile", "tiles") },
+      { id: "avg-longest", title: "Average longest solved", desc: "Average per run", get: (s) => s.longestSolved, agg: "mean", fmt: (v) => `${fmtN(v, nf1)} tiles` },
+      { id: "recall", title: "Recall rate", desc: "Tiles recalled in order out of tiles shown, averaged over runs",
+        get: (s) => (isNum(s.score) && isNum(s.tilesShown) && s.tilesShown > 0 ? s.score / s.tilesShown : null), agg: "mean", fmt: pct },
+    ],
+  };
+  // Each card: computed over the runs whose value is a finite number; shown only with at least INSIGHT_MIN of them.
+  function insightsFor(key, runs) {
+    const out = [];
+    for (const def of INSIGHTS[key] || []) {
+      const vals = [];
+      for (const r of runs) {
+        if (!r.stats) continue;
+        let v;
+        try { v = def.get(r.stats); } catch (e) { v = undefined; }
+        if (isNum(v)) vals.push(v);
+      }
+      if (vals.length < INSIGHT_MIN) continue;
+      const value = def.agg === "max" ? Math.max(...vals) : mean(vals);
+      if (!isNum(value)) continue;
+      out.push({ id: def.id, title: def.title, desc: def.desc, value, n: vals.length, text: def.fmt(value) });
+    }
+    return out;
+  }
+
+  // ---- the play strip: 12 Monday-to-Sunday weeks ending with this week, days after today left blank ----
+  function stripModel(dates, today) {
+    const have = new Set(dates.filter(validYmd));
+    const start = addDays(today, -(mondayIndex(today) + 7 * (STRIP_WEEKS - 1)));
+    const cells = [];
+    let played = 0, days = 0;
+    for (let i = 0; i < STRIP_WEEKS * 7; i++) {
+      const d = addDays(start, i);
+      if (d > today) { cells.push({ day: d, kind: "future" }); continue; }
+      days++;
+      const p = have.has(d);
+      if (p) played++;
+      cells.push({ day: d, kind: p ? "played" : "unplayed" });
+    }
+    return { start, cells, played, days, label: `Played on ${played} of the last ${days} days` };
+  }
+  const loadStripDates = (userId, start) => fetchPaged(() => sb.from("game_scores").select("id, played_date")
+    .eq("user_id", userId).gte("played_date", start).order("id", { ascending: true })).then((rows) => rows.map((r) => r.played_date));
+
+  // ---- DOM ----
+  const $ = (id) => document.getElementById(id);
+  function el(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+  const today = () => londonDate(Date.now());
+
+  let userId = null, current = null, range = "all", sel = -1, chart = null, tableOpen = false;
+  const cache = new Map();   // game key -> { status: "loading" | "ready" | "error", runs }
+
+  const tabs = GAMES.map((g, i) => el("button", { type: "button", role: "tab", class: "st-tab", id: `tab-${g.slug}`, "aria-selected": "false", "aria-controls": "panel", tabindex: i === 0 ? "0" : "-1", "data-game": g.key,
+    text: g.name, onclick: () => go(g) }));
+  $("tabs").append(...tabs);
+  $("tabs").addEventListener("keydown", (e) => {
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    const j = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i + tabs.length - 1) % tabs.length : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : -1;
+    if (j < 0) return;
+    e.preventDefault(); tabs[j].focus(); go(GAMES[j]);
+  });
+  const bySlug = (hash) => GAMES.find((g) => "#" + g.slug === hash) || null;
+  function go(g) { if (location.hash !== "#" + g.slug) location.hash = g.slug; else show(g); }
+  // A hash that names no game (none, or after Back to the first entry) shows the default game; the address is never rewritten.
+  let defaultGame = null;
+  window.addEventListener("hashchange", () => { if (!userId) return; const g = bySlug(location.hash) || defaultGame; if (g) show(g); });
+
+  function show(g) {
+    current = g;
+    tabs.forEach((t, i) => { const on = GAMES[i] === g; t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; });
+    $("panel").setAttribute("aria-labelledby", `tab-${g.slug}`);
+    $("mm-note").hidden = g.key !== "multiple_match_v3";
+    sel = -1;
+    ensure(g);
+    render();
+  }
+  function ensure(g) {
+    const c = cache.get(g.key);
+    if (c && c.status !== "error") return;
+    const entry = { status: "loading", runs: [] };
+    cache.set(g.key, entry);
+    loadRuns(userId, g.key).then((runs) => { entry.status = "ready"; entry.runs = runs; },
+      (err) => { console.error("[game-stats] runs failed", g.key, err); entry.status = "error"; })
+      .then(() => { if (current === g) render(); });
+  }
+
+  function setSum(id, value, sub) { const box = $(id); box.querySelector("[data-v]").textContent = value; box.querySelector("[data-s]").textContent = sub; }
+  function render() {
+    const g = current, c = cache.get(g.key), t = today();
+    const state = $("state");
+    if (chart) { chart.destroy(); chart = null; }
+    if (!c || c.status === "loading") {
+      state.replaceChildren(el("span", { text: `Loading your ${g.name} runs…` })); state.hidden = false; $("main").hidden = true; return;
+    }
+    if (c.status === "error") {
+      state.replaceChildren(el("span", { text: `Couldn't load your ${g.name} runs.` }),
+        el("button", { type: "button", class: "st-btn", text: "Retry", onclick: () => { ensure(g); render(); } }));
+      state.hidden = false; $("main").hidden = true; return;
+    }
+    const runs = c.runs;
+    if (!runs.length) {
+      state.replaceChildren(el("span", { text: "No runs yet." }), el("a", { class: "st-link", href: g.page, text: `Play ${g.name} →` }));
+      state.hidden = false; $("main").hidden = true; return;
+    }
+    state.hidden = true; state.replaceChildren(); $("main").hidden = false;
+
+    // summary (all runs)
+    const best = bestRun(runs), latest = runs[runs.length - 1];
+    setSum("sum-best", fmtScore(g, best.score), [`Run ${best.n}`, fmtDay(best.day, t)].filter(Boolean).join(" · "));
+    setSum("sum-latest", fmtScore(g, latest.score), [`Run ${latest.n}`, fmtDay(latest.day, t)].filter(Boolean).join(" · "));
+    const cmp = compare(runs.map((r) => r.score));
+    $("sum-compare").hidden = !cmp;
+    if (cmp) setSum("sum-compare", compareText(g, cmp), `Average of the last ${cmp.N}: ${fmtAvgScore(g, cmp.last)} · the ${cmp.N} before: ${fmtAvgScore(g, cmp.before)}`);
+    setSum("sum-plays", `${fmtN(plays7(runs, t), nf0)} in the last 7 days`, `${fmtN(runs.length, nf0)} all time`);
+
+    // chart, readout and table (the chosen range)
+    for (const b of document.querySelectorAll("#chips .st-chip")) b.setAttribute("aria-pressed", String(b.dataset.range === range));
+    const shown = rangeRuns(runs, range, t);
+    $("range-empty").hidden = shown.length > 0;
+    $("chart-area").hidden = shown.length === 0;
+    if (!shown.length) $("range-empty").textContent = `No runs in ${RANGE_WORDS[range]}. Choose All runs to see older ones.`;
+    else drawChart(g, runs, shown, t);
+
+    // insights (the chosen range)
+    const ins = insightsFor(g.key, shown);
+    $("insights-card").hidden = ins.length === 0;
+    $("insights-sub").textContent = `Over ${RANGE_WORDS[range]}. A card shows once at least ${INSIGHT_MIN} runs have the figure.`;
+    $("insights").replaceChildren(...ins.map((x) => el("div", { class: "st-ins", "data-insight": x.id },
+      el("p", { class: "st-ins-title", text: x.title }), el("p", { class: "st-ins-value", text: x.text }),
+      el("p", { class: "st-ins-desc", text: x.desc }), el("p", { class: "st-ins-count", text: `(${fmtN(x.n, nf0)} ${x.n === 1 ? "run" : "runs"})` }))));
+  }
+
+  function drawChart(g, runs, shown, t) {
+    const trend = shown.length >= ROLL_WINDOW;
+    const scores = runs.map((r) => r.score);
+    // both lines are computed over every run, then read at the runs shown (run n is index n - 1)
+    const fullRoll = trend ? StkCharts.rollingAverage(scores, ROLL_WINDOW) : null, fullBest = trend ? StkCharts.bestSoFar(scores) : null;
+    const roll = fullRoll && shown.map((r) => fullRoll[r.n - 1]), bsf = fullBest && shown.map((r) => fullBest[r.n - 1]);
+    if (sel < 0 || sel >= shown.length) sel = shown.length - 1;
+    const lo = Math.min(...shown.map((r) => r.score)), hi = Math.max(...shown.map((r) => r.score));
+    const aria = `${g.name} scores, ${RANGE_WORDS[range]}: ${plural(shown.length, "run", "runs")}` +
+      (shown.length > 1 ? `, from ${fmtScore(g, shown[0].score)} to ${fmtScore(g, shown[shown.length - 1].score)}, lowest ${fmtScore(g, lo)}, highest ${fmtScore(g, hi)}` : `, score ${fmtScore(g, lo)}`) +
+      (trend ? ", with a 5-run average line and a best-so-far line" : "");
+    chart = StkCharts.line($("chart"), {
+      points: shown.map((r) => ({ x: r.n, y: r.score, label: `Run ${r.n}` })),
+      rolling: roll, best: bsf,
+      yFormat: (v) => (g.money ? "£" + fmtN(v / 100, nf2) : fmtN(v, nfScore)),
+      ariaLabel: aria,
+      onSelect: (i) => { sel = i; readout(shown, g, t); },
+    });
+    chart.select(sel);
+    $("trend-note").hidden = trend;
+    $("legend").textContent = trend ? "Dots: each run. Thick line: average of the last 5. Dashed: your best so far." : "Dots: each run.";
+    readout(shown, g, t);
+    const last = shown.slice(-TABLE_ROWS).reverse();
+    $("table-caption").textContent = last.length === 1 ? "Your latest run" : `Your last ${last.length} runs, newest first`;
+    $("table-body").replaceChildren(...last.map((r) => el("tr", null, el("td", { text: String(r.n) }), el("td", { text: fmtDay(r.day, t) || "—" }), el("td", { text: fmtScore(g, r.score) }))));
+    $("table-wrap").hidden = !tableOpen;
+    $("table-toggle").setAttribute("aria-expanded", String(tableOpen));
+    $("table-toggle").textContent = tableOpen ? "Hide the table" : "Show data as a table";
+    drawChart.shown = shown;
+  }
+  function readout(shown, g, t) {
+    const r = shown[sel];
+    $("readout").textContent = [`Run ${r.n}`, fmtDay(r.day, t), `Score ${fmtScore(g, r.score)}`].filter(Boolean).join(" · ");
+    $("prev-btn").disabled = sel <= 0;
+    $("next-btn").disabled = sel >= shown.length - 1;
+  }
+  function step(d) {
+    const shown = drawChart.shown;
+    if (!shown || !chart) return;
+    const j = Math.max(0, Math.min(shown.length - 1, sel + d));
+    if (j === sel) return;
+    sel = j; chart.select(sel); readout(shown, current, today());
+  }
+  $("prev-btn").addEventListener("click", () => step(-1));
+  $("next-btn").addEventListener("click", () => step(1));
+  $("table-toggle").addEventListener("click", () => {
+    tableOpen = !tableOpen;
+    $("table-wrap").hidden = !tableOpen;
+    $("table-toggle").setAttribute("aria-expanded", String(tableOpen));
+    $("table-toggle").textContent = tableOpen ? "Hide the table" : "Show data as a table";
+  });
+  for (const b of document.querySelectorAll("#chips .st-chip")) b.addEventListener("click", () => { range = b.dataset.range; sel = -1; render(); });
+
+  // ---- play strip ----
+  let stripSeq = 0;
+  async function loadStrip() {
+    const seq = ++stripSeq, t = today();
+    const start = addDays(t, -(mondayIndex(t) + 7 * (STRIP_WEEKS - 1)));
+    $("strip-state").replaceChildren(el("span", { text: "Loading your play calendar…" })); $("strip-state").hidden = false; $("strip-wrap").hidden = true;
+    let dates;
+    try { dates = await loadStripDates(userId, start); }
+    catch (err) {
+      console.error("[game-stats] play calendar failed", err);
+      if (seq !== stripSeq) return;
+      $("strip-state").replaceChildren(el("span", { text: "Couldn't load your play calendar." }), el("button", { type: "button", class: "st-btn", text: "Retry", onclick: loadStrip }));
+      return;
+    }
+    if (seq !== stripSeq) return;
+    const m = stripModel(dates, t);
+    $("strip").setAttribute("aria-label", m.label);
+    $("strip").replaceChildren(...m.cells.map((c) => el("span", { class: `st-cell ${c.kind}`, "data-day": c.day })));
+    $("strip-range").textContent = `${m.label}, from ${fmtDay(m.start, t)} to today.`;
+    $("strip-state").hidden = true; $("strip-state").replaceChildren(); $("strip-wrap").hidden = false;
+  }
+
+  // The default tab, when the address has no game: the game played most recently (Mental maths if none).
+  async function latestGame() {
+    const { data, error } = await sb.from("game_scores").select("game, created_at, id").eq("user_id", userId).in("game", GAMES.map((g) => g.key))
+      .order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1);
+    if (error) { console.error("[game-stats] latest game failed", error); return GAMES[0]; }
+    return (data && data[0] && GAMES.find((g) => g.key === data[0].game)) || GAMES[0];
+  }
+  async function start() {
+    loadStrip();
+    const fromHash = bySlug(location.hash);
+    if (fromHash) { show(fromHash); return; }
+    $("state").replaceChildren(el("span", { text: "Loading your runs…" })); $("state").hidden = false; $("main").hidden = true;
+    defaultGame = await latestGame();
+    if (bySlug(location.hash)) return; // a tab was chosen meanwhile
+    show(defaultGame);
+  }
+
+  window.GameStats = { GAMES, PAGE_SIZE, toRuns, bestRun, compare, compareText, plays7, rangeRuns, insightsFor, stripModel, dayOf, fmtDay, fmtScore, londonDate, addDays, mondayIndex };
+
+  // --- Auth gate: locked when signed out ---
+  sb.auth.onAuthStateChange((event, session) => {
+    $("login-gate").style.display = session ? "none" : "block";
+    $("app-content").style.display = session ? "block" : "none";
+    if (session && userId !== session.user.id) { userId = session.user.id; cache.clear(); start(); }
+  });
+
+  $("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+</script>
+<script src="site-nav.js?v=1"></script>
+</body>
+</html>
