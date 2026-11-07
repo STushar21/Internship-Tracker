@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gym progress — STK</title>
+<style>
+  [hidden] { display: none !important; }
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  h2 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; margin: 0 0 8px; overflow-wrap: anywhere; }
+  h3 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 19px; margin: 0 0 8px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; overflow-wrap: anywhere; }
+  #logout-btn { min-height: 44px; min-width: 44px; }
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .back-link:hover { text-decoration: underline; }
+  .back-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .back-top { margin: -14px 0 4px; }
+
+  /* --- gym progress --- */
+  .gp-card { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 16px; margin: 14px 0; min-width: 0; }
+  .gp-state { font-size: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .gp-error { border-color: #A6453B; }
+  .gp-btn, .gp-chip {
+    min-height: 44px; padding: 0 16px; border: 1px solid #8B6B49; border-radius: 8px; background: #FFFFFF;
+    color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gp-chip[aria-pressed="true"] { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
+  .gp-btn:disabled { color: #5A5650; border-color: #B8AE98; cursor: default; }
+  .gp-btn:focus-visible, .gp-chip:focus-visible, .gp-row:focus-visible, .gp-link:focus-visible, .gp-search:focus-visible, .gp-how summary:focus-visible { outline: 2px solid #1A1A18; outline-offset: 2px; }
+  .gp-link { display: inline-flex; align-items: center; min-height: 44px; color: #6F5439; font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 4px; }
+  .gp-link:hover { text-decoration: underline; }
+  .gp-search-label { display: block; font-size: 13px; font-weight: 600; color: #5A5650; margin: 18px 0 6px; }
+  .gp-search { width: 100%; max-width: 420px; min-height: 44px; font: inherit; font-size: 16px; padding: 8px 12px; border: 1px solid #8B6B49; border-radius: 8px; background: #FFFFFF; color: #1A1A18; }
+  .gp-heading { margin: 22px 0 8px; }
+  .gp-rows { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  @media (min-width: 700px) { .gp-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .gp-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; text-align: left; padding: 12px 14px; background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 10px;
+    color: #1A1A18; font-family: inherit; cursor: pointer; min-width: 0; }
+  .gp-row:hover { border-color: #8B6B49; }
+  .gp-row-main { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+  .gp-row-name { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .gp-row-meta, .gp-row-line { font-size: 13px; color: #5A5650; overflow-wrap: anywhere; }
+  .gp-row-line { color: #1A1A18; font-variant-numeric: tabular-nums; }
+  .gp-row-spark { flex: 0 0 auto; line-height: 0; }
+  .gp-note { font-size: 13px; line-height: 1.5; color: #5A5650; margin: 10px 0 0; }
+  .gp-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+  .gp-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; }
+  @media (min-width: 900px) { .gp-summary { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .gp-sum { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 12px 14px; min-width: 0; }
+  .gp-sum-label { font-size: 12px; font-weight: 600; color: #5A5650; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+  .gp-sum-value { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 20px; margin: 2px 0 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .gp-sum-sub { font-size: 13px; color: #5A5650; margin: 2px 0 0; overflow-wrap: anywhere; }
+  .gp-chart { width: 100%; min-width: 0; overflow: hidden; }
+  .gp-readout { font-size: 15px; font-weight: 600; margin: 10px 0 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .gp-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+  .gp-table-wrap { overflow-x: auto; margin: 12px 0 0; }
+  .gp-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .gp-table caption { text-align: left; font-size: 13px; color: #5A5650; padding: 0 0 6px; }
+  .gp-table th, .gp-table td { text-align: left; vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid #E3DAC4; overflow-wrap: anywhere; }
+  .gp-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #5A5650; }
+  .gp-how summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: #6F5439; }
+  .gp-how p { font-size: 14px; line-height: 1.55; margin: 8px 0 0; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; border-bottom: 2px solid transparent; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    h1 { font-size: 26px; }
+    .gp-card { padding: 14px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html">Games</a>
+      <a href="gym.html">Gym</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+<a class="back-link back-top" href="gym.html">← Gym</a>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to see your gym progress.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Gym progress</h1>
+<p class="sub">How each exercise is going, session by session. Strength is led by your estimated one-rep max.</p>
+
+<div id="load-errors"></div>
+<div class="gp-card gp-state" id="state" role="status"></div>
+
+<section id="list-view" hidden>
+  <label class="gp-search-label" for="search">Search exercises</label>
+  <input type="search" id="search" class="gp-search" autocomplete="off" spellcheck="false">
+  <p class="gp-note" id="no-match" hidden>No exercises match your search.</p>
+  <div id="list"></div>
+</section>
+
+<section id="detail-view" hidden>
+  <a class="gp-link" href="#" id="back-list">← All exercises</a>
+  <h2 id="ex-title"></h2>
+  <p class="sub" id="ex-sub"></p>
+  <div class="gp-chips" role="group" aria-label="Measure" id="metric-chips" hidden></div>
+  <div class="gp-chips" role="group" aria-label="Range" id="range-chips">
+    <button type="button" class="gp-chip" data-range="last10" aria-pressed="false">Last 10 sessions</button>
+    <button type="button" class="gp-chip" data-range="days90" aria-pressed="false">Last 90 days</button>
+    <button type="button" class="gp-chip" data-range="all" aria-pressed="true">All</button>
+  </div>
+  <div class="gp-summary" id="summary"></div>
+  <section class="gp-card" aria-labelledby="chart-title">
+    <h3 id="chart-title">Sessions</h3>
+    <p class="gp-note" id="range-empty" hidden></p>
+    <div id="chart-area">
+      <div class="gp-chart" id="chart"></div>
+      <p class="gp-note" id="trend-note" hidden>Trend appears after 3 sessions</p>
+      <p class="gp-note" id="legend"></p>
+      <p class="gp-readout" id="readout" aria-live="polite"></p>
+      <div class="gp-steps">
+        <button type="button" class="gp-btn" id="prev-btn">Previous</button>
+        <button type="button" class="gp-btn" id="next-btn">Next</button>
+      </div>
+    </div>
+    <div class="gp-steps">
+      <button type="button" class="gp-btn" id="table-toggle" aria-expanded="false" aria-controls="table-wrap">Show data as a table</button>
+    </div>
+    <div class="gp-table-wrap" id="table-wrap" hidden>
+      <table class="gp-table" id="data-table">
+        <caption id="table-caption"></caption>
+        <thead><tr><th scope="col">Date</th><th scope="col">Sets</th><th scope="col" id="value-head">Value</th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </section>
+  <details class="gp-card gp-how" id="how" hidden>
+    <summary>How this is calculated</summary>
+    <p>Each set with a weight above 0 kg and 1 to 12 reps gets an estimated one-rep max: the weight itself for 1 rep, otherwise weight × (1 + reps ÷ 30) (the Epley formula), rounded to 0.1 kg.</p>
+    <p>A session's value is its best set's estimate. Sets above 12 reps and sets without a weight are left out of the estimate, because the formula isn't reliable there.</p>
+    <p>A session is a new best when its value is higher than every earlier session's; the first session isn't counted as one. If an exercise has no weighted sets at all, its sessions are compared by their most reps instead.</p>
+    <p>The heaviest set uses the Gym page's "New best" rule (the heaviest weight, then the most reps, at any rep count), so it can differ from the best estimate.</p>
+  </details>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="stk-charts.js?v=2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Gym progress: per-exercise trends from the signed-in user's saved workouts. Read-only.
+  // A session is one workout. Sets are grouped by exercise_id, or by the lower-cased snapshot name when the id is gone.
+  // Strength is led by the estimated one-rep max (Epley); cardio by distance, speed, incline, minutes or level.
+  // Every dynamic string is set with textContent or built as DOM nodes; no HTML strings.
+  // ---------------------------------------------------------------------------
+  const PAGE_SIZE = 1000;        // the API returns at most 1000 rows per request
+  const E1RM_MAX_REPS = 12;      // sets above this are left out of the estimate
+  const ROLL_WINDOW = 3;         // the chart's rolling average, and the session count from which trends show
+  const LIST_SPARK = 8;          // sessions in a list row's sparkline
+  const TABLE_ROWS = 20;
+  const RANGE_DAYS = 90;
+
+  // ---- dates: London calendar dates via Intl; days stepped with Date.UTC ----
+  const londonFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+  const londonDate = (ms) => londonFmt.format(new Date(ms));
+  function addDays(ymd, n) {
+    const [y, m, d] = ymd.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+  }
+  const dayFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  const dayFmtYear = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  function fmtDay(ymd, today) {
+    if (typeof ymd !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return "";
+    const [y, m, d] = ymd.split("-").map(Number), dt = new Date(Date.UTC(y, m - 1, d));
+    return (today && ymd.slice(0, 4) === today.slice(0, 4) ? dayFmt : dayFmtYear).format(dt).replace(",", "");
+  }
+  const today = () => londonDate(Date.now());
+
+  // ---- numbers: Intl en-GB, trailing zeros removed; anything that isn't a finite number prints as a dash ----
+  const isNum = (v) => typeof v === "number" && isFinite(v);
+  const num = (v) => (isNum(v) ? v : null);
+  const NF = [0, 1, 2].map((d) => new Intl.NumberFormat("en-GB", { maximumFractionDigits: d }));
+  const sci = new Intl.NumberFormat("en-GB", { notation: "scientific", maximumFractionDigits: 1 });
+  function fmtN(v, decimals) {
+    if (!isNum(v)) return "—";
+    const x = v === 0 ? 0 : v;
+    if (Math.abs(x) >= 1e15) return sci.format(x);
+    const s = NF[decimals].format(x);
+    return s === "-0" ? "0" : s;
+  }
+
+  // ---- the estimate ----
+  // Epley: weight for 1 rep, otherwise weight × (1 + reps / 30), rounded half up to 0.1 (computed as weight × (30 + reps) / 3 tenths).
+  function e1rm(weight, reps) {
+    if (!isNum(weight) || !(weight > 0) || !isNum(reps) || !Number.isInteger(reps) || reps < 1 || reps > E1RM_MAX_REPS) return null;
+    const tenths = reps === 1 ? weight * 10 : (weight * (30 + reps)) / 3;
+    return Math.round(Number(tenths.toFixed(6))) / 10;
+  }
+  // The Gym page's rule: a beats b if heavier, or the same weight with more reps (no weight counts as 0).
+  function beats(a, b) {
+    const wa = a.weight ?? 0, wb = b.weight ?? 0;
+    return wa > wb || (wa === wb && (a.reps ?? 0) > (b.reps ?? 0));
+  }
+  function topSet(sets) { let t = null; for (const s of sets) if (!t || beats(s, t)) t = s; return t; }
+
+  // ---- grouping ----
+  const normType = (t) => (t === "rowing" || t === "treadmill" ? t : "general");
+  function cleanSet(s) {
+    return { id: Number(s.id), workout_id: Number(s.workout_id), exercise_id: isNum(s.exercise_id) ? s.exercise_id : null, name: typeof s.exercise_name === "string" ? s.exercise_name : "",
+      position: num(s.position), set_number: num(s.set_number), reps: num(s.reps), weight: num(s.weight_kg), minutes: num(s.minutes), level: num(s.level),
+      distance: num(s.distance_m), speed: num(s.speed_kmh), incline: num(s.incline_pct) };
+  }
+  const groupKey = (s) => (s.exercise_id !== null ? `id:${s.exercise_id}` : `name:${s.name.trim().toLowerCase()}`);
+  // Without an exercise row: distance means rowing, speed or incline treadmill, minutes without weight or reps general cardio, otherwise strength.
+  function inferType(sets) {
+    if (sets.some((s) => s.distance !== null)) return { kind: "cardio", ctype: "rowing" };
+    if (sets.some((s) => s.speed !== null || s.incline !== null)) return { kind: "cardio", ctype: "treadmill" };
+    if (sets.some((s) => s.minutes !== null) && !sets.some((s) => s.weight !== null || s.reps !== null)) return { kind: "cardio", ctype: "general" };
+    return { kind: "strength", ctype: null };
+  }
+  // A strength set needs reps >= 1; a rowing block minutes > 0 or distance > 0; other cardio minutes > 0 (the Gym page's rules).
+  function validSet(s, kind, ctype) {
+    if (kind === "strength") return s.reps !== null && s.reps >= 1;
+    const timed = s.minutes !== null && s.minutes > 0;
+    return ctype === "rowing" ? timed || (s.distance !== null && s.distance > 0) : timed;
+  }
+  function buildGroups(exercises, workouts, sets) {
+    const exById = new Map();
+    for (const e of exercises || []) if (e && isNum(e.id)) exById.set(e.id, e);
+    const ws = new Map();
+    for (const w of workouts || []) {
+      const t = w && typeof w.started_at === "string" ? Date.parse(w.started_at) : NaN;
+      if (w && isNum(w.id) && isFinite(t)) ws.set(w.id, { id: w.id, t, day: londonDate(t) });
+    }
+    const groups = new Map();
+    for (const raw of sets || []) {
+      if (!raw) continue;
+      const s = cleanSet(raw), w = ws.get(s.workout_id);
+      if (!w) continue;                       // a set without a loaded workout can't be dated
+      const k = groupKey(s);
+      if (!groups.has(k)) groups.set(k, { key: k, exercise: s.exercise_id !== null ? exById.get(s.exercise_id) || null : null, sets: [] });
+      groups.get(k).sets.push(Object.assign(s, { w }));
+    }
+    const out = [];
+    for (const g of groups.values()) {
+      g.sets.sort((a, b) => a.w.t - b.w.t || a.w.id - b.w.id || (a.position ?? 0) - (b.position ?? 0) || (a.set_number ?? 0) - (b.set_number ?? 0) || a.id - b.id);
+      const ex = g.exercise, snapshot = g.sets[g.sets.length - 1].name.trim();
+      g.name = ex && typeof ex.name === "string" && ex.name.trim() ? ex.name : snapshot || "Unnamed exercise";
+      const t = ex && (ex.kind === "strength" || ex.kind === "cardio") ? { kind: ex.kind, ctype: ex.kind === "cardio" ? normType(ex.cardio_type) : null } : inferType(g.sets);
+      g.kind = t.kind; g.ctype = t.ctype; g.hidden = !!(ex && ex.archived === true);
+      const valid = g.sets.filter((s) => validSet(s, g.kind, g.ctype));
+      g.repsMode = g.kind === "strength" && !valid.some((s) => s.weight !== null && s.weight > 0);
+      const byW = new Map();
+      for (const s of valid) { if (!byW.has(s.w.id)) byW.set(s.w.id, { w: s.w, sets: [] }); byW.get(s.w.id).sets.push(s); }
+      g.sessions = [...byW.values()].sort((a, b) => a.w.t - b.w.t || a.w.id - b.w.id).map((x) => ({ id: x.w.id, t: x.w.t, day: x.w.day, sets: x.sets }));
+      out.push(g);
+    }
+    return out;
+  }
+
+  // ---- session values ----
+  const maxOf = (xs) => { let m = null; for (const x of xs) if (isNum(x) && (m === null || x > m)) m = x; return m; };
+  const sumOf = (xs) => { let t = null; for (const x of xs) if (isNum(x)) t = (t ?? 0) + x; return t; };
+  const METRICS = {
+    e1rm: { label: "Est. 1RM", decimals: 1, unit: (v) => `${fmtN(v, 1)} kg`, value: (s) => maxOf(s.sets.map((x) => e1rm(x.weight, x.reps))) },
+    reps: { label: "Most reps", decimals: 0, unit: (v) => `${fmtN(v, 0)} ${v === 1 ? "rep" : "reps"}`, value: (s) => maxOf(s.sets.map((x) => x.reps)) },
+    distance: { label: "Distance", decimals: 0, unit: (v) => `${fmtN(v, 0)} m`, value: (s) => maxOf(s.sets.map((x) => (x.distance !== null && x.distance > 0 ? x.distance : null))) },
+    speed: { label: "Speed", decimals: 1, unit: (v) => `${fmtN(v, 1)} km/h`, value: (s) => maxOf(s.sets.map((x) => x.speed)) },
+    incline: { label: "Incline", decimals: 1, unit: (v) => `${fmtN(v, 1)}%`, value: (s) => maxOf(s.sets.map((x) => x.incline)) },
+    minutes: { label: "Minutes", decimals: 1, unit: (v) => `${fmtN(v, 1)} min`, value: (s) => sumOf(s.sets.map((x) => x.minutes)) },
+    level: { label: "Level", decimals: 1, unit: (v) => `level ${fmtN(v, 1)}`, value: (s) => maxOf(s.sets.map((x) => x.level)) },
+  };
+  const CHOICES = { treadmill: [["speed", "Speed"], ["incline", "Incline"], ["minutes", "Minutes"]], general: [["minutes", "Minutes"], ["level", "Level"]] };
+  function metricsFor(g) {
+    if (g.kind === "strength") return [g.repsMode ? "reps" : "e1rm"];
+    if (g.ctype === "rowing") return ["distance"];
+    return CHOICES[g.ctype].map((c) => c[0]);
+  }
+  const highlightsFor = (g) => g.kind === "strength" || g.ctype === "rowing";
+  // A new best: strictly greater than every earlier charted session's value; the first one never is.
+  function newBests(values) {
+    let best = null;
+    return values.map((v, i) => { const nb = i > 0 && best !== null && v > best; if (best === null || v > best) best = v; return nb; });
+  }
+  function changeText(from, to, decimals, unit, which) {
+    if (!isNum(from) || !isNum(to)) return "";
+    const f = Math.pow(10, decimals), d = Math.round((to - from) * f) / f;
+    if (d === 0) return `Level with your ${which} session`;
+    return `${d > 0 ? "Up" : "Down"} ${unit(Math.abs(d))} since your ${which} session`;
+  }
+  const setText = (s) => (s.weight !== null && s.weight > 0 ? `${fmtN(s.weight, 2)} kg × ${fmtN(s.reps, 0)}` : `${fmtN(s.reps, 0)} ${s.reps === 1 ? "rep" : "reps"}`);
+  function blockText(s) {
+    const parts = [];
+    if (s.distance !== null) parts.push(`${fmtN(s.distance, 0)} m`);
+    if (s.minutes !== null) parts.push(`${fmtN(s.minutes, 1)} min`);
+    if (s.speed !== null) parts.push(`${fmtN(s.speed, 1)} km/h`);
+    if (s.incline !== null) parts.push(`${fmtN(s.incline, 1)}%`);
+    if (s.level !== null) parts.push(`level ${fmtN(s.level, 1)}`);
+    return parts.join(" · ");
+  }
+  const sessionText = (g, s) => (g.kind === "strength" ? s.sets.map(setText).join(", ") : s.sets.map(blockText).join(" + "));
+  // The series for one metric: every session with its value (null when it has none, e.g. a time-only rowing session).
+  function seriesFor(g, metric) {
+    const m = METRICS[metric];
+    return g.sessions.map((s) => ({ session: s, value: m.value(s) }));
+  }
+  function listLine(g) {
+    if (!g.sessions.length) return "No data yet";
+    const last = g.sessions[g.sessions.length - 1];
+    if (g.kind === "strength") {
+      const ser = seriesFor(g, g.repsMode ? "reps" : "e1rm").filter((x) => x.value !== null);
+      if (!ser.length) return "No data yet";
+      const best = maxOf(ser.map((x) => x.value));
+      if (g.repsMode) return `Best ${METRICS.reps.unit(best)}`;
+      return `Est. 1RM ${METRICS.e1rm.unit(ser[ser.length - 1].value)} · best ${METRICS.e1rm.unit(best)}`;
+    }
+    if (g.ctype === "rowing") {
+      const ser = seriesFor(g, "distance").filter((x) => x.value !== null);
+      if (!ser.length) return "No distance logged yet";
+      return `Last ${METRICS.distance.unit(ser[ser.length - 1].value)} · best ${METRICS.distance.unit(maxOf(ser.map((x) => x.value)))}`;
+    }
+    const keys = g.ctype === "treadmill" ? ["minutes", "speed", "incline"] : ["minutes", "level"];
+    const parts = keys.map((k) => { const v = METRICS[k].value(last); return v === null ? null : METRICS[k].unit(v); }).filter(Boolean);
+    return parts.length ? `Last ${parts.join(" · ")}` : "No data yet";
+  }
+  const primaryMetric = (g) => metricsFor(g)[0];
+
+  // ---- loading: three independent paged loads, all for the signed-in user ----
+  async function fetchPaged(build) {
+    const out = [];
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await build().range(from, from + PAGE_SIZE - 1);
+      if (error) throw error;
+      const page = data || [];
+      out.push(...page);
+      if (page.length < PAGE_SIZE) return out;
+    }
+  }
+  let userId = null;
+  const LOADS = {
+    exercises: { label: "your exercise list", note: "Names and types come from your saved sets meanwhile.",
+      build: () => sb.from("exercises").select("id, name, kind, archived, cardio_type").eq("user_id", userId).order("id", { ascending: true }) },
+    workouts: { label: "your workouts", note: "",
+      build: () => sb.from("workouts").select("id, started_at").eq("user_id", userId).order("started_at", { ascending: true }).order("id", { ascending: true }) },
+    sets: { label: "your sets", note: "",
+      build: () => sb.from("workout_sets").select("id, workout_id, exercise_id, exercise_name, position, set_number, reps, weight_kg, minutes, level, distance_m, speed_kmh, incline_pct")
+        .eq("user_id", userId).order("id", { ascending: true }) },
+  };
+  const data = { exercises: { status: "loading", rows: [] }, workouts: { status: "loading", rows: [] }, sets: { status: "loading", rows: [] } };
+  let groups = null;
+  function load(name) {
+    const d = data[name];
+    d.status = "loading"; d.rows = [];
+    render();
+    fetchPaged(LOADS[name].build).then((rows) => { d.status = "ready"; d.rows = rows; },
+      (err) => { console.error("[gym-progress] load failed", name, err); d.status = "error"; })
+      .then(() => { groups = null; render(); });
+  }
+
+  // ---- DOM ----
+  const $ = (id) => document.getElementById(id);
+  function el(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+  const routeKey = () => (location.hash.startsWith("#ex=") ? (() => { try { return decodeURIComponent(location.hash.slice(4)); } catch (e) { return null; } })() : null);
+  let range = "all", sel = -1, chart = null, tableOpen = false, metricChoice = {}, shownNow = null;
+
+  function render() {
+    // which loads failed, each with its own Retry
+    $("load-errors").replaceChildren(...Object.keys(LOADS).filter((n) => data[n].status === "error").map((n) =>
+      el("div", { class: "gp-card gp-state gp-error", "data-load": n }, el("span", { text: `Couldn't load ${LOADS[n].label}.${LOADS[n].note ? " " + LOADS[n].note : ""}` }),
+        el("button", { type: "button", class: "gp-btn", text: "Retry", onclick: () => load(n) }))));
+    const st = $("state");
+    const need = ["workouts", "sets"], loading = Object.keys(data).filter((n) => data[n].status === "loading");
+    if (chart) { chart.destroy(); chart = null; }
+    if (need.some((n) => data[n].status !== "ready") || data.exercises.status === "loading") {
+      const failed = need.filter((n) => data[n].status === "error");
+      st.replaceChildren(el("span", { text: loading.length ? "Loading your workouts…" : `Your progress can't be shown without ${failed.map((n) => LOADS[n].label).join(" and ")}.` }));
+      st.hidden = false; $("list-view").hidden = true; $("detail-view").hidden = true; return;
+    }
+    if (!groups) groups = buildGroups(data.exercises.status === "ready" ? data.exercises.rows : [], data.workouts.rows, data.sets.rows);
+    if (!groups.length) {
+      st.replaceChildren(el("span", { text: "No workouts logged yet." }), el("a", { class: "gp-link", href: "gym.html", text: "Go to the Gym page →" }));
+      st.hidden = false; $("list-view").hidden = true; $("detail-view").hidden = true; return;
+    }
+    st.hidden = true; st.replaceChildren();
+    const key = routeKey(), g = key !== null ? groups.find((x) => x.key === key) : null;
+    if (g) renderDetail(g); else renderList();
+  }
+
+  function recent(g) { return g.sessions.length ? g.sessions[g.sessions.length - 1].t : -Infinity; }
+  function renderList() {
+    $("detail-view").hidden = true; $("list-view").hidden = false;
+    const q = $("search").value.trim().toLowerCase(), t = today();
+    const sections = [];
+    let shown = 0;
+    for (const [kind, title] of [["strength", "Strength"], ["cardio", "Cardio"]]) {
+      const items = groups.filter((g) => g.kind === kind && (!q || g.name.toLowerCase().includes(q)))
+        .sort((a, b) => recent(b) - recent(a) || a.name.localeCompare(b.name, "en-GB", { sensitivity: "base" }));
+      if (!items.length) continue;
+      shown += items.length;
+      sections.push(el("h2", { class: "gp-heading", text: title }), el("div", { class: "gp-rows" }, ...items.map((g) => listRow(g, t))));
+    }
+    $("list").replaceChildren(...sections);
+    $("no-match").hidden = shown > 0;
+  }
+  function listRow(g, t) {
+    const n = g.sessions.length, last = n ? g.sessions[n - 1] : null;
+    const meta = n ? `${n} ${n === 1 ? "session" : "sessions"} · last ${fmtDay(last.day, t)}` : "No sessions";
+    const btn = el("button", { type: "button", class: "gp-row", "data-key": g.key, onclick: () => { location.hash = "ex=" + encodeURIComponent(g.key); } },
+      el("span", { class: "gp-row-main" }, el("span", { class: "gp-row-name", text: g.name }), el("span", { class: "gp-row-meta", text: meta }), el("span", { class: "gp-row-line", text: listLine(g) })));
+    const m = primaryMetric(g), vals = seriesFor(g, m).map((x) => x.value).filter((v) => v !== null).slice(-LIST_SPARK);
+    if (vals.length) {
+      const box = el("span", { class: "gp-row-spark" });
+      StkCharts.sparkline(box, vals, { width: 96, height: 28, ariaLabel: `${METRICS[m].label} over the last ${vals.length} ${vals.length === 1 ? "session" : "sessions"}: from ${METRICS[m].unit(vals[0])} to ${METRICS[m].unit(vals[vals.length - 1])}` });
+      btn.append(box);
+    }
+    return btn;
+  }
+
+  function inRange(sessions) {
+    if (range === "last10") return sessions.slice(-10);
+    if (range === "days90") { const from = addDays(today(), -(RANGE_DAYS - 1)), t = today(); return sessions.filter((s) => s.day >= from && s.day <= t); }
+    return sessions.slice();
+  }
+  const RANGE_WORDS = { last10: "your last 10 sessions", days90: "the last 90 days", all: "all sessions" };
+  function card(label, value, sub) { return el("div", { class: "gp-sum" }, el("p", { class: "gp-sum-label", text: label }), el("p", { class: "gp-sum-value", text: value }), ...[].concat(sub).filter(Boolean).map((x) => el("p", { class: "gp-sum-sub", text: x }))); }
+  function renderDetail(g) {
+    $("list-view").hidden = true; $("detail-view").hidden = false;
+    const t = today(), metrics = metricsFor(g);
+    const metric = metrics.includes(metricChoice[g.key]) ? metricChoice[g.key] : metrics[0], M = METRICS[metric];
+    $("ex-title").textContent = g.name;
+    $("ex-sub").textContent = [g.kind === "strength" ? (g.repsMode ? "Strength · no weighted sets, so compared by reps" : "Strength") : `Cardio · ${g.ctype === "rowing" ? "rowing" : g.ctype === "treadmill" ? "treadmill" : "general"}`,
+      `${g.sessions.length} ${g.sessions.length === 1 ? "session" : "sessions"}`, g.hidden ? "hidden on the Gym page" : null].filter(Boolean).join(" · ");
+    $("how").hidden = g.kind !== "strength";
+    if (!g.sessions.length) {   // sets saved, but none valid
+      for (const id of ["metric-chips", "range-chips", "summary"]) $(id).hidden = true;
+      $("chart-area").hidden = true; $("range-empty").hidden = false; $("range-empty").textContent = "No data yet: none of this exercise's saved sets has the numbers a chart needs.";
+      $("table-body").replaceChildren(); $("table-caption").textContent = "No sessions"; shownNow = null; return;
+    }
+    $("range-chips").hidden = false; $("summary").hidden = false;
+    const mc = $("metric-chips");
+    mc.hidden = metrics.length < 2;
+    mc.replaceChildren(...(metrics.length < 2 ? [] : CHOICES[g.ctype].map(([k, label]) => el("button", { type: "button", class: "gp-chip", "data-metric": k, "aria-pressed": String(k === metric), text: label,
+      onclick: () => { metricChoice[g.key] = k; sel = -1; render(); } }))));
+    for (const b of document.querySelectorAll("#range-chips .gp-chip")) b.setAttribute("aria-pressed", String(b.dataset.range === range));
+
+    // summary cards (all sessions)
+    const all = seriesFor(g, metric), charted = all.filter((x) => x.value !== null);
+    const cards = [];
+    if (charted.length) {
+      let best = charted[0];
+      for (const x of charted) if (x.value > best.value) best = x;
+      cards.push(card(g.kind === "strength" ? (g.repsMode ? "Best reps" : "Best estimate") : g.ctype === "rowing" ? "Best distance" : `Best ${M.label.toLowerCase()}`, M.unit(best.value), fmtDay(best.session.day, t)));
+    }
+    if (g.kind === "strength") {
+      const allSets = g.sessions.flatMap((s) => s.sets.map((x) => ({ x, s })));
+      let heavy = null;
+      for (const p of allSets) if (!heavy || beats(p.x, heavy.x)) heavy = p;
+      if (heavy) cards.push(card("Heaviest set", setText(heavy.x), [fmtDay(heavy.s.day, t), "The Gym page's New best rule (heaviest, then most reps), so it can differ from the best estimate."]));
+      const lastS = g.sessions[g.sessions.length - 1];
+      cards.push(card("Latest session", setText(topSet(lastS.sets)), fmtDay(lastS.day, t)));
+    } else {
+      const lastS = g.sessions[g.sessions.length - 1], v = M.value(lastS);
+      const mins = sumOf(lastS.sets.map((x) => x.minutes));
+      cards.push(card("Latest", v !== null ? M.unit(v) : g.ctype === "rowing" && mins !== null ? `Time only (${fmtN(mins, 1)} min)` : "—", fmtDay(lastS.day, t)));
+    }
+    if (charted.length >= 2) {
+      const f = charted[0].value, p = charted[charted.length - 2].value, l = charted[charted.length - 1].value;
+      cards.push(card("Change", changeText(f, l, M.decimals, M.unit, "first"), changeText(p, l, M.decimals, M.unit, "previous")));
+    } else cards.push(card("Change", charted.length ? "Only one session so far" : "No sessions to compare", ""));
+    cards.push(card("Sessions", fmtN(g.sessions.length, 0), ""));
+    $("summary").replaceChildren(...cards);
+
+    // chart and table (the chosen range)
+    const shownSessions = inRange(g.sessions), shownIds = new Set(shownSessions.map((s) => s.id));
+    const flags = highlightsFor(g) ? newBests(charted.map((x) => x.value)) : charted.map(() => false);
+    const rollAll = StkCharts.rollingAverage(charted.map((x) => x.value), ROLL_WINDOW), bestAll = StkCharts.bestSoFar(charted.map((x) => x.value));
+    const idx = charted.map((x, i) => i).filter((i) => shownIds.has(charted[i].session.id));
+    const pts = idx.map((i) => charted[i]);
+    shownNow = { g, metric, pts, flags: idx.map((i) => flags[i]) };
+    $("range-empty").hidden = pts.length > 0;
+    $("chart-area").hidden = pts.length === 0;
+    if (!pts.length) $("range-empty").textContent = shownSessions.length ? `No ${M.label.toLowerCase()} in ${RANGE_WORDS[range]}.` : `No sessions in ${RANGE_WORDS[range]}. Choose All to see older ones.`;
+    else {
+      const trend = pts.length >= ROLL_WINDOW, hl = highlightsFor(g);
+      if (sel < 0 || sel >= pts.length) sel = pts.length - 1;
+      const lo = maxOf(pts.map((x) => -x.value)), hi = maxOf(pts.map((x) => x.value));
+      chart = StkCharts.line($("chart"), {
+        points: pts.map((x) => ({ x: x.session.id, y: x.value, label: fmtDay(x.session.day, t) })),
+        rolling: trend ? idx.map((i) => rollAll[i]) : null, best: trend ? idx.map((i) => bestAll[i]) : null,
+        highlight: hl ? shownNow.flags : undefined,
+        yFormat: (v) => fmtN(v, 2),
+        ariaLabel: `${g.name}, ${M.label.toLowerCase()} per session, ${RANGE_WORDS[range]}: ${pts.length} ${pts.length === 1 ? "session" : "sessions"}, lowest ${M.unit(-lo)}, highest ${M.unit(hi)}` +
+          (trend ? ", with a 3-session average line and a best-so-far line" : "") + (hl && shownNow.flags.some(Boolean) ? `, ${shownNow.flags.filter(Boolean).length} new bests ringed` : ""),
+        onSelect: (i) => { sel = i; readout(); },
+      });
+      chart.select(sel);
+      $("trend-note").hidden = trend;
+      $("legend").textContent = (trend ? "Dots: each session. Thick line: average of the last 3. Dashed: your best so far." : "Dots: each session.") +
+        (hl && shownNow.flags.some(Boolean) ? " Double ring: a new best." : "");
+      readout();
+    }
+    const rows = shownSessions.slice(-TABLE_ROWS).reverse();
+    $("value-head").textContent = M.label;
+    $("table-caption").textContent = rows.length === 1 ? "Your latest session" : `Your last ${rows.length} sessions, newest first`;
+    $("table-body").replaceChildren(...rows.map((s) => { const v = M.value(s); return el("tr", null, el("td", { text: fmtDay(s.day, t) }), el("td", { text: sessionText(g, s) }), el("td", { text: v === null ? "—" : M.unit(v) })); }));
+    $("table-wrap").hidden = !tableOpen;
+    $("table-toggle").setAttribute("aria-expanded", String(tableOpen));
+    $("table-toggle").textContent = tableOpen ? "Hide the table" : "Show data as a table";
+  }
+  function readout() {
+    const { g, metric, pts, flags } = shownNow, x = pts[sel], M = METRICS[metric], t = today();
+    const extra = g.kind === "strength" ? setText(topSet(x.session.sets)) : null;
+    $("readout").textContent = [fmtDay(x.session.day, t), `${M.label} ${M.unit(x.value)}`, extra, flags[sel] ? "New best" : null].filter(Boolean).join(" · ");
+    $("prev-btn").disabled = sel <= 0;
+    $("next-btn").disabled = sel >= pts.length - 1;
+  }
+  function step(d) {
+    if (!shownNow || !chart) return;
+    const j = Math.max(0, Math.min(shownNow.pts.length - 1, sel + d));
+    if (j === sel) return;
+    sel = j; chart.select(sel); readout();
+  }
+  $("prev-btn").addEventListener("click", () => step(-1));
+  $("next-btn").addEventListener("click", () => step(1));
+  $("table-toggle").addEventListener("click", () => {
+    tableOpen = !tableOpen;
+    $("table-wrap").hidden = !tableOpen;
+    $("table-toggle").setAttribute("aria-expanded", String(tableOpen));
+    $("table-toggle").textContent = tableOpen ? "Hide the table" : "Show data as a table";
+  });
+  for (const b of document.querySelectorAll("#range-chips .gp-chip")) b.addEventListener("click", () => { range = b.dataset.range; sel = -1; render(); });
+  $("search").addEventListener("input", () => { if (groups) renderList(); });
+  $("back-list").addEventListener("click", (e) => { e.preventDefault(); location.hash = ""; });
+  window.addEventListener("hashchange", () => { sel = -1; if (userId) render(); });
+
+  window.GymProgress = { e1rm, beats, topSet, inferType, validSet, buildGroups, seriesFor, newBests, changeText, listLine, metricsFor, setText, blockText, fmtN, londonDate, addDays, PAGE_SIZE, E1RM_MAX_REPS };
+
+  // --- Auth gate: locked when signed out ---
+  sb.auth.onAuthStateChange((event, session) => {
+    $("login-gate").style.display = session ? "none" : "block";
+    $("app-content").style.display = session ? "block" : "none";
+    if (session && userId !== session.user.id) { userId = session.user.id; groups = null; for (const n of Object.keys(LOADS)) load(n); }
+  });
+
+  $("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+</script>
+<script src="site-nav.js?v=1"></script>
+</body>
+</html>
