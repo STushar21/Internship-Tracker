@@ -442,7 +442,8 @@
   let userId = null;
   const LOADS = {
     exercises: { label: "your exercise list", note: "Names and types come from your saved sets meanwhile.",
-      build: () => sb.from("exercises").select("id, name, kind, archived, cardio_type").eq("user_id", userId).order("id", { ascending: true }) },
+      // no user filter, as on gym.html: the 34 seeded exercises have user_id null and must still give names, kinds and cardio types
+      build: () => sb.from("exercises").select("id, name, kind, archived, cardio_type").order("id", { ascending: true }) },
     workouts: { label: "your workouts", note: "",
       build: () => sb.from("workouts").select("id, started_at").eq("user_id", userId).order("started_at", { ascending: true }).order("id", { ascending: true }) },
     sets: { label: "your sets", note: "",
