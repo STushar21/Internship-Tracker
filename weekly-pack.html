@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1D1D1B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Weekly pack — STK</title>
+<style>
+  [hidden] { display: none !important; }
+  :root {
+    --bg: #F2ECDF;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EBDC;
+    --border: #E3DAC4;
+    --ink: #1A1A18;
+    --ink-soft: #5A5650;
+    --gold: #8B6B49;
+    --gold-dim: #6F5439;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: #F2ECDF; color: #1A1A18;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: min(960px, 94vw); margin: 40px auto; padding: 0 16px 80px;
+  }
+  h1 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 30px; margin: 0 0 6px; }
+  h2 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 22px; margin: 0 0 8px; overflow-wrap: anywhere; }
+  h3 { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 19px; margin: 0 0 8px; }
+  .sub { color: #5A5650; font-size: 14px; line-height: 1.55; margin: 0; max-width: 62ch; overflow-wrap: anywhere; }
+  #logout-btn { min-height: 44px; min-width: 44px; }
+  .back-link { display: inline-flex; align-items: center; min-height: 44px; color: #5A5650; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .back-link:hover { text-decoration: underline; }
+  .back-link:focus-visible { outline: 2px solid #6F5439; outline-offset: 2px; }
+  .back-top { margin: -14px 0 4px; }
+
+  /* --- weekly pack --- */
+  .wp-card { background: #FFFFFF; border: 1px solid #E3DAC4; border-radius: 12px; padding: 16px; margin: 14px 0; min-width: 0; }
+  .wp-error { border-color: #A6453B; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 15px; }
+  .wp-btn { min-height: 44px; min-width: 44px; padding: 0 16px; border: 1px solid #8B6B49; border-radius: 8px; background: #FFFFFF; color: #6F5439; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .wp-btn:disabled { color: #5A5650; border-color: #B8AE98; cursor: default; }
+  .wp-primary { background: #6F5439; border-color: #6F5439; color: #FFFFFF; }
+  .wp-primary:disabled { background: #FFFFFF; }
+  .wp-btn:focus-visible, .wp-stepbtn:focus-visible, .wp-input:focus-visible, .wp-preview:focus-visible { outline: 2px solid #1A1A18; outline-offset: 2px; }
+  .wp-weeknav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 18px 0 0; }
+  .wp-week { margin: 0; font-weight: 600; font-size: 15px; text-align: center; flex: 1 1 auto; min-width: 0; }
+  .wp-table-wrap { overflow-x: auto; }
+  .wp-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .wp-table th, .wp-table td { text-align: left; vertical-align: middle; padding: 4px 8px 4px 0; border-bottom: 1px solid #E3DAC4; overflow-wrap: anywhere; }
+  .wp-table thead th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #5A5650; padding-bottom: 6px; }
+  .wp-table thead th { overflow-wrap: normal; }   /* headings never break inside a word */
+  .wp-table tbody td:nth-child(2) { white-space: nowrap; }   /* "93.2 kg" stays on one line */
+  .wp-table tbody th { font-weight: 600; white-space: nowrap; }
+  .wp-stepbtn { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-height: 44px; min-width: 44px; padding: 4px 8px; margin-left: -8px; border: 1px solid transparent; border-radius: 6px;
+    background: none; color: #1A1A18; font: inherit; font-variant-numeric: tabular-nums; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: #8B6B49; text-underline-offset: 3px; }
+  .wp-stepbtn:hover { border-color: #8B6B49; }
+  .wp-tag { font-size: 12px; font-weight: 600; color: #6F5439; border: 1px solid #8B6B49; border-radius: 4px; padding: 0 4px; text-decoration: none; }
+  .wp-so-far { font-size: 12px; color: #5A5650; }
+  .wp-edit-row td { padding: 8px 0 12px; }
+  .wp-editor { display: flex; flex-direction: column; gap: 8px; }
+  .wp-label { font-size: 13px; font-weight: 600; color: #5A5650; }
+  .wp-input { width: 100%; max-width: 220px; min-height: 44px; font: inherit; font-size: 16px; padding: 8px 12px; border: 1px solid #8B6B49; border-radius: 8px; background: #FFFFFF; color: #1A1A18; }
+  .wp-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .wp-err { margin: 0; font-size: 14px; color: #A6453B; }
+  .wp-note { font-size: 13px; line-height: 1.5; color: #5A5650; margin: 10px 0 0; }
+  .wp-msg { font-size: 14px; font-weight: 600; color: #1A1A18; }
+  .wp-sum h3 { font-size: 17px; margin: 12px 0 4px; }
+  .wp-sum p { margin: 0 0 4px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+  .wp-preview { white-space: pre-wrap; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.55;
+    background: #F1EBDC; color: #1A1A18; border: 1px solid #E3DAC4; border-radius: 8px; padding: 12px; margin: 8px 0 0; }
+
+  .top-nav {
+    position: sticky; top: 16px; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    background: #1D1D1B; border: 1px solid #2E2E2A; border-radius: 10px;
+    padding: 5px; margin: 0 auto 28px; width: fit-content;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.08);
+  }
+  .top-nav .brand {
+    font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 14px;
+    color: #C9956A; padding: 8px 14px 8px 12px; text-decoration: none;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(255,255,255,0.15); margin-right: 4px;
+  }
+  .top-nav a.nav-link { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; border-bottom: 2px solid transparent; }
+  .top-nav a.nav-link.active { background: rgba(201,149,106,0.15); color: #C9956A; border-bottom: 2px solid #C9956A; }
+  .top-nav a.nav-link.soon { color: #8A8F99; }
+
+  .nav-dropdown { position: relative; display: flex; align-items: center; }
+  .nav-caret { background: none; border: none; color: #8A8F99; cursor: pointer; font-size: 10px; padding: 8px 10px 8px 2px; margin-right: -6px; }
+  .nav-dropdown-menu {
+    display: none; position: absolute; top: 120%; left: 0;
+    background: var(--surface); border: 1px solid #D8DADD; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.1); padding: 6px; min-width: 190px; z-index: 200;
+  }
+  .nav-dropdown-menu.open { display: block; }
+  .nav-dropdown-menu a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .nav-dropdown-menu a:hover { background: var(--surface-alt); }
+  .nav-dropdown-menu a.active { color: var(--gold-dim); font-weight: 600; }
+
+  .logout-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  #logout-btn { background: none; border: 1px solid var(--border); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+
+  #login-gate { max-width: 340px; margin: 80px auto; text-align: center; }
+  #login-gate .mark { font-family: 'EB Garamond', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--gold-dim); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 18px; }
+  #login-gate h2 { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+  #login-gate .sub { margin-bottom: 0; }
+  #login-gate a { color: var(--gold-dim); }
+
+  @media (max-width: 640px) {
+    body { margin: 16px auto; padding: 0 12px; }
+    .top-nav {
+      max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .top-nav::-webkit-scrollbar { display: none; }
+    .top-nav .brand, .top-nav a.nav-link, .nav-dropdown { flex-shrink: 0; }
+    .nav-dropdown-menu { position: fixed; }
+    .nav-caret { padding: 11px 14px 11px 6px; }
+
+    h1 { font-size: 26px; }
+    .wp-card { padding: 14px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">STK</a>
+  <a href="tracker.html" class="nav-link">Tracker</a>
+  <a href="outreach.html" class="nav-link">Outreach</a>
+  <a href="questions.html" class="nav-link">Questions</a>
+  <a href="calendar.html" class="nav-link">Calendar</a>
+  <div class="nav-dropdown">
+    <a href="habits.html" class="nav-link active">Self Improvement</a>
+    <button class="nav-caret" type="button" aria-label="Self Improvement menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="habits.html">Habits</a>
+      <a href="journal.html">Journal</a>
+      <a href="games.html">Games</a>
+      <a href="gym.html">Gym</a>
+    </div>
+  </div>
+  <a href="oa-prep.html" class="nav-link">OA Prep</a>
+  <div class="nav-dropdown">
+    <a href="resources.html" class="nav-link">Resources</a>
+    <button class="nav-caret" type="button" aria-label="Resources menu">&#9662;</button>
+    <div class="nav-dropdown-menu">
+      <a href="resources.html">Areas of Finance</a>
+      <a href="resources-cheatsheets.html">Cheat Sheets</a>
+      <a href="resources-calendar.html">Recruitment Calendar</a>
+    </div>
+  </div>
+  <a href="advice.html" class="nav-link">Advice</a>
+</nav>
+<a class="back-link back-top" href="gym.html">← Gym</a>
+
+<div id="login-gate">
+  <div class="mark">Reps</div>
+  <h2>Locked</h2>
+  <div class="sub">Sign in from the <a href="index.html">home page</a> to see your weekly pack.</div>
+</div>
+
+<div id="app-content" style="display:none;">
+<div class="logout-bar"><button id="logout-btn" type="button">Sign out</button></div>
+
+<h1>Weekly pack</h1>
+<p class="sub">Your week's weigh-ins, steps and workouts, ready to copy for your mentor. Weeks run Sunday to Saturday.</p>
+
+<div class="wp-weeknav">
+  <button type="button" class="wp-btn" id="prev-week">Previous</button>
+  <p class="wp-week" id="week-label" aria-live="polite"></p>
+  <button type="button" class="wp-btn" id="next-week">Next</button>
+</div>
+
+<div id="load-errors"></div>
+
+<section class="wp-card" aria-labelledby="days-title">
+  <h2 id="days-title">Days</h2>
+  <div class="wp-table-wrap">
+    <table class="wp-table" id="day-table">
+      <thead><tr><th scope="col">Day</th><th scope="col">Weight</th><th scope="col">Steps</th><th scope="col">Sessions</th></tr></thead>
+      <tbody id="day-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="wp-card" aria-labelledby="summary-title">
+  <h2 id="summary-title">Week summary</h2>
+  <div id="summary"></div>
+</section>
+
+<section class="wp-card" aria-labelledby="copy-title">
+  <h2 id="copy-title">For your mentor</h2>
+  <div class="wp-steps">
+    <button type="button" class="wp-btn wp-primary" id="copy-btn">Copy week for my mentor</button>
+    <span class="wp-msg" id="copy-msg" role="status"></span>
+  </div>
+  <p class="wp-note">This is exactly the text that is copied:</p>
+  <div class="wp-preview" id="preview" tabindex="0" aria-label="The text that is copied"></div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://dnlrpybpbivtpnipkwpo.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRubHJweWJwYml2dHBuaXBrd3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MzgyODMsImV4cCI6MjEwMTQxNDI4M30.vVhwpSS5lMwTArRN-CHae5z3WMIbb5V-2mkUgHhiROw";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------------------------------------------------------------------
+  // Weekly pack: one calendar week (Sunday to Saturday, London dates) of weigh-ins, steps and workouts, with a fixed-format text to copy.
+  // Read-only apart from the steps editor (daily_steps, source 'manual'). The estimate, grouping and validity rules are gym-progress.html's,
+  // copied unchanged. Every dynamic string is set with textContent or built as DOM nodes; no HTML strings.
+  // ---------------------------------------------------------------------------
+  const WEEK_STARTS_ON = 0;          // 0 = Sunday: weeks run Sunday to Saturday
+  const PAGE_SIZE = 1000;            // the API returns at most 1000 rows per request
+  const STALE_MS = 3 * 3600 * 1000;  // today's steps older than this get a note
+  const EARLIEST = "2020-01-01";     // Previous stops at the week containing this date
+  const MAX_STEPS = 100000;
+  const E1RM_MAX_REPS = 12;
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const DASH = "–";
+
+  // ---- dates: London calendar dates via Intl; days stepped with Date.UTC ----
+  const londonFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+  const londonDate = (ms) => londonFmt.format(new Date(ms));
+  const timeFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const londonTime = (ms) => timeFmt.format(new Date(ms));
+  function addDays(ymd, n) {
+    const [y, m, d] = ymd.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+  }
+  const dow = (ymd) => { const [y, m, d] = ymd.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); };
+  const weekStart = (ymd) => addDays(ymd, -((dow(ymd) - WEEK_STARTS_ON + 7) % 7));
+  const weekDays = (start) => Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  const shortFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  const yearFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", year: "numeric" });
+  const utcOf = (ymd) => { const [y, m, d] = ymd.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+  const dayLabel = (ymd) => shortFmt.format(utcOf(ymd)).replace(",", "");             // "Sun 15 Nov"
+  const dayShort = (ymd) => dayLabel(ymd).split(" ")[0];                               // "Sun"
+  const dayLong = (ymd) => DAY_NAMES[dow(ymd)];                                         // "Sunday"
+  const yearOf = (ymd) => yearFmt.format(utcOf(ymd));
+  function weekRange(start, withYear) {   // "Sun 15 Nov – Sat 21 Nov" (+ " 2026"); a week across New Year names both years
+    const end = addDays(start, 6), a = dayLabel(start), b = dayLabel(end);
+    if (yearOf(start) !== yearOf(end)) return `${a} ${yearOf(start)} – ${b} ${yearOf(end)}`;
+    return withYear ? `${a} – ${b} ${yearOf(end)}` : `${a} – ${b}`;
+  }
+
+  // ---- numbers: Intl en-GB; anything that isn't a finite number is skipped or printed as a dash ----
+  const isNum = (v) => typeof v === "number" && isFinite(v);
+  const num = (v) => (isNum(v) ? v : null);
+  const NF = [0, 1, 2].map((d) => new Intl.NumberFormat("en-GB", { maximumFractionDigits: d }));
+  const NF1 = new Intl.NumberFormat("en-GB", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  function fmtN(v, decimals) {
+    if (!isNum(v)) return DASH;
+    const x = v === 0 ? 0 : v, s = NF[decimals].format(x);
+    return s === "-0" ? "0" : s;
+  }
+  const fmt1 = (v) => { if (!isNum(v)) return DASH; const s = NF1.format(v === 0 ? 0 : v); return s === "-0.0" ? "0.0" : s; };   // averages: one decimal
+  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  // "up 1.5" / "down 0.4" / "level", from the two values as they are shown (rounded half away from zero, as Intl does), so the words always
+  // match the printed numbers (91.25 shows as 91.3, and 90.0 against it is "down 1.3")
+  const roundTo = (v, decimals) => { const f = Math.pow(10, decimals); return Math.sign(v) * Math.round(Number((Math.abs(v) * f).toFixed(6))) / f; };
+  function change(from, to, decimals, show) {
+    const d = roundTo(roundTo(to, decimals) - roundTo(from, decimals), decimals);
+    return d === 0 ? "level" : `${d > 0 ? "up" : "down"} ${show(Math.abs(d))}`;
+  }
+
+  // ---- gym-progress.html's rules, copied unchanged (the pack must give the same estimate) ----
+  function e1rm(weight, reps) {
+    if (!isNum(weight) || !(weight > 0) || !isNum(reps) || !Number.isInteger(reps) || reps < 1 || reps > E1RM_MAX_REPS) return null;
+    const tenths = reps === 1 ? weight * 10 : (weight * (30 + reps)) / 3;
+    return Math.round(Number(tenths.toFixed(6))) / 10;
+  }
+  function beats(a, b) {
+    const wa = a.weight ?? 0, wb = b.weight ?? 0;
+    return wa > wb || (wa === wb && (a.reps ?? 0) > (b.reps ?? 0));
+  }
+  function topSet(sets) { let t = null; for (const s of sets) if (!t || beats(s, t)) t = s; return t; }
+  const normType = (t) => (t === "rowing" || t === "treadmill" ? t : "general");
+  function cleanSet(s) {
+    return { id: Number(s.id), workout_id: Number(s.workout_id), exercise_id: isNum(s.exercise_id) ? s.exercise_id : null, name: typeof s.exercise_name === "string" ? s.exercise_name : "",
+      position: num(s.position), set_number: num(s.set_number), reps: num(s.reps), weight: num(s.weight_kg), minutes: num(s.minutes), level: num(s.level),
+      distance: num(s.distance_m), speed: num(s.speed_kmh), incline: num(s.incline_pct) };
+  }
+  const groupKey = (s) => (s.exercise_id !== null ? `id:${s.exercise_id}` : `name:${s.name.trim().toLowerCase()}`);
+  function inferType(sets) {
+    if (sets.some((s) => s.distance !== null)) return { kind: "cardio", ctype: "rowing" };
+    if (sets.some((s) => s.speed !== null || s.incline !== null)) return { kind: "cardio", ctype: "treadmill" };
+    if (sets.some((s) => s.minutes !== null) && !sets.some((s) => s.weight !== null || s.reps !== null)) return { kind: "cardio", ctype: "general" };
+    return { kind: "strength", ctype: null };
+  }
+  function validSet(s, kind, ctype) {
+    if (kind === "strength") return s.reps !== null && s.reps >= 1;
+    const timed = s.minutes !== null && s.minutes > 0;
+    return ctype === "rowing" ? timed || (s.distance !== null && s.distance > 0) : timed;
+  }
+  const maxOf = (xs) => { let m = null; for (const x of xs) if (isNum(x) && (m === null || x > m)) m = x; return m; };
+  const sumOf = (xs) => { let t = null; for (const x of xs) if (isNum(x)) t = (t ?? 0) + x; return t; };
+  const setText = (s) => (s.weight !== null && s.weight > 0 ? `${fmtN(s.weight, 2)} kg × ${fmtN(s.reps, 0)}` : `${fmtN(s.reps, 0)} ${s.reps === 1 ? "rep" : "reps"}`);
+
+  // ---- the week model (pure): rows from the four tables → everything the page and the text show ----
+  // week: { start, today, nowMs }; rows: { steps, weights, workouts, sets, exercises } (null when that load failed)
+  function buildWeek(week, rows) {
+    const days = weekDays(week.start), prevStart = addDays(week.start, -7), prevDays = weekDays(prevStart);
+    const inWeek = (d) => d >= days[0] && d <= days[6], inPrev = (d) => d >= prevDays[0] && d <= prevDays[6];
+    const out = { days, prevStart, current: week.today >= days[0] && week.today <= days[6] };
+    // weights: one per day (unique user_id + measured_on)
+    if (rows.weights) {
+      const w = new Map();
+      for (const r of rows.weights) { const v = num(r.weight_kg); if (v !== null && typeof r.measured_on === "string") w.set(r.measured_on, v); }
+      out.weight = days.map((d) => (w.has(d) ? w.get(d) : null));
+      const cur = days.map((d) => w.get(d)).filter((v) => v !== undefined), prev = prevDays.map((d) => w.get(d)).filter((v) => v !== undefined);
+      out.weightAvg = cur.length ? { mean: mean(cur), n: cur.length } : null;
+      out.weightPrev = prev.length ? { mean: mean(prev), n: prev.length } : null;
+    }
+    if (rows.steps) {
+      const s = new Map();
+      for (const r of rows.steps) { const v = num(r.steps); if (v !== null && typeof r.step_date === "string") s.set(r.step_date, { steps: v, source: r.source === "manual" ? "manual" : "shortcut", at: Date.parse(r.updated_at) }); }
+      out.steps = days.map((d) => s.get(d) || null);
+      const cur = days.map((d) => s.get(d)).filter(Boolean).map((x) => x.steps), prev = prevDays.map((d) => s.get(d)).filter(Boolean).map((x) => x.steps);
+      out.stepsAvg = cur.length ? { mean: Math.round(mean(cur)), n: cur.length } : null;
+      out.stepsPrev = prev.length ? { mean: Math.round(mean(prev)), n: prev.length } : null;
+    }
+    if (rows.workouts) {
+      const ws = new Map();
+      for (const w of rows.workouts) { const t = typeof w.started_at === "string" ? Date.parse(w.started_at) : NaN; if (isNum(w.id) && isFinite(t)) ws.set(w.id, { id: w.id, t, day: londonDate(t) }); }
+      const thisW = [...ws.values()].filter((w) => inWeek(w.day)).sort((a, b) => a.t - b.t || a.id - b.id);
+      out.sessionsByDay = days.map((d) => thisW.filter((w) => w.day === d).length);
+      out.sessions = thisW.length;
+      if (rows.sets) out.exercises = exerciseLines(rows, ws, inWeek, inPrev);
+    }
+    return out;
+  }
+  function exerciseLines(rows, ws, inWeek, inPrev) {
+    const exById = new Map();
+    for (const e of rows.exercises || []) if (e && isNum(e.id)) exById.set(e.id, e);
+    const groups = new Map();
+    for (const raw of rows.sets) {
+      if (!raw) continue;
+      const s = cleanSet(raw), w = ws.get(s.workout_id);
+      if (!w) continue;
+      const k = groupKey(s);
+      if (!groups.has(k)) groups.set(k, { key: k, exercise: s.exercise_id !== null ? exById.get(s.exercise_id) || null : null, sets: [] });
+      groups.get(k).sets.push(Object.assign(s, { w }));
+    }
+    const strength = [], cardio = [];
+    for (const g of groups.values()) {
+      g.sets.sort((a, b) => a.w.t - b.w.t || a.w.id - b.w.id || (a.position ?? 0) - (b.position ?? 0) || (a.set_number ?? 0) - (b.set_number ?? 0) || a.id - b.id);
+      const ex = g.exercise, snapshot = g.sets[g.sets.length - 1].name.trim();
+      const name = ex && typeof ex.name === "string" && ex.name.trim() ? ex.name : snapshot || "Unnamed exercise";
+      const t = ex && (ex.kind === "strength" || ex.kind === "cardio") ? { kind: ex.kind, ctype: ex.kind === "cardio" ? normType(ex.cardio_type) : null } : inferType(g.sets);
+      const valid = g.sets.filter((s) => validSet(s, t.kind, t.ctype));
+      const cur = valid.filter((s) => inWeek(s.w.day)), prev = valid.filter((s) => inPrev(s.w.day));
+      if (!cur.length) continue;   // only exercises done this week
+      if (t.kind === "strength") {
+        const repsMode = !g.sets.some((s) => validSet(s, t.kind, t.ctype) && s.weight !== null && s.weight > 0);
+        const value = (xs) => (repsMode ? maxOf(xs.map((s) => s.reps)) : maxOf(xs.map((s) => e1rm(s.weight, s.reps))));
+        strength.push({ name, repsMode, best: value(cur), prev: prev.length ? value(prev) : null, prevDone: prev.length > 0, top: topSet(cur) });
+      } else if (t.ctype === "rowing") {
+        const dist = (xs) => maxOf(xs.map((s) => (s.distance !== null && s.distance > 0 ? s.distance : null)));
+        cardio.push({ name, ctype: "rowing", best: dist(cur), prev: dist(prev), prevDone: prev.length > 0, minutes: sumOf(cur.map((s) => s.minutes)) });
+      } else {
+        cardio.push({ name, ctype: t.ctype, minutes: sumOf(cur.map((s) => s.minutes)), speed: maxOf(cur.map((s) => s.speed)), incline: maxOf(cur.map((s) => s.incline)), level: maxOf(cur.map((s) => s.level)) });
+      }
+    }
+    const byName = (a, b) => a.name.localeCompare(b.name, "en-GB", { sensitivity: "base" });
+    return { strength: strength.sort(byName), cardio: cardio.sort(byName) };
+  }
+
+  // ---- the lines (shared by the page and the copied text) ----
+  const kgShow = (v) => fmtN(v, 2);
+  function weightLine(m) {
+    if (!m.weightAvg) return `No weigh-ins this week${m.weightPrev ? ` (previous week ${fmt1(m.weightPrev.mean)} from ${m.weightPrev.n})` : ""}`;
+    const a = m.weightAvg, p = m.weightPrev;
+    const base = `Weekly average ${fmt1(a.mean)} from ${a.n} ${a.n === 1 ? "weigh-in" : "weigh-ins"}`;
+    return p ? `${base} (previous week ${fmt1(p.mean)} from ${p.n}, ${change(p.mean, a.mean, 1, fmt1)})` : `${base} (no weigh-ins the previous week)`;
+  }
+  function stepsLine(m) {
+    if (!m.stepsAvg) return `No steps this week${m.stepsPrev ? ` (previous week ${fmtN(m.stepsPrev.mean, 0)})` : ""}`;
+    const a = m.stepsAvg, p = m.stepsPrev;
+    const base = `Average ${fmtN(a.mean, 0)} over ${a.n} ${a.n === 1 ? "day" : "days"}`;
+    return p ? `${base} (previous week ${fmtN(p.mean, 0)}, ${change(p.mean, a.mean, 0, (v) => fmtN(v, 0))})` : `${base} (no steps the previous week)`;
+  }
+  function sessionsLine(m) {
+    const names = [];
+    m.days.forEach((d, i) => { const n = m.sessionsByDay[i]; if (n) names.push(n > 1 ? `${dayShort(d)} ×${n}` : dayShort(d)); });
+    return `${m.sessions}${names.length ? ` (${names.join(", ")})` : ""}`;
+  }
+  function strengthLine(x) {
+    const unit = x.repsMode ? (v) => `${fmtN(v, 0)} ${v === 1 ? "rep" : "reps"}` : (v) => `${fmtN(v, 1)} kg`;
+    const show = x.repsMode ? (v) => fmtN(v, 0) : (v) => fmtN(v, 1);
+    const top = x.top ? `, top set ${setText(x.top)}` : "";
+    if (x.best === null) return `${x.name}: no estimate (no sets of 1 to 12 reps with a weight)${top}`;
+    const ch = !x.prevDone ? "not done last week" : x.prev === null ? "no estimate last week" : change(x.prev, x.best, x.repsMode ? 0 : 1, show);
+    return `${x.name}: ${x.repsMode ? "best " : ""}${unit(x.best)} (${ch})${top}`;
+  }
+  function cardioLine(x) {
+    if (x.ctype === "rowing") {
+      if (x.best === null) return `${x.name}: no distance this week${x.minutes !== null ? `, ${fmtN(x.minutes, 1)} min total` : ""}`;
+      return `${x.name}: best ${fmtN(x.best, 0)} m (${!x.prevDone ? "not done last week" : x.prev === null ? "no distance last week" : `previous week ${fmtN(x.prev, 0)} m`})`;
+    }
+    const parts = [`${fmtN(x.minutes, 1)} min total`];
+    if (x.speed !== null) parts.push(`${fmtN(x.speed, 1)} km/h`);
+    if (x.incline !== null) parts.push(`${fmtN(x.incline, 1)}% incline`);
+    if (x.level !== null) parts.push(`level ${fmtN(x.level, 1)}`);
+    return `${x.name}: ${parts.join(", ")}`;
+  }
+  function namesList(xs) { return xs.length === 1 ? xs[0] : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`; }
+  function notes(m, week) {
+    const out = [];
+    const ti = m.current ? m.days.indexOf(week.today) : -1;
+    const upto = ti >= 0 ? m.days.slice(0, ti + 1) : m.days;
+    if (ti >= 0 && m.steps) {
+      const s = m.steps[ti];
+      out.push(s ? `${dayLong(week.today)}'s steps are partial (synced ${londonTime(s.at)}).` : `${dayLong(week.today)}'s steps are partial (not synced yet).`);
+      if (s && isFinite(s.at) && week.nowMs - s.at > STALE_MS) out.push(`The last step sync was more than 3 hours ago (${londonTime(s.at)}).`);
+    }
+    if (m.weight) {
+      const miss = upto.filter((d, i) => m.weight[i] === null).map(dayLong);
+      if (miss.length) out.push(miss.length === 1 ? `${miss[0]}'s weight is missing.` : `Weights are missing for ${namesList(miss)}.`);
+    }
+    if (m.steps) {
+      const past = ti >= 0 ? m.days.slice(0, ti) : m.days;
+      const miss = past.filter((d) => !m.steps[m.days.indexOf(d)]).map(dayLong);
+      if (miss.length) out.push(miss.length === 1 ? `${miss[0]}'s steps are missing.` : `Steps are missing for ${namesList(miss)}.`);
+    }
+    return out;
+  }
+  // The text copied for the mentor (fixed format).
+  function packText(m, week) {
+    const L = [];
+    L.push(`WEEK ${weekRange(m.days[0], true)} (copied ${dayLabel(week.today)}, ${londonTime(week.nowMs)})`);
+    L.push("WEIGHT (kg): " + (m.weight ? m.days.map((d, i) => `${dayShort(d)} ${m.weight[i] === null ? DASH : kgShow(m.weight[i])}`).join(" | ") : "couldn't load"));
+    L.push(m.weight ? weightLine(m) : "Weekly average couldn't be worked out");
+    if (m.steps) {
+      const ti = m.current ? m.days.indexOf(week.today) : -1;
+      L.push("STEPS: " + m.days.map((d, i) => {
+        const s = m.steps[i], v = `${dayShort(d)} ${s ? fmtN(s.steps, 0) : DASH}`;
+        return i === ti && s ? `${v} (so far, synced ${londonTime(s.at)})` : v;
+      }).join(" | "));
+      L.push(stepsLine(m));
+    } else { L.push("STEPS: couldn't load"); L.push("Average couldn't be worked out"); }
+    L.push("SESSIONS: " + (m.sessionsByDay ? sessionsLine(m) : "couldn't load"));
+    L.push("STRENGTH (best estimated 1RM this week; change against the previous week):");
+    if (!m.exercises) L.push("- couldn't load");
+    else if (!m.exercises.strength.length) L.push("- none");
+    else for (const x of m.exercises.strength) L.push(`- ${strengthLine(x)}`);
+    L.push("CARDIO:");
+    if (!m.exercises) L.push("- couldn't load");
+    else if (!m.exercises.cardio.length) L.push("- none");
+    else for (const x of m.exercises.cardio) L.push(`- ${cardioLine(x)}`);
+    const n = notes(m, week);
+    L.push("NOTES: " + (n.length ? n.join(" ") : "none"));
+    return L.join("\n");
+  }
+
+  // ---- loading: each table on its own, paged, for the selected week and the one before ----
+  async function fetchPaged(build) {
+    const out = [];
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await build().range(from, from + PAGE_SIZE - 1);
+      if (error) throw error;
+      const page = data || [];
+      out.push(...page);
+      if (page.length < PAGE_SIZE) return out;
+    }
+  }
+  let userId = null, offset = 0;   // offset: weeks before the current one (0 = this week)
+  const data = {};
+  const LOADS = {
+    steps: { label: "your steps", build: (a, b) => sb.from("daily_steps").select("id, step_date, steps, source, updated_at").eq("user_id", userId).gte("step_date", a).lte("step_date", b).order("step_date", { ascending: true }).order("id", { ascending: true }) },
+    weights: { label: "your weigh-ins", build: (a, b) => sb.from("body_weights").select("id, measured_on, weight_kg").eq("user_id", userId).gte("measured_on", a).lte("measured_on", b).order("measured_on", { ascending: true }).order("id", { ascending: true }) },
+    // a day either side in UTC, then each workout is placed on its London date
+    workouts: { label: "your workouts", build: (a, b) => sb.from("workouts").select("id, started_at").eq("user_id", userId).gte("started_at", addDays(a, -1) + "T00:00:00Z").lt("started_at", addDays(b, 2) + "T00:00:00Z").order("started_at", { ascending: true }).order("id", { ascending: true }) },
+    // as on gym.html and gym-progress.html: no user filter, because the seeded exercises have user_id null
+    exercises: { label: "your exercise list", build: () => sb.from("exercises").select("id, name, kind, archived, cardio_type").order("id", { ascending: true }) },
+  };
+  const SETS_LABEL = "your sets";
+  const setsQuery = (ids) => () => sb.from("workout_sets").select("id, workout_id, exercise_id, exercise_name, position, set_number, reps, weight_kg, minutes, level, distance_m, speed_kmh, incline_pct")
+    .eq("user_id", userId).in("workout_id", ids).order("id", { ascending: true });
+  let loadSeq = 0;
+  function currentWeek() {
+    const nowMs = Date.now(), today = londonDate(nowMs);
+    return { start: addDays(weekStart(today), 7 * offset), today, nowMs };
+  }
+  function load(name) {
+    const seq = loadSeq, w = currentWeek(), a = addDays(w.start, -7), b = addDays(w.start, 6);
+    data[name] = { status: "loading", rows: null };
+    if (name === "workouts") data.sets = { status: "loading", rows: null };
+    render();
+    const done = (rows) => { if (seq !== loadSeq) return; data[name] = { status: "ready", rows }; };
+    const fail = (err) => { if (seq !== loadSeq) return; console.error("[weekly-pack] load failed", name, err); data[name] = { status: "error", rows: null }; };
+    let p;
+    if (name === "sets") {
+      const ids = (data.workouts && data.workouts.rows || []).map((x) => x.id).filter(isNum);
+      p = ids.length ? fetchPaged(setsQuery(ids)) : Promise.resolve([]);
+    } else p = fetchPaged(() => LOADS[name].build(a, b));
+    return p.then(done, fail).then(() => {
+      if (seq !== loadSeq) return;
+      if (name === "workouts") { if (data.workouts.status === "ready") return load("sets"); data.sets = { status: "error", rows: null, blocked: true }; }
+      render();
+    });
+  }
+  function loadAll() { loadSeq++; for (const n of ["steps", "weights", "workouts", "exercises"]) load(n); }
+
+  // ---- DOM ----
+  const $ = (id) => document.getElementById(id);
+  function el(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : String(v));
+    }
+    for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+  let editing = null;   // { day, value, saving, error }
+  let lastText = "";
+  const rowsOf = (n) => (data[n] && data[n].status === "ready" ? data[n].rows : null);
+  function render() {
+    const w = currentWeek(), firstAllowed = weekStart(EARLIEST);
+    $("week-label").textContent = weekRange(w.start, false);
+    $("next-week").disabled = offset >= 0;
+    $("prev-week").disabled = addDays(w.start, -7) < firstAllowed;
+    const labels = { steps: LOADS.steps.label, weights: LOADS.weights.label, workouts: LOADS.workouts.label, exercises: LOADS.exercises.label, sets: SETS_LABEL };
+    $("load-errors").replaceChildren(...Object.keys(labels).filter((n) => data[n] && data[n].status === "error" && !data[n].blocked).map((n) =>
+      el("div", { class: "wp-card wp-error", "data-load": n }, el("span", { text: `Couldn't load ${labels[n]}.` }),
+        el("button", { type: "button", class: "wp-btn", text: "Retry", onclick: () => load(n) }))));
+    const loading = Object.values(data).some((d) => d.status === "loading");
+    const m = buildWeek(w, { steps: rowsOf("steps"), weights: rowsOf("weights"), workouts: rowsOf("workouts"), sets: rowsOf("sets"), exercises: rowsOf("exercises") || (data.exercises && data.exercises.status === "error" ? [] : null) });
+    renderDays(m, w, loading);
+    renderSummary(m, w, loading);
+    lastText = loading ? "" : packText(m, w);
+    $("preview").textContent = loading ? "Loading…" : lastText;
+    $("copy-btn").disabled = loading;
+  }
+  function renderDays(m, w) {
+    const body = $("day-body");
+    body.replaceChildren(...m.days.map((d, i) => {
+      const future = d > w.today;
+      const wt = m.weight ? (m.weight[i] === null ? DASH : `${kgShow(m.weight[i])} kg`) : "…";
+      const s = m.steps ? m.steps[i] : undefined;
+      const stepsCell = el("td", { class: "wp-steps-cell" });
+      if (s === undefined) stepsCell.append(el("span", { text: "…" }));
+      else if (future) stepsCell.append(el("span", { text: DASH }));
+      else {
+        const isToday = d === w.today;
+        stepsCell.append(el("button", { type: "button", class: "wp-stepbtn", "data-day": d, "aria-label": `Steps on ${dayLabel(d)}: ${s ? fmtN(s.steps, 0) : "none"}. Edit`,
+          onclick: () => { editing = editing && editing.day === d ? null : { day: d, value: s ? String(s.steps) : "", saving: false, error: "" }; render(); focusEditor(); } },
+          el("span", { text: s ? fmtN(s.steps, 0) : DASH }),
+          s && s.source === "manual" ? el("span", { class: "wp-tag", text: "manual" }) : null,
+          isToday && s ? el("span", { class: "wp-so-far", text: `so far · synced ${londonTime(s.at)}` }) : null));
+      }
+      const tr = el("tr", { "data-day": d }, el("th", { scope: "row", text: dayLabel(d) }), el("td", { text: wt }), stepsCell,
+        el("td", { text: m.sessionsByDay ? (m.sessionsByDay[i] ? String(m.sessionsByDay[i]) : DASH) : "…" }));
+      if (!editing || editing.day !== d) return [tr];
+      return [tr, el("tr", { class: "wp-edit-row" }, el("td", { colspan: "4" }, editor(d, s)))];
+    }).flat());
+  }
+  function editor(d, s) {
+    const input = el("input", { type: "text", inputmode: "numeric", class: "wp-input", id: "steps-input", "aria-label": `Steps on ${dayLabel(d)}`, autocomplete: "off", maxlength: "6" });
+    input.value = editing.value;
+    input.addEventListener("input", () => { editing.value = input.value; editing.error = ""; });
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveSteps(d); } if (e.key === "Escape") { editing = null; render(); } });
+    const err = el("p", { class: "wp-err", role: "alert", text: editing.error });
+    err.hidden = !editing.error;
+    return el("div", { class: "wp-editor" },
+      el("label", { class: "wp-label", for: "steps-input", text: `Steps on ${dayLabel(d)}` }), input,
+      el("div", { class: "wp-steps" },
+        el("button", { type: "button", class: "wp-btn wp-primary", text: editing.error && editing.failed ? "Retry" : "Save", disabled: editing.saving || null, onclick: () => saveSteps(d) }),
+        el("button", { type: "button", class: "wp-btn", text: "Cancel", onclick: () => { editing = null; render(); } }),
+        s ? el("button", { type: "button", class: "wp-btn", text: "Clear", disabled: editing.saving || null, onclick: () => clearSteps(d) }) : null),
+      err, el("p", { class: "wp-note", text: "A value you enter here is kept: the automatic sync never replaces it. Clear it to let the sync write this day again." }));
+  }
+  function focusEditor() { const i = $("steps-input"); if (i) i.focus(); }
+  async function saveSteps(d) {
+    if (!editing || editing.saving) return;   // one save, however many clicks
+    const raw = editing.value.trim();
+    if (!/^\d{1,6}$/.test(raw) || Number(raw) > MAX_STEPS) { editing.error = "Enter a whole number from 0 to 100,000."; editing.failed = false; render(); focusEditor(); return; }
+    editing.saving = true; editing.error = ""; render();
+    const { error } = await sb.from("daily_steps").upsert({ user_id: userId, step_date: d, steps: Number(raw), source: "manual", updated_at: new Date(Date.now()).toISOString() }, { onConflict: "user_id,step_date" });
+    if (error) { console.error("[weekly-pack] save failed", error); editing.saving = false; editing.failed = true; editing.error = "Couldn't save. Check your connection, then Retry."; render(); return; }
+    editing = null; await load("steps");
+  }
+  async function clearSteps(d) {
+    if (!editing || editing.saving) return;
+    editing.saving = true; render();
+    const { error } = await sb.from("daily_steps").delete().eq("user_id", userId).eq("step_date", d);
+    if (error) { console.error("[weekly-pack] clear failed", error); editing.saving = false; editing.failed = true; editing.error = "Couldn't clear. Check your connection, then Retry."; render(); return; }
+    editing = null; await load("steps");
+  }
+  function renderSummary(m, w, loading) {
+    const sec = (title, lines) => el("div", { class: "wp-sum" }, el("h3", { text: title }), ...lines.map((t) => el("p", { text: t })));
+    if (loading) { $("summary").replaceChildren(el("p", { class: "wp-note", text: "Loading…" })); return; }
+    const parts = [];
+    parts.push(sec("Weight", [m.weight ? weightLine(m) : "Couldn't load your weigh-ins."]));
+    parts.push(sec("Steps", [m.steps ? stepsLine(m) : "Couldn't load your steps."]));
+    parts.push(sec("Sessions", [m.sessionsByDay ? sessionsLine(m) : "Couldn't load your workouts."]));
+    parts.push(sec("Strength", !m.exercises ? ["Couldn't load your sets."] : m.exercises.strength.length ? m.exercises.strength.map(strengthLine) : ["None this week."]));
+    parts.push(sec("Cardio", !m.exercises ? ["Couldn't load your sets."] : m.exercises.cardio.length ? m.exercises.cardio.map(cardioLine) : ["None this week."]));
+    const n = notes(m, w);
+    parts.push(sec("Notes", n.length ? n : ["None."]));
+    $("summary").replaceChildren(...parts);
+  }
+  async function copyText(text) {
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); return true; } } catch (e) { /* falls back below */ }
+    try {
+      const t = el("textarea", { readonly: true, "aria-hidden": "true", style: "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;" });
+      t.value = text; document.body.append(t); t.select(); t.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy"); t.remove(); return !!ok;
+    } catch (e) { return false; }
+  }
+  let copyTimer = 0;
+  $("copy-btn").addEventListener("click", async () => {
+    render();   // the copied time is now
+    const ok = await copyText(lastText);
+    $("copy-msg").textContent = ok ? "Copied" : "Couldn't copy. Select the text below and copy it by hand.";
+    clearTimeout(copyTimer); copyTimer = setTimeout(() => { $("copy-msg").textContent = ""; }, ok ? 2000 : 6000);
+  });
+  $("prev-week").addEventListener("click", () => { offset--; editing = null; loadAll(); });
+  $("next-week").addEventListener("click", () => { if (offset < 0) { offset++; editing = null; loadAll(); } });
+
+  window.WeeklyPack = { WEEK_STARTS_ON, e1rm, weekStart, weekDays, weekRange, buildWeek, packText, notes, londonDate, addDays, PAGE_SIZE, get lastText() { return lastText; } };
+
+  // --- Auth gate: locked when signed out ---
+  sb.auth.onAuthStateChange((event, session) => {
+    $("login-gate").style.display = session ? "none" : "block";
+    $("app-content").style.display = session ? "block" : "none";
+    if (session && userId !== session.user.id) { userId = session.user.id; offset = 0; loadAll(); }
+  });
+
+  $("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  });
+
+</script>
+<script src="site-nav.js?v=1"></script>
+</body>
+</html>
