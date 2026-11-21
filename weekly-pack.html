@@ -380,7 +380,7 @@
   }
 
   // ---- the lines (shared by the page and the copied text) ----
-  const kgShow = (v) => fmtN(v, 2);
+  const kgShow = (v) => fmt1(v);   // weights always show one decimal ("93.0"), like the weekly averages
   function weightLine(m) {
     if (!m.weightAvg) return `No weigh-ins this week${m.weightPrev ? ` (previous week ${fmt1(m.weightPrev.mean)} from ${m.weightPrev.n})` : ""}`;
     const a = m.weightAvg, p = m.weightPrev;
